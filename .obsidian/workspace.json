@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_AI_CONTEXT/thinking.md",
+                "file": "_AI_CONTEXT/coding-principles.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "thinking"
+              "title": "coding-principles"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_AI_CONTEXT/thinking.md",
+                "file": "_AI_CONTEXT/coding-principles.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_AI_CONTEXT/thinking.md",
+                "file": "_AI_CONTEXT/coding-principles.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_AI_CONTEXT/thinking.md",
+                "file": "_AI_CONTEXT/coding-principles.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -191,6 +191,7 @@
   "active": "d12d92a9f2323aa3",
   "lastOpenFiles": [
     "_AI_CONTEXT/thinking.md",
+    "_AI_CONTEXT/coding-principles.md",
     "_AI_CONTEXT"
   ]
 }
