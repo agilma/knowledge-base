@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_AI_CONTEXT/coding-principles.md",
+                "file": "_AI_CONTEXT/ui-ux-principles.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "coding-principles"
+              "title": "ui-ux-principles"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_AI_CONTEXT/coding-principles.md",
+                "file": "_AI_CONTEXT/ui-ux-principles.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_AI_CONTEXT/coding-principles.md",
+                "file": "_AI_CONTEXT/ui-ux-principles.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_AI_CONTEXT/coding-principles.md",
+                "file": "_AI_CONTEXT/ui-ux-principles.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -192,6 +192,7 @@
   "lastOpenFiles": [
     "_AI_CONTEXT/thinking.md",
     "_AI_CONTEXT/coding-principles.md",
+    "_AI_CONTEXT/ui-ux-principles.md",
     "_AI_CONTEXT"
   ]
 }
