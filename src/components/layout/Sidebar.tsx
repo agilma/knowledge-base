@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { Home, Search, Star, Clock, FolderOpen } from "lucide-react";
-import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
-      <div className="p-4 flex items-center h-14 border-b border-border/50 shrink-0">
+      <div className="p-4 flex items-center h-14 border-b border-border/50">
         <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
       </div>
 
@@ -57,10 +56,6 @@ export function Sidebar() {
           </Link>
         </div>
       </nav>
-
-      <div className="border-t border-border/50 shrink-0">
-        <UserMenu />
-      </div>
     </aside>
   );
 }

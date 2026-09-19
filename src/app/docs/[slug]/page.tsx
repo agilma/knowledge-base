@@ -70,16 +70,16 @@ export default async function DocumentPage({
         </header>
 
         {/* Document Content Sections */}
-        <div className="space-y-12 prose prose-neutral dark:prose-invert max-w-none prose-lg prose-headings:font-semibold prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-relaxed prose-p:text-foreground/90">
+        <div className="space-y-12 prose prose-neutral dark:prose-invert max-w-none">
           {doc.sections.map((section) => (
             <section key={section.id} id={section.id} className="scroll-mt-24">
-              <h2 className="text-2xl font-semibold tracking-tight border-b border-border pb-2 mb-6 flex items-center gap-2 group mt-0">
+              <h2 className="text-2xl font-semibold tracking-tight border-b border-border pb-2 mb-6 flex items-center gap-2 group">
                 {section.title}
                 <a href={`#${section.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <Hash className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                 </a>
               </h2>
-              <div className="text-lg text-foreground/90 leading-relaxed whitespace-pre-wrap font-normal">
+              <div className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
                 {section.content}
               </div>
             </section>
