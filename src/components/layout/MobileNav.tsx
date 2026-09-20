@@ -5,6 +5,7 @@ import { Menu, Home, Search, Star, Clock, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -20,13 +21,13 @@ export function MobileNav() {
           <Menu className="w-5 h-5" />
           <span className="sr-only">Toggle Menu</span>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side="left" className="w-72 p-0 flex flex-col">
           <DialogTitle className="sr-only">Navigation Menu</DialogTitle>
-          <div className="p-4 border-b border-border/50 h-14 flex items-center">
+          <div className="p-4 border-b border-border/50 h-14 flex items-center shrink-0">
             <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
           </div>
 
-          <nav className="p-3 space-y-6 overflow-y-auto h-[calc(100vh-3.5rem)]">
+          <nav className="flex-1 p-3 space-y-6 overflow-y-auto">
             <div className="space-y-1">
               <Link onClick={closeSheet} href="/" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
                 <Home className="w-4 h-4 text-muted-foreground" />
@@ -74,6 +75,10 @@ export function MobileNav() {
               </Link>
             </div>
           </nav>
+
+          <div className="border-t border-border/50 shrink-0">
+            <UserMenu />
+          </div>
         </SheetContent>
       </Sheet>
     </div>

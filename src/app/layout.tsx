@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AuthProvider } from "@/lib/auth/auth-context";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSans = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -25,17 +27,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans flex h-screen bg-background text-foreground`}
+        className={`${fontSans.variable} ${fontMono.variable} antialiased font-sans flex h-screen bg-background text-foreground selection:bg-primary/10`}
       >
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <MobileNav />
-          <main className="flex-1 overflow-y-auto w-full">
-            {children}
-          </main>
-        </div>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <Sidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <MobileNav />
+              <main className="flex-1 overflow-y-auto w-full">
+                {children}
+              </main>
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
