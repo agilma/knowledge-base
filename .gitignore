@@ -20,6 +20,9 @@
 # production
 /build
 
+# logs
+*.log
+
 # misc
 .DS_Store
 *.pem

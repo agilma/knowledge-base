@@ -37,6 +37,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 - Next.js 16.3.5 (App Router), React 19.2.8, TypeScript 5
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
+- Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
 - Font: Inter + JetBrains Mono via `next/font/google`
 
 Catatan: `AGENTS.md` dan `CLAUDE.md` di repo adalah file auto-generated Next.js. Ikuti peringatannya (baca `node_modules/next/dist/docs/` sebelum menulis kode Next.js), tetapi konteks project yang sebenarnya ada di folder `_AI_CONTEXT/` ini.
@@ -45,9 +46,10 @@ Catatan: `AGENTS.md` dan `CLAUDE.md` di repo adalah file auto-generated Next.js.
 
 ## 4. Model Data
 
-Didefinisikan di `prisma/schema.prisma` (Model Collection → Document):
+Didefinisikan di `prisma/schema.prisma` (Model Collection → Document, serta Auth.js models):
 
-- **User** — `id`, `email` (unique), `name`, `role` (`VIEWER` | `EDITOR` | `ADMIN`, default `VIEWER`)
+- **User** — `id`, `email` (unique), `name`, `emailVerified`, `image`, `role` (`VIEWER` | `EDITOR` | `ADMIN`, default `VIEWER`)
+- **Account**, **Session**, **VerificationToken** — tabel pendukung adapter Auth.js / NextAuth
 - **Collection** — `id`, `slug` (unique), `name`, `description`, `icon`, `status` (`ACTIVE` | `ARCHIVED`, default `ACTIVE`)
 - **Document** — `id`, `slug` (unique), `title`, `excerpt`, `content` (markdown), `type` (`PANDUAN` | `MASALAH` | `SOLUSI` | `REFERENSI`, default `PANDUAN`), `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`, default `DRAFT`), `collectionId` (relasi wajib ke Collection, `onDelete: Restrict`), `authorId` (opsional, relasi ke User, `onDelete: SetNull`)
 - **DocumentRelation** — relasi many-to-many antar Document untuk "Related Knowledge" (`fromId`, `toId`, `createdAt`, `onDelete: Cascade`)
@@ -60,20 +62,41 @@ Aturan relasi & visualisasi:
 
 ---
 
-## 5. Aturan Khusus Project
+## 5. Autentikasi & Role (RBAC)
+
+- **Library Auth**: Auth.js v5 (`next-auth@5.0.0-beta.32`) dengan `@auth/prisma-adapter`.
+- **Provider**: Hanya Google OAuth.
+- **Aturan Akses**:
+  - Domain utama dibatasi melalui env `AUTH_ALLOWED_DOMAIN` (misal: `thunderlab.id`).
+  - Pengecualian email spesifik diizinkan via env `AUTH_ALLOWED_EMAILS` (dipisah koma).
+  - Percobaan login dari email/domain di luar ketentuan ditolak dan diarahkan ke `/login?error=DomainAccessDenied` dengan pesan ramah bahasa Indonesia.
+- **Bootstrap Role ADMIN**:
+  - Email yang terdaftar di env `AUTH_ADMIN_EMAILS` (dipisah koma) secara otomatis diberi role `ADMIN` saat pembuatan user maupun login.
+  - Role user yang sudah dinaikkan (misal ke `EDITOR` atau `ADMIN`) tidak akan diturunkan secara otomatis.
+- **Proteksi Rute**:
+  - Seluruh rute aplikasi terlindungi via Next.js 16 `src/proxy.ts` (kecuali `/login`, `/api/auth/*`, dan aset statis).
+  - Request tanpa autentikasi otomatis didorong ke `/login?callbackUrl=...`.
+- **Helper Server Session**:
+  - `getCurrentUser()` — Mengambil objek user aktif dari server session.
+  - `requireUser()` — Memastikan user sudah login (redirect ke `/login` jika belum).
+  - `requireRole(allowedRoles)` — Memastikan user memiliki role yang disyaratkan.
+
+---
+
+## 6. Aturan Khusus Project
 
 - **Hapus `src/lib/mockData.ts` dari jalur produksi** begitu service Prisma dipakai oleh komponen UI. Tidak boleh ada data palsu di production.
 - Semua akses data lewat lapisan service (`src/lib/services/`), bukan query Prisma langsung di komponen halaman.
 - Slug harus unik dan stabil; jangan mengubah slug yang sudah PUBLISHED tanpa redirect.
 - Hanya konten `PUBLISHED` yang tampil ke VIEWER. `DRAFT` hanya terlihat oleh penulis/EDITOR/ADMIN.
-- Migrasi Prisma: `0_init` diselaraskan untuk schema Collection/Document.
+- Migrasi Prisma: `0_init` diselaraskan untuk schema awal, `1_auth` untuk tabel autentikasi Auth.js.
 - Jangan menambah dependency tanpa alasan yang jelas di PR description.
 - Ikuti `ui-ux-principles.md`: minimalis, whitespace, tidak banyak card/border, referensi Outline.
 - UI dalam bahasa Indonesia.
 
 ---
 
-## 6. Alur Kerja Agent
+## 7. Alur Kerja Agent
 
 1. Baca `_AI_CONTEXT/` (semua file) dan `project-status.md`.
 2. Periksa branch, commit, dan PR terkini di GitHub — jangan anggap `project-status.md` selalu mutakhir.
@@ -85,7 +108,7 @@ Aturan relasi & visualisasi:
 
 ---
 
-## 7. Urutan Implementasi yang Disepakati
+## 8. Urutan Implementasi yang Disepakati
 
 1. Konteks project di `_AI_CONTEXT/` + rapikan metadata repo (package name, README)
 2. Align Prisma Schema (Collection → Document), Service layer, Idempotent Seed, dan build di Vercel
