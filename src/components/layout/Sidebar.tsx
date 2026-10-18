@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { Home, Search, Star, Clock, FolderOpen } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { getCollections } from "@/lib/services/collections";
 
-export function Sidebar() {
+export async function Sidebar() {
+  let collections: Awaited<ReturnType<typeof getCollections>> = [];
+  try {
+    collections = await getCollections();
+  } catch {
+    collections = [];
+  }
+
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
       <div className="p-4 flex items-center h-14 border-b border-border/50 shrink-0">
@@ -13,48 +21,42 @@ export function Sidebar() {
         <div className="space-y-1">
           <Link href="/" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <Home className="w-4 h-4 text-muted-foreground" />
-            Home
+            Beranda
           </Link>
           <Link href="/search" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <Search className="w-4 h-4 text-muted-foreground" />
-            Search
+            Cari
           </Link>
         </div>
 
         <div className="space-y-1">
-          <h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Library</h4>
+          <h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pustaka</h4>
           <Link href="/favorites" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <Star className="w-4 h-4 text-muted-foreground" />
-            Favorites
+            Favorit
           </Link>
           <Link href="/recent" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <Clock className="w-4 h-4 text-muted-foreground" />
-            Recent
+            Terakhir Dibuka
           </Link>
         </div>
 
         <div className="space-y-1">
           <div className="flex items-center justify-between px-3 mb-2">
             <Link href="/collections" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
-              Collections
+              Koleksi
             </Link>
           </div>
-          <Link href="/collections/engineering" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
-            <FolderOpen className="w-4 h-4 text-muted-foreground" />
-            Engineering
-          </Link>
-          <Link href="/collections/project" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
-            <FolderOpen className="w-4 h-4 text-muted-foreground" />
-            Project
-          </Link>
-          <Link href="/collections/process" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
-            <FolderOpen className="w-4 h-4 text-muted-foreground" />
-            Process
-          </Link>
-          <Link href="/collections/general-knowledge" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
-            <FolderOpen className="w-4 h-4 text-muted-foreground" />
-            General Knowledge
-          </Link>
+          {collections.map((col) => (
+            <Link
+              key={col.id}
+              href={`/collections/${col.slug}`}
+              className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground"
+            >
+              <FolderOpen className="w-4 h-4 text-muted-foreground" />
+              {col.name}
+            </Link>
+          ))}
         </div>
       </nav>
 

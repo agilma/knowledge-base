@@ -29,7 +29,7 @@ export function UserMenu() {
     return (
       <div className="flex w-full items-center justify-between p-4">
         <Button variant="outline" className="w-full justify-start" render={<Link href="/login" />} >
-          Sign In
+          Masuk
         </Button>
         <div className="ml-2">
           <ThemeToggle />
@@ -63,7 +63,7 @@ export function UserMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20" onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <span>Keluar</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

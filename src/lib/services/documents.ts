@@ -69,7 +69,7 @@ export async function getRelatedDocuments(
 
 export async function searchDocuments(
   query: string,
-  options?: ReadOptions
+  options?: ReadOptions & { collectionId?: string }
 ) {
   const trimmed = query.trim();
   if (!trimmed) return [];
@@ -81,6 +81,7 @@ export async function searchDocuments(
   return db.document.findMany({
     where: {
       ...(whereStatus ? { status: whereStatus } : {}),
+      ...(options?.collectionId ? { collectionId: options.collectionId } : {}),
       OR: [
         { title: { contains: trimmed, mode: "insensitive" } },
         { excerpt: { contains: trimmed, mode: "insensitive" } },
@@ -91,5 +92,25 @@ export async function searchDocuments(
       collection: true,
     },
     orderBy: { updatedAt: "desc" },
+  });
+}
+
+export async function getRecentlyUpdatedDocuments(
+  limit: number = 5,
+  options?: ReadOptions
+) {
+  const whereStatus = options?.includeDrafts
+    ? undefined
+    : DocumentStatus.PUBLISHED;
+
+  return db.document.findMany({
+    where: {
+      ...(whereStatus ? { status: whereStatus } : {}),
+    },
+    include: {
+      collection: true,
+    },
+    orderBy: { updatedAt: "desc" },
+    take: limit,
   });
 }
