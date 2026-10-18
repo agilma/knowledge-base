@@ -2,13 +2,13 @@
 CREATE TYPE "Role" AS ENUM ('VIEWER', 'EDITOR', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "ProjectStatus" AS ENUM ('ACTIVE', 'MAINTENANCE', 'ARCHIVED');
+CREATE TYPE "DocumentType" AS ENUM ('PANDUAN', 'MASALAH', 'SOLUSI', 'REFERENSI');
 
 -- CreateEnum
-CREATE TYPE "ProblemStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
+CREATE TYPE "DocumentStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
 
 -- CreateEnum
-CREATE TYPE "SolutionStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
+CREATE TYPE "CollectionStatus" AS ENUM ('ACTIVE', 'ARCHIVED');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -23,47 +23,43 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
-CREATE TABLE "projects" (
+CREATE TABLE "collections" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "status" "ProjectStatus" NOT NULL DEFAULT 'ACTIVE',
+    "icon" TEXT,
+    "status" "CollectionStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "projects_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "collections_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "problems" (
+CREATE TABLE "documents" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT,
-    "content" TEXT,
-    "status" "ProblemStatus" NOT NULL DEFAULT 'DRAFT',
-    "authorId" TEXT NOT NULL,
-    "projectId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "problems_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "solutions" (
-    "id" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
+    "excerpt" TEXT,
     "content" TEXT NOT NULL,
-    "status" "SolutionStatus" NOT NULL DEFAULT 'DRAFT',
-    "problemId" TEXT NOT NULL,
-    "authorId" TEXT NOT NULL,
+    "type" "DocumentType" NOT NULL DEFAULT 'PANDUAN',
+    "status" "DocumentStatus" NOT NULL DEFAULT 'DRAFT',
+    "collectionId" TEXT NOT NULL,
+    "authorId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "solutions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "document_relations" (
+    "fromId" TEXT NOT NULL,
+    "toId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "document_relations_pkey" PRIMARY KEY ("fromId","toId")
 );
 
 -- CreateTable
@@ -92,34 +88,19 @@ CREATE TABLE "recent_views" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "projects_slug_key" ON "projects"("slug");
+CREATE UNIQUE INDEX "collections_slug_key" ON "collections"("slug");
 
 -- CreateIndex
-CREATE INDEX "projects_status_idx" ON "projects"("status");
+CREATE UNIQUE INDEX "documents_slug_key" ON "documents"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "problems_slug_key" ON "problems"("slug");
+CREATE INDEX "documents_collectionId_idx" ON "documents"("collectionId");
 
 -- CreateIndex
-CREATE INDEX "problems_authorId_idx" ON "problems"("authorId");
+CREATE INDEX "documents_status_idx" ON "documents"("status");
 
 -- CreateIndex
-CREATE INDEX "problems_projectId_idx" ON "problems"("projectId");
-
--- CreateIndex
-CREATE INDEX "problems_status_idx" ON "problems"("status");
-
--- CreateIndex
-CREATE UNIQUE INDEX "solutions_slug_key" ON "solutions"("slug");
-
--- CreateIndex
-CREATE INDEX "solutions_problemId_idx" ON "solutions"("problemId");
-
--- CreateIndex
-CREATE INDEX "solutions_authorId_idx" ON "solutions"("authorId");
-
--- CreateIndex
-CREATE INDEX "solutions_status_idx" ON "solutions"("status");
+CREATE INDEX "documents_type_idx" ON "documents"("type");
 
 -- CreateIndex
 CREATE INDEX "favorites_userId_idx" ON "favorites"("userId");
@@ -134,13 +115,13 @@ CREATE INDEX "recent_views_userId_idx" ON "recent_views"("userId");
 CREATE INDEX "recent_views_userId_viewedAt_idx" ON "recent_views"("userId", "viewedAt");
 
 -- AddForeignKey
-ALTER TABLE "problems" ADD CONSTRAINT "problems_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "documents" ADD CONSTRAINT "documents_collectionId_fkey" FOREIGN KEY ("collectionId") REFERENCES "collections"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "problems" ADD CONSTRAINT "problems_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "documents" ADD CONSTRAINT "documents_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "solutions" ADD CONSTRAINT "solutions_problemId_fkey" FOREIGN KEY ("problemId") REFERENCES "problems"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "document_relations" ADD CONSTRAINT "document_relations_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "solutions" ADD CONSTRAINT "solutions_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "document_relations" ADD CONSTRAINT "document_relations_toId_fkey" FOREIGN KEY ("toId") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;

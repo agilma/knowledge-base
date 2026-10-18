@@ -13,21 +13,21 @@ enum Role {
   ADMIN
 }
 
-enum ProjectStatus {
+enum DocumentType {
+  PANDUAN
+  MASALAH
+  SOLUSI
+  REFERENSI
+}
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CollectionStatus {
   ACTIVE
-  MAINTENANCE
-  ARCHIVED
-}
-
-enum ProblemStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
-
-enum SolutionStatus {
-  DRAFT
-  PUBLISHED
   ARCHIVED
 }
 
@@ -39,67 +39,60 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  problems  Problem[]
-  solutions Solution[]
+  documents Document[]
 
   @@map("users")
 }
 
-model Project {
-  id          String        @id @default(cuid())
-  slug        String        @unique
+model Collection {
+  id          String           @id @default(cuid())
+  slug        String           @unique
   name        String
   description String?
-  status      ProjectStatus @default(ACTIVE)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  icon        String?
+  status      CollectionStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  problems Problem[]
+  documents Document[]
 
-  @@index([status])
-  @@map("projects")
+  @@map("collections")
 }
 
-model Problem {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  title       String
-  description String?
-  content     String?
-  status      ProblemStatus @default(DRAFT)
-  authorId    String
-  projectId   String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+model Document {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  title        String
+  excerpt      String?
+  content      String
+  type         DocumentType   @default(PANDUAN)
+  status       DocumentStatus @default(DRAFT)
+  collectionId String
+  authorId     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  solutions Solution[]
+  collection  Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  author      User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  relatedFrom DocumentRelation[] @relation("RelatedFrom")
+  relatedTo   DocumentRelation[] @relation("RelatedTo")
 
-  @@index([authorId])
-  @@index([projectId])
+  @@index([collectionId])
   @@index([status])
-  @@map("problems")
+  @@index([type])
+  @@map("documents")
 }
 
-model Solution {
-  id        String         @id @default(cuid())
-  slug      String         @unique
-  title     String
-  content   String
-  status    SolutionStatus @default(DRAFT)
-  problemId String
-  authorId  String
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+model DocumentRelation {
+  fromId    String
+  toId      String
+  createdAt DateTime @default(now())
 
-  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  from Document @relation("RelatedFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to   Document @relation("RelatedTo", fields: [toId], references: [id], onDelete: Cascade)
 
-  @@index([problemId])
-  @@index([authorId])
-  @@index([status])
-  @@map("solutions")
+  @@id([fromId, toId])
+  @@map("document_relations")
 }
 
 model Favorite {

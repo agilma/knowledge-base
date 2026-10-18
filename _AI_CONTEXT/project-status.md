@@ -1,54 +1,57 @@
 # Thunderlab Knowledge Base — Project Status
 
-Terakhir diperbarui: 2026-10-18 oleh Claude (planner), berdasarkan pemeriksaan langsung repo `agilma/knowledge-base`.
+Terakhir diperbarui: 2026-10-18 oleh Jules (software engineer), berdasarkan implementasi model Collection → Document dan service layer.
 
 Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, Vercel) sebelum mempercayai isinya.
 
 ---
 
-## Kondisi Repo (terverifikasi 2026-10-18)
+## Kondisi Repo
 
-- `main`: hanya berisi `_AI_CONTEXT/` (4 dokumen prinsip) dan `.obsidian/`. Belum ada kode aplikasi.
-- Ada 5 PR dari Jules, **belum ada yang di-merge** ke `main`:
-  - PR #1 — Interactive Plan, tanpa perubahan kode
-  - PR #2, #3, #4 — versi prototype yang sudah tergantikan oleh #5
-  - **PR #5** — versi paling lengkap: UI prototype, tipografi, dark mode, mock login, Prisma schema + migrasi `0_init`
-- PR #5 adalah superset dari #4 (diff hanya menambah file Prisma).
+- `main`: berisi base UI prototype dan struktur dasar project.
+- Branch `feat/schema-collection-document`:
+  - Schema Prisma diselaraskan ke model Collection → Document (`prisma/schema.prisma`).
+  - Migrasi `prisma/migrations/0_init/migration.sql` diperbarui dari schema baru.
+  - Lapisan service `src/lib/services/collections.ts` dan `src/lib/services/documents.ts` dibuat.
+  - Seed idempoten `prisma/seed.ts` dibuat (runner `tsx`).
+  - Script build dikonfigurasi untuk `prisma migrate deploy && prisma db seed && next build`.
 
-## Yang Sudah Ada (di PR #5)
+## Yang Sudah Ada
 
-- Halaman: `/`, `/search`, `/collections`, `/collections/[slug]`, `/docs/[slug]`, `/favorites`, `/recent`, `/login`
+- Halaman UI prototype: `/`, `/search`, `/collections`, `/collections/[slug]`, `/docs/[slug]`, `/favorites`, `/recent`, `/login`
 - Komponen layout: Sidebar, MobileNav, UserMenu, ThemeToggle
-- `prisma/schema.prisma` + `prisma/migrations/0_init/migration.sql`
+- `prisma/schema.prisma` + `prisma/migrations/0_init/migration.sql` (Model Collection → Document)
 - `src/lib/db.ts` (Prisma client singleton)
+- `src/lib/services/collections.ts` & `src/lib/services/documents.ts` (Read services dengan filter `PUBLISHED`)
+- `prisma/seed.ts` (Seed idempoten data awal)
 - Auth context dan ProtectedRoute berbasis **mock**
 
 ## Yang Masih Mock / Belum Ada
 
-- **Semua halaman masih membaca `src/lib/mockData.ts`**. Belum ada query ke database.
+- **Halaman UI masih membaca `src/lib/mockData.ts`**. Menghubungkan UI ke `src/lib/services` adalah task berikutnya.
 - Login masih mock, belum ada autentikasi sungguhan.
-- Belum ada CRUD, editor, search sungguhan, PWA, atau offline.
-- Konfigurasi Vercel & Prisma client generation saat build sudah disiapkan di `package.json` (`postinstall`: `prisma generate`), namun deploy aktual ke Vercel belum dilakukan (dilakukan oleh owner).
+- Belum ada CRUD, editor, full-text search sungguhan, PWA, atau offline.
 
-## Hasil Validasi yang Benar-benar Dijalankan (2026-10-18, branch `chore/vercel-build-ready`)
+## Hasil Validasi yang Benar-benar Dijalankan
 
-- `npm ci` — berhasil (memicu `postinstall` -> `prisma generate` secara otomatis)
+- `npm ci` — berhasil
+- `npx prisma format` — formatted & verified
 - `npm run lint` — bersih, tanpa error
 - `npx tsc --noEmit` — bersih, tanpa error
-- `npm run build` (tanpa `DATABASE_URL`) — berhasil
-- `npm run build` (`DATABASE_URL="postgresql://user:pass@localhost:5432/db"`) — berhasil
+- `npx next build` (langsung, tanpa `migrate deploy`/`seed` karena tidak ada DB lokal) — berhasil
+
+Catatan: `npm run build` penuh (`prisma migrate deploy && prisma db seed && next build`) memerlukan koneksi PostgreSQL aktif (misal Neon) dan akan diverifikasi otomatis saat deploy ke Vercel.
 
 ## Pertanyaan Terbuka
 
-1. Relasi Solution ↔ Project: dipertahankan lewat Problem saja, atau ditambah relasi langsung?
-2. Pilihan editor markdown: Tiptap atau MDXEditor?
-3. Mekanisme autentikasi: belum diputuskan (kandidat: Auth.js / NextAuth dengan provider yang sesuai kebutuhan tim).
-4. Jalur ekspor Obsidian (opsional, tahap akhir): via MacBook + Syncthing, atau tombol download.
+1. Pilihan editor markdown: Tiptap atau MDXEditor?
+2. Mekanisme autentikasi: belum diputuskan (kandidat: Auth.js / NextAuth dengan provider yang sesuai kebutuhan tim).
+3. Jalur ekspor Obsidian (opsional, tahap akhir): via MacBook + Syncthing, atau tombol download.
 
 ## Langkah Berikutnya
 
-1. Owner melakukan deploy ke Vercel dan menghubungkan dengan database Neon.
-2. Implementasi lapisan service Prisma & seed data awal untuk menggantikan `mockData`.
+1. Owner/Vercel melakukan deploy untuk menjalankan migrasi dan seed di database Neon.
+2. Menghubungkan halaman UI ke `src/lib/services` menggantikan pemakaian `mockData.ts`.
 3. Lanjut sesuai urutan di `project-context.md` bagian 7.
 
 ## Riwayat
@@ -58,3 +61,4 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 - 2026-09-29 — PR #5 (Prisma schema + migrasi awal)
 - 2026-10-18 — Audit kondisi repo; keputusan arsitektur opsi B dan urutan implementasi disepakati
 - 2026-10-18 — Konfigurasi build Vercel-ready dengan script `postinstall` (`prisma generate`) dan verifikasi skenario build tanpa/dengan `DATABASE_URL`
+- 2026-10-18 — Model Prisma diganti ke Collection → Document, service layer & seed idempoten ditambahkan, script build Vercel diperbarui untuk running migration + seed.

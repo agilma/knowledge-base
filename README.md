@@ -27,6 +27,16 @@ Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk men
    npm run dev
    ```
 
+## Automated Migration & Seed pada Vercel Build
+
+Proses build aplikasi (`npm run build`) dikonfigurasi untuk menjalankan:
+```bash
+prisma migrate deploy && prisma db seed && next build
+```
+
+- **Migrasi**: Menjalankan migrasi database PostgreSQL secara otomatis saat deploy di Vercel.
+- **Seed**: Script seed (`prisma/seed.ts`) bersifat idempoten. Seed hanya akan mengisi data awal jika tabel `Collection` di database masih kosong (count = 0). Apabila database sudah berisi data, proses seed dilewati secara aman.
+
 ---
 
 Sebelum melakukan perubahan atau kontribusi, seluruh agent dan kontributor wajib membaca pedoman di folder `_AI_CONTEXT/`.
