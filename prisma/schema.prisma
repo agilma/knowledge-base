@@ -13,21 +13,21 @@ enum Role {
   ADMIN
 }
 
-enum DocumentType {
-  PANDUAN
-  MASALAH
-  SOLUSI
-  REFERENSI
+enum ProjectStatus {
+  ACTIVE
+  MAINTENANCE
+  ARCHIVED
 }
 
-enum DocumentStatus {
+enum ProblemStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
 }
 
-enum CollectionStatus {
-  ACTIVE
+enum SolutionStatus {
+  DRAFT
+  PUBLISHED
   ARCHIVED
 }
 
@@ -39,60 +39,67 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  documents Document[]
+  problems  Problem[]
+  solutions Solution[]
 
   @@map("users")
 }
 
-model Collection {
-  id          String           @id @default(cuid())
-  slug        String           @unique
+model Project {
+  id          String        @id @default(cuid())
+  slug        String        @unique
   name        String
   description String?
-  icon        String?
-  status      CollectionStatus @default(ACTIVE)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  documents Document[]
+  problems Problem[]
 
-  @@map("collections")
-}
-
-model Document {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  title        String
-  excerpt      String?
-  content      String
-  type         DocumentType   @default(PANDUAN)
-  status       DocumentStatus @default(DRAFT)
-  collectionId String
-  authorId     String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  collection  Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
-  author      User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  relatedFrom DocumentRelation[] @relation("RelatedFrom")
-  relatedTo   DocumentRelation[] @relation("RelatedTo")
-
-  @@index([collectionId])
   @@index([status])
-  @@index([type])
-  @@map("documents")
+  @@map("projects")
 }
 
-model DocumentRelation {
-  fromId    String
-  toId      String
-  createdAt DateTime @default(now())
+model Problem {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  description String?
+  content     String?
+  status      ProblemStatus @default(DRAFT)
+  authorId    String
+  projectId   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  from Document @relation("RelatedFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  to   Document @relation("RelatedTo", fields: [toId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  solutions Solution[]
 
-  @@id([fromId, toId])
-  @@map("document_relations")
+  @@index([authorId])
+  @@index([projectId])
+  @@index([status])
+  @@map("problems")
+}
+
+model Solution {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  title     String
+  content   String
+  status    SolutionStatus @default(DRAFT)
+  problemId String
+  authorId  String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([authorId])
+  @@index([status])
+  @@map("solutions")
 }
 
 model Favorite {

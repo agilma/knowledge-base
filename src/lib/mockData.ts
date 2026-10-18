@@ -1,4 +1,3 @@
-// DEPRECATED: akan digantikan oleh src/lib/services pada task berikutnya.
 import { Collection, Document } from "./types";
 
 export const collections: Collection[] = [

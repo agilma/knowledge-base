@@ -1,10 +1,9 @@
 "use client";
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, Search, Star, Clock, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import { UserMenu } from "@/components/auth/UserMenu";
 
 export function MobileNav() {
@@ -22,7 +21,7 @@ export function MobileNav() {
           <span className="sr-only">Toggle Menu</span>
         </SheetTrigger>
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
-          <DialogTitle className="sr-only">Navigation Menu</DialogTitle>
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="p-4 border-b border-border/50 h-14 flex items-center shrink-0">
             <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
           </div>
