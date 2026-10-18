@@ -1,0 +1,127 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+enum ProjectStatus {
+  ACTIVE
+  MAINTENANCE
+  ARCHIVED
+}
+
+enum ProblemStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SolutionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  problems  Problem[]
+  solutions Solution[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  problems Problem[]
+
+  @@index([status])
+  @@map("projects")
+}
+
+model Problem {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  description String?
+  content     String?
+  status      ProblemStatus @default(DRAFT)
+  authorId    String
+  projectId   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  solutions Solution[]
+
+  @@index([authorId])
+  @@index([projectId])
+  @@index([status])
+  @@map("problems")
+}
+
+model Solution {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  title     String
+  content   String
+  status    SolutionStatus @default(DRAFT)
+  problemId String
+  authorId  String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([authorId])
+  @@index([status])
+  @@map("solutions")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  entityType String
+  entityId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, entityType, entityId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model RecentView {
+  id         String   @id @default(cuid())
+  userId     String
+  entityType String
+  entityId   String
+  viewedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, viewedAt])
+  @@map("recent_views")
+}
