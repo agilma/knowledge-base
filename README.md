@@ -7,6 +7,7 @@ Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk men
 - **Framework**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS 4, shadcn/ui, next-themes
 - **Database & ORM**: PostgreSQL (Neon), Prisma 5.22
+- **Autentikasi**: Auth.js v5 (`next-auth@5`) dengan `@auth/prisma-adapter` & Google OAuth
 
 ## Cara Menjalankan Lokal
 
@@ -14,7 +15,7 @@ Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk men
    ```bash
    npm install
    ```
-2. Salin file `.env.example` ke `.env`:
+2. Salin file `.env.example` ke `.env` dan isi variabel autentikasi & database:
    ```bash
    cp .env.example .env
    ```
@@ -26,6 +27,28 @@ Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk men
    ```bash
    npm run dev
    ```
+
+## Autentikasi & Konfigurasi Google OAuth
+
+Aplikasi menggunakan Auth.js v5 (`next-auth@5`) dengan login khusus Google OAuth.
+
+### Variable Environment
+
+- `AUTH_SECRET`: Key enkripsi sesi (dapat dibuat dengan `npx auth secret`).
+- `AUTH_GOOGLE_ID`: Client ID Google OAuth dari Google Cloud Console.
+- `AUTH_GOOGLE_SECRET`: Client Secret Google OAuth dari Google Cloud Console.
+- `AUTH_ALLOWED_DOMAIN`: Domain email utama yang diizinkan (contoh: `thunderlab.id`).
+- `AUTH_ALLOWED_EMAILS`: Daftar email di luar domain utama yang diizinkan (dipisah koma).
+- `AUTH_ADMIN_EMAILS`: Daftar email yang otomatis diberikan role `ADMIN` saat login (dipisah koma).
+
+### URL Callback / Redirect Google Cloud Console
+
+Saat mendaftarkan OAuth Client ID di Google Cloud Console, tambahkan URL callback berikut pada **Authorized redirect URIs**:
+
+- **Pengembangan Lokal**:
+  `http://localhost:3000/api/auth/callback/google`
+- **Produksi (Vercel / Domain Kustom)**:
+  `https://<domain-aplikasi>/api/auth/callback/google`
 
 ## Automated Migration & Seed pada Vercel Build
 

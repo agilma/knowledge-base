@@ -4,7 +4,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { AuthProvider } from "@/lib/auth/auth-context";
+import { SessionProvider } from "next-auth/react";
 
 const fontSans = Inter({
   variable: "--font-sans",
@@ -37,7 +37,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
+          <SessionProvider>
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
               <MobileNav />
@@ -45,7 +45,7 @@ export default function RootLayout({
                 {children}
               </main>
             </div>
-          </AuthProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>
