@@ -1,20 +1,24 @@
 import Link from "next/link";
-import { collections, getDocumentsByCollection } from "@/lib/mockData";
+import { getCollectionsWithDocumentCount } from "@/lib/services/collections";
 import { FolderOpen } from "lucide-react";
 
-export default function CollectionsIndexPage() {
+export const dynamic = "force-dynamic";
+
+export default async function CollectionsIndexPage() {
+  const collections = await getCollectionsWithDocumentCount();
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
       <header className="space-y-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Collections</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Koleksi</h1>
         <p className="text-lg text-muted-foreground">
-          Browse all knowledge base collections.
+          Jelajahi semua koleksi basis pengetahuan.
         </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {collections.map((collection) => {
-          const docCount = getDocumentsByCollection(collection.id).length;
+          const docCount = collection.documentCount;
           return (
             <Link
               key={collection.id}
@@ -31,7 +35,7 @@ export default function CollectionsIndexPage() {
                 {collection.description}
               </p>
               <div className="text-sm font-medium text-muted-foreground/80">
-                {docCount} {docCount === 1 ? 'document' : 'documents'}
+                {docCount} {docCount === 1 ? 'dokumen' : 'dokumen'}
               </div>
             </Link>
           );
