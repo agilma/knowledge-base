@@ -34,8 +34,6 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 
 ## 3. Stack Aktual (terverifikasi dari kode)
 
-Sumber: branch PR #5 (`feature/thunderlab-kb-prototype-...-7145903340380807370`), diperiksa 2026-10-18.
-
 - Next.js 16.3.5 (App Router), React 19.2.8, TypeScript 5
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
@@ -47,28 +45,28 @@ Catatan: `AGENTS.md` dan `CLAUDE.md` di repo adalah file auto-generated Next.js.
 
 ## 4. Model Data
 
-Didefinisikan di `prisma/schema.prisma`.
+Didefinisikan di `prisma/schema.prisma` (Model Collection → Document):
 
 - **User** — `id`, `email` (unique), `name`, `role` (`VIEWER` | `EDITOR` | `ADMIN`, default `VIEWER`)
-- **Project** — `slug` (unique), `name`, `description`, `status` (`ACTIVE` | `MAINTENANCE` | `ARCHIVED`)
-- **Problem** — `slug` (unique), `title`, `description`, `content`, `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`), `authorId`, `projectId` (opsional)
-- **Solution** — `slug` (unique), `title`, `content`, `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`), `problemId`, `authorId`
+- **Collection** — `id`, `slug` (unique), `name`, `description`, `icon`, `status` (`ACTIVE` | `ARCHIVED`, default `ACTIVE`)
+- **Document** — `id`, `slug` (unique), `title`, `excerpt`, `content` (markdown), `type` (`PANDUAN` | `MASALAH` | `SOLUSI` | `REFERENSI`, default `PANDUAN`), `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`, default `DRAFT`), `collectionId` (relasi wajib ke Collection, `onDelete: Restrict`), `authorId` (opsional, relasi ke User, `onDelete: SetNull`)
+- **DocumentRelation** — relasi many-to-many antar Document untuk "Related Knowledge" (`fromId`, `toId`, `createdAt`, `onDelete: Cascade`)
 - **Favorite** — `userId` + `entityType` + `entityId` (unique)
 - **RecentView** — `userId`, `entityType`, `entityId`, `viewedAt`
 
-Relasi saat ini: Problem → Solution (one-to-many), Problem → Project (opsional, many-to-one).
-
-**Pertanyaan terbuka:** rencana awal menyebut relasi Solution ↔ Project secara langsung. Di schema saat ini Solution hanya terhubung ke Project lewat Problem. Perlu konfirmasi owner sebelum mengubah schema.
+Aturan relasi & visualisasi:
+- Konten disimpan sebagai satu markdown di `Document.content`; struktur section diturunkan dari heading markdown pada task UI.
+- Hanya dokumen berstatus `PUBLISHED` yang ditampilkan kepada VIEWER secara default.
 
 ---
 
 ## 5. Aturan Khusus Project
 
-- **Hapus `src/lib/mockData.ts` dari jalur produksi** begitu service Prisma tersedia. Tidak boleh ada data palsu di production.
-- Semua akses data lewat lapisan service (`src/lib/services/` atau pola yang disepakati), bukan query Prisma langsung di komponen halaman.
+- **Hapus `src/lib/mockData.ts` dari jalur produksi** begitu service Prisma dipakai oleh komponen UI. Tidak boleh ada data palsu di production.
+- Semua akses data lewat lapisan service (`src/lib/services/`), bukan query Prisma langsung di komponen halaman.
 - Slug harus unik dan stabil; jangan mengubah slug yang sudah PUBLISHED tanpa redirect.
 - Hanya konten `PUBLISHED` yang tampil ke VIEWER. `DRAFT` hanya terlihat oleh penulis/EDITOR/ADMIN.
-- Migrasi Prisma: jangan menulis ulang migrasi yang sudah ada. Buat migrasi baru untuk setiap perubahan schema.
+- Migrasi Prisma: `0_init` diselaraskan untuk schema Collection/Document.
 - Jangan menambah dependency tanpa alasan yang jelas di PR description.
 - Ikuti `ui-ux-principles.md`: minimalis, whitespace, tidak banyak card/border, referensi Outline.
 - UI dalam bahasa Indonesia.
@@ -81,7 +79,7 @@ Relasi saat ini: Problem → Solution (one-to-many), Problem → Project (opsion
 2. Periksa branch, commit, dan PR terkini di GitHub — jangan anggap `project-status.md` selalu mutakhir.
 3. Buat plan sebelum implementasi untuk task yang substansial.
 4. Kerjakan dalam scope task; jangan memperluas scope.
-5. Validasi dengan `npm run lint`, `npx tsc --noEmit`, dan `npm run build`. Laporkan hasil yang **benar-benar dijalankan**.
+5. Validasi dengan `npm run lint`, `npx tsc --noEmit`, dan `npx next build`. Laporkan hasil yang **benar-benar dijalankan**.
 6. Laporkan: file yang berubah, perintah yang dijalankan beserta hasilnya, masalah yang belum selesai, dan detail commit/PR.
 7. Perbarui `project-status.md` di PR yang sama jika task mengubah status project.
 
@@ -90,10 +88,10 @@ Relasi saat ini: Problem → Solution (one-to-many), Problem → Project (opsion
 ## 7. Urutan Implementasi yang Disepakati
 
 1. Konteks project di `_AI_CONTEXT/` + rapikan metadata repo (package name, README)
-2. Deploy ke Vercel + koneksi Neon, pastikan build jalan
-3. Lapisan service Prisma + seed data awal, ganti semua pemakaian `mockData`
+2. Align Prisma Schema (Collection → Document), Service layer, Idempotent Seed, dan build di Vercel
+3. Hubungkan halaman UI dengan `src/lib/services` menggantikan `mockData`
 4. Autentikasi sungguhan + RBAC (VIEWER / EDITOR / ADMIN)
-5. CRUD Problem / Solution / Project + editor markdown
+5. CRUD Document / Collection + editor markdown
 6. Search (PostgreSQL full-text)
 7. Favorit & Recent persisten
 8. PWA + offline-baca
