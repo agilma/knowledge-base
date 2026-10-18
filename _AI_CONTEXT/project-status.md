@@ -28,15 +28,15 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 - **Semua halaman masih membaca `src/lib/mockData.ts`**. Belum ada query ke database.
 - Login masih mock, belum ada autentikasi sungguhan.
 - Belum ada CRUD, editor, search sungguhan, PWA, atau offline.
-- Belum pernah terverifikasi deploy di Vercel. `vercel.json` yang dibuat di PR #3 (fix 404) **tidak ada** di PR #5 — perlu dicek saat deploy.
-- `package.json` masih bernama `temp-app`; `README.md` masih boilerplate create-next-app.
+- Konfigurasi Vercel & Prisma client generation saat build sudah disiapkan di `package.json` (`postinstall`: `prisma generate`), namun deploy aktual ke Vercel belum dilakukan (dilakukan oleh owner).
 
-## Hasil Validasi yang Benar-benar Dijalankan (2026-10-18, branch PR #5)
+## Hasil Validasi yang Benar-benar Dijalankan (2026-10-18, branch `chore/vercel-build-ready`)
 
-- `npm ci` — berhasil
+- `npm ci` — berhasil (memicu `postinstall` -> `prisma generate` secara otomatis)
+- `npm run lint` — bersih, tanpa error
 - `npx tsc --noEmit` — bersih, tanpa error
-- `npx eslint src` — bersih, tanpa error
-- `npm run build` — **gagal di lingkungan pemeriksa** karena tidak bisa mengakses Google Fonts dan binary Prisma (pembatasan jaringan sandbox), **bukan** karena error kode. Build di Vercel belum diverifikasi.
+- `npm run build` (tanpa `DATABASE_URL`) — berhasil
+- `npm run build` (`DATABASE_URL="postgresql://user:pass@localhost:5432/db"`) — berhasil
 
 ## Pertanyaan Terbuka
 
@@ -47,10 +47,9 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 
 ## Langkah Berikutnya
 
-1. Owner merge PR #5 ke `main`, tutup PR #1–#4 sebagai superseded.
-2. Task Jules: tambah `_AI_CONTEXT/project-context.md` dan `project-status.md`, rename package, perbarui README.
-3. Deploy ke Vercel + Neon, verifikasi build dan routing.
-4. Lanjut sesuai urutan di `project-context.md` bagian 7.
+1. Owner melakukan deploy ke Vercel dan menghubungkan dengan database Neon.
+2. Implementasi lapisan service Prisma & seed data awal untuk menggantikan `mockData`.
+3. Lanjut sesuai urutan di `project-context.md` bagian 7.
 
 ## Riwayat
 
@@ -58,3 +57,4 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 - 2026-09-19 — PR #1 (plan), #2, #3, #4 (prototype UI, deploy fix, dark mode, mock login)
 - 2026-09-29 — PR #5 (Prisma schema + migrasi awal)
 - 2026-10-18 — Audit kondisi repo; keputusan arsitektur opsi B dan urutan implementasi disepakati
+- 2026-10-18 — Konfigurasi build Vercel-ready dengan script `postinstall` (`prisma generate`) dan verifikasi skenario build tanpa/dengan `DATABASE_URL`
