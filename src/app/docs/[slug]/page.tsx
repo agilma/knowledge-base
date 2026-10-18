@@ -38,7 +38,7 @@ export default async function DocumentPage({
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
           <Link href="/collections" className="hover:text-foreground transition-colors flex items-center gap-1">
             <FolderOpen className="w-4 h-4" />
-            Pustaka
+            Koleksi
           </Link>
           <ChevronRight className="w-4 h-4" />
           {doc.collection && (
