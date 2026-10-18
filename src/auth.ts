@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 
 declare module "next-auth" {
   interface Session {
@@ -15,6 +16,18 @@ declare module "next-auth" {
   interface User {
     role?: Role;
   }
+}
+
+function getAuthSecret(): string {
+  if (process.env.AUTH_SECRET) {
+    return process.env.AUTH_SECRET;
+  }
+  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) {
+    return "build-phase-placeholder-secret-do-not-use-in-production";
+  }
+  throw new Error(
+    "AUTH_SECRET environment variable is missing. Please set AUTH_SECRET in your environment variables."
+  );
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -106,5 +119,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     },
   },
-  secret: process.env.AUTH_SECRET || "build-time-placeholder-secret-do-not-use-in-prod",
+  secret: getAuthSecret(),
 });
