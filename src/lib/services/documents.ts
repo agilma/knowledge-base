@@ -1,5 +1,6 @@
 import { DocumentStatus } from "@prisma/client";
 import { db } from "../db";
+import { documentSchema, DocumentInput } from "../validation/document";
 
 export interface ReadOptions {
   includeDrafts?: boolean;
@@ -41,6 +42,16 @@ export async function getDocumentBySlug(
   }
 
   return document;
+}
+
+export async function getDocumentById(id: string) {
+  return db.document.findUnique({
+    where: { id },
+    include: {
+      collection: true,
+      author: true,
+    },
+  });
 }
 
 export async function getRelatedDocuments(
@@ -112,5 +123,84 @@ export async function getRecentlyUpdatedDocuments(
     },
     orderBy: { updatedAt: "desc" },
     take: limit,
+  });
+}
+
+export async function isDocumentSlugAvailable(slug: string, excludeId?: string) {
+  const existing = await db.document.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!existing) return true;
+  if (excludeId && existing.id === excludeId) return true;
+  return false;
+}
+
+export async function createDocument(data: DocumentInput, authorId?: string) {
+  const validated = documentSchema.parse(data);
+  const isAvailable = await isDocumentSlugAvailable(validated.slug);
+  if (!isAvailable) {
+    throw new Error("Slug dokumen sudah digunakan");
+  }
+
+  return db.document.create({
+    data: {
+      title: validated.title,
+      slug: validated.slug,
+      collectionId: validated.collectionId,
+      type: validated.type,
+      excerpt: validated.excerpt || null,
+      content: validated.content,
+      status: validated.status,
+      authorId: authorId || null,
+    },
+  });
+}
+
+export async function updateDocument(id: string, data: DocumentInput) {
+  const validated = documentSchema.parse(data);
+
+  const existingDoc = await db.document.findUnique({
+    where: { id },
+  });
+
+  if (!existingDoc) {
+    throw new Error("Dokumen tidak ditemukan");
+  }
+
+  // Jika dokumen pernah / sedang PUBLISHED atau ARCHIVED (bukan DRAFT murni), slug tidak boleh diubah
+  if (existingDoc.status !== DocumentStatus.DRAFT && existingDoc.slug !== validated.slug) {
+    throw new Error("Dokumen yang sudah pernah dipublikasi tidak boleh diubah slugnya");
+  }
+
+  const isAvailable = await isDocumentSlugAvailable(validated.slug, id);
+  if (!isAvailable) {
+    throw new Error("Slug dokumen sudah digunakan");
+  }
+
+  return db.document.update({
+    where: { id },
+    data: {
+      title: validated.title,
+      slug: validated.slug,
+      collectionId: validated.collectionId,
+      type: validated.type,
+      excerpt: validated.excerpt || null,
+      content: validated.content,
+      status: validated.status,
+    },
+  });
+}
+
+export async function setDocumentStatus(id: string, status: DocumentStatus) {
+  return db.document.update({
+    where: { id },
+    data: { status },
+  });
+}
+
+export async function deleteDocument(id: string) {
+  return db.document.delete({
+    where: { id },
   });
 }

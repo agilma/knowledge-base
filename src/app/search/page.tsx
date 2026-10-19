@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Search as SearchIcon, FileText, ChevronRight } from "lucide-react";
+import { Role, DocumentStatus } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { searchDocuments } from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
 import { Input } from "@/components/ui/input";
@@ -13,6 +15,9 @@ export default async function SearchPage({
 }: {
   searchParams: Promise<{ q?: string; collection?: string }>;
 }) {
+  const user = await getCurrentUser();
+  const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+
   const { q, collection: selectedCollectionSlug } = await searchParams;
   const query = q ?? "";
 
@@ -24,6 +29,7 @@ export default async function SearchPage({
   const results = query.trim()
     ? await searchDocuments(query, {
         collectionId: selectedCollection?.id,
+        includeDrafts: canSeeDrafts,
       })
     : [];
 
@@ -116,10 +122,22 @@ export default async function SearchPage({
                         <span>•</span>
                         <span>{formatDate(doc.updatedAt)}</span>
                       </div>
-                      <h2 className="text-xl font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-muted-foreground" />
-                        {doc.title}
-                      </h2>
+                      <div className="flex items-center justify-between gap-2">
+                        <h2 className="text-xl font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-muted-foreground" />
+                          {doc.title}
+                        </h2>
+                        {doc.status === DocumentStatus.DRAFT && (
+                          <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600 dark:text-amber-400 shrink-0">
+                            Draf
+                          </Badge>
+                        )}
+                        {doc.status === DocumentStatus.ARCHIVED && (
+                          <Badge variant="outline" className="text-xs shrink-0">
+                            Diarsipkan
+                          </Badge>
+                        )}
+                      </div>
                       {doc.excerpt && (
                         <p className="text-muted-foreground line-clamp-2 leading-relaxed">
                           {doc.excerpt}

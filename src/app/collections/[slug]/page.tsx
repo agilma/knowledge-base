@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Role, DocumentStatus } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCollectionBySlug } from "@/lib/services/collections";
 import { getDocumentsByCollection } from "@/lib/services/documents";
+import { CollectionActions } from "@/components/collection/CollectionActions";
+import { Badge } from "@/components/ui/badge";
 import { FileText, FolderOpen, ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
@@ -12,6 +16,9 @@ export default async function CollectionDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const user = await getCurrentUser();
+  const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+
   const { slug } = await params;
   const collection = await getCollectionBySlug(slug);
 
@@ -19,11 +26,11 @@ export default async function CollectionDetailPage({
     notFound();
   }
 
-  const docs = await getDocumentsByCollection(collection.id);
+  const docs = await getDocumentsByCollection(collection.id, { includeDrafts: canSeeDrafts });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
         <Link
           href="/collections"
           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 px-3 -ml-3 text-muted-foreground"
@@ -31,6 +38,15 @@ export default async function CollectionDetailPage({
           <ArrowLeft className="w-4 h-4 mr-1" />
           Semua Koleksi
         </Link>
+
+        {user && (
+          <CollectionActions
+            collectionId={collection.id}
+            collectionSlug={collection.slug}
+            status={collection.status}
+            userRole={user.role}
+          />
+        )}
       </div>
 
       <header className="space-y-4">
@@ -61,8 +77,20 @@ export default async function CollectionDetailPage({
               >
                 <div className="flex items-start gap-4">
                   <FileText className="w-5 h-5 text-muted-foreground mt-0.5 group-hover:text-primary transition-colors" />
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{doc.title}</h3>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{doc.title}</h3>
+                      {doc.status === DocumentStatus.DRAFT && (
+                        <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600 dark:text-amber-400">
+                          Draf
+                        </Badge>
+                      )}
+                      {doc.status === DocumentStatus.ARCHIVED && (
+                        <Badge variant="outline" className="text-xs">
+                          Diarsipkan
+                        </Badge>
+                      )}
+                    </div>
                     {doc.excerpt && <p className="text-sm text-muted-foreground">{doc.excerpt}</p>}
                     <p className="text-xs text-muted-foreground/80 mt-2">
                       Diperbarui {formatDate(doc.updatedAt)}

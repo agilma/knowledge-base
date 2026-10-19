@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Role, DocumentStatus } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
-import { Star, ChevronRight, FolderOpen, Calendar } from "lucide-react";
+import { Star, ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
+import { DocumentActions } from "@/components/document/DocumentActions";
 import { extractHeadings } from "@/lib/markdown";
 import { formatDate } from "@/lib/format";
 
@@ -19,41 +22,67 @@ export default async function DocumentPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const user = await getCurrentUser();
+  const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+
   const { slug } = await params;
-  const doc = await getDocumentBySlug(slug);
+  const doc = await getDocumentBySlug(slug, { includeDrafts: canSeeDrafts });
 
   if (!doc) {
     notFound();
   }
 
-  const relatedDocs = await getRelatedDocuments(doc.id);
+  const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts });
   const headings = extractHeadings(doc.content);
 
   return (
     <div className="flex w-full">
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 max-w-4xl mx-auto px-6 py-10 lg:pr-10 lg:pl-16">
+      <div className="flex-1 min-w-0 max-w-4xl mx-auto px-6 py-10 lg:pr-10 lg:pl-16 space-y-6">
 
-        {/* Breadcrumb / Metadata Header */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-          <Link href="/collections" className="hover:text-foreground transition-colors flex items-center gap-1">
-            <FolderOpen className="w-4 h-4" />
-            Koleksi
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          {doc.collection && (
-            <>
-              <Link href={`/collections/${doc.collection.slug}`} className="hover:text-foreground transition-colors">
-                {doc.collection.name}
-              </Link>
-              <ChevronRight className="w-4 h-4" />
-            </>
+        {/* Draft/Archived Notice Banner */}
+        {doc.status !== DocumentStatus.PUBLISHED && (
+          <div className="flex items-center gap-2 p-3 text-sm rounded-lg border bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-200">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              {doc.status === DocumentStatus.DRAFT
+                ? "Dokumen ini masih draf"
+                : "Dokumen ini diarsipkan"}
+            </span>
+          </div>
+        )}
+
+        {/* Breadcrumb / Action Header */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/collections" className="hover:text-foreground transition-colors flex items-center gap-1">
+              <FolderOpen className="w-4 h-4" />
+              Koleksi
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            {doc.collection && (
+              <>
+                <Link href={`/collections/${doc.collection.slug}`} className="hover:text-foreground transition-colors">
+                  {doc.collection.name}
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+            <span className="text-foreground truncate max-w-[200px]">{doc.title}</span>
+          </div>
+
+          {user && (
+            <DocumentActions
+              documentId={doc.id}
+              documentSlug={doc.slug}
+              status={doc.status}
+              userRole={user.role}
+            />
           )}
-          <span className="text-foreground truncate">{doc.title}</span>
         </div>
 
         {/* Document Header */}
-        <header className="space-y-6 mb-12">
+        <header className="space-y-6 mb-8">
           <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
             {doc.title}
           </h1>

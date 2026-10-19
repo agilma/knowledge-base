@@ -38,6 +38,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
 - Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
+- Validasi: `zod` (`^3.24.x`)
 - Font: Inter + JetBrains Mono via `next/font/google`
 
 Catatan: `AGENTS.md` dan `CLAUDE.md` di repo adalah file auto-generated Next.js. Ikuti peringatannya (baca `node_modules/next/dist/docs/` sebelum menulis kode Next.js), tetapi konteks project yang sebenarnya ada di folder `_AI_CONTEXT/` ini.
@@ -62,7 +63,7 @@ Aturan relasi & visualisasi:
 
 ---
 
-## 5. Autentikasi & Role (RBAC)
+## 5. Autentikasi & Hak Akses (RBAC)
 
 - **Library Auth**: Auth.js v5 (`next-auth@5.0.0-beta.32`) dengan `@auth/prisma-adapter`.
 - **Provider**: Hanya Google OAuth.
@@ -81,14 +82,32 @@ Aturan relasi & visualisasi:
   - `requireUser()` — Memastikan user sudah login (redirect ke `/login` jika belum).
   - `requireRole(allowedRoles)` — Memastikan user memiliki role yang disyaratkan.
 
+### Matriks Hak Akses
+
+| Aksi | VIEWER | EDITOR | ADMIN |
+|---|---|---|---|
+| Baca dokumen PUBLISHED | ✓ | ✓ | ✓ |
+| Lihat dokumen DRAFT/ARCHIVED | – | ✓ | ✓ |
+| Buat / ubah dokumen | – | ✓ | ✓ |
+| Publish / arsipkan dokumen | – | ✓ | ✓ |
+| Hapus dokumen | – | – | ✓ |
+| Buat / ubah / arsipkan koleksi | – | – | ✓ |
+| Hapus koleksi | – | – | ✓ (hanya jika tidak ada dokumen) |
+
 ---
 
-## 6. Aturan Khusus Project
+## 6. Editor Content
+
+Editor markdown utama adalah `src/components/document/MarkdownEditor.tsx` yang menggunakan antarmuka sederhana (`value`, `onChange`). Komponen ini dirancang khusus sebagai titik ganti (plug-and-play) untuk editor rich-text (Tiptap / MDXEditor) di task berikutnya tanpa perlu mengubah komponen `DocumentForm.tsx`.
+
+---
+
+## 7. Aturan Khusus Project
 
 - **Hapus `src/lib/mockData.ts` dari jalur produksi** begitu service Prisma dipakai oleh komponen UI. Tidak boleh ada data palsu di production.
 - Semua akses data lewat lapisan service (`src/lib/services/`), bukan query Prisma langsung di komponen halaman.
-- Slug harus unik dan stabil; jangan mengubah slug yang sudah PUBLISHED tanpa redirect.
-- Hanya konten `PUBLISHED` yang tampil ke VIEWER. `DRAFT` hanya terlihat oleh penulis/EDITOR/ADMIN.
+- Slug harus unik dan stabil; dokumen yang telah dipublikasikan (`PUBLISHED` / `ARCHIVED`) tidak boleh diubah slugnya (ditegakkan di client form dan server action/service).
+- Hanya konten `PUBLISHED` yang tampil ke VIEWER. `DRAFT`/`ARCHIVED` hanya terlihat oleh EDITOR/ADMIN.
 - Migrasi Prisma: `0_init` diselaraskan untuk schema awal, `1_auth` untuk tabel autentikasi Auth.js.
 - Jangan menambah dependency tanpa alasan yang jelas di PR description.
 - Ikuti `ui-ux-principles.md`: minimalis, whitespace, tidak banyak card/border, referensi Outline.
@@ -96,7 +115,7 @@ Aturan relasi & visualisasi:
 
 ---
 
-## 7. Alur Kerja Agent
+## 8. Alur Kerja Agent
 
 1. Baca `_AI_CONTEXT/` (semua file) dan `project-status.md`.
 2. Periksa branch, commit, dan PR terkini di GitHub — jangan anggap `project-status.md` selalu mutakhir.
@@ -108,7 +127,7 @@ Aturan relasi & visualisasi:
 
 ---
 
-## 8. Urutan Implementasi yang Disepakati
+## 9. Urutan Implementasi yang Disepakati
 
 1. Konteks project di `_AI_CONTEXT/` + rapikan metadata repo (package name, README)
 2. Align Prisma Schema (Collection → Document), Service layer, Idempotent Seed, dan build di Vercel
