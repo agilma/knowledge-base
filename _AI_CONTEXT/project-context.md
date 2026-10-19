@@ -21,12 +21,12 @@ Alur utama pengguna: **Search → Read → Related Knowledge**.
 | Keputusan | Pilihan | Alasan |
 |---|---|---|
 | Sumber kebenaran data | PostgreSQL (Neon) via Prisma | Bisa diakses lintas-device, mendukung relasi, search, dan role |
-| Markdown / Obsidian | Obsidian hanya sebagai **cermin ekspor**, bukan sumber data. Opsional, tahap akhir | Push/pull Git dari HP tidak praktis |
+| Markdown / Obsidian | Obsidian hanya sebagai **cermin ekspor**, bukan sumber data. Opsional, tahap akhir | Push/pull Git dari HP tidak practical |
 | Hosting | Vercel | Deploy otomatis dari GitHub |
 | Offline | **Tahap 1: offline-baca** (PWA + cache halaman yang pernah dibuka). Offline-tulis + sinkron **belum** masuk scope | Offline-tulis butuh IndexedDB, antrian sinkron, dan resolusi konflik; dikerjakan setelah fitur dasar stabil |
-| Editor konten | Markdown disimpan di DB; editor web rich-text rasa markdown (kandidat: Tiptap / MDXEditor). Belum dipilih final | Pengguna tidak perlu hafal sintaks markdown; output tetap markdown bersih |
+| Editor konten | MDXEditor (`@mdxeditor/editor`) | Mengedit visual (WYSIWYG) rasa markdown, ramah untuk HP Android, menghasilkan markdown bersih, serta mendukung Mode Markdown mentah |
 | Bahasa UI | Indonesia | Pengguna internal |
-| Mode tampilan | Light mode utama; dark mode sudah ada di prototype | — |
+| Mode tampilan | Light mode utama; dark mode diselaraskan via variabel CSS | — |
 
 Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project.
 
@@ -35,6 +35,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 ## 3. Stack Aktual (terverifikasi dari kode)
 
 - Next.js 16.3.5 (App Router), React 19.2.8, TypeScript 5
+- Editor: MDXEditor (`@mdxeditor/editor` `4.3.2`)
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
 - Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
@@ -98,7 +99,11 @@ Aturan relasi & visualisasi:
 
 ## 6. Editor Content
 
-Editor markdown utama adalah `src/components/document/MarkdownEditor.tsx` yang menggunakan antarmuka sederhana (`value`, `onChange`). Komponen ini dirancang khusus sebagai titik ganti (plug-and-play) untuk editor rich-text (Tiptap / MDXEditor) di task berikutnya tanpa perlu mengubah komponen `DocumentForm.tsx`.
+Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/editor` `4.3.2`) di `src/components/document/MarkdownEditor.tsx` (yang secara dinamis memuat `InitializedMDXEditor.tsx` dengan `ssr: false`).
+- **Antarmuka Props**: Menjaga antarmuka props persis `{ value: string; onChange: (value: string) => void; id?: string; name?: string; placeholder?: string; rows?: number; className?: string }` tanpa mengubah `DocumentForm.tsx`.
+- **Fitur Toolbar & GFM**: Mendukung Headings (H1-H6), Bold, Italic, List (peluru, nomor, checklist), Link, Quote, Kode inline, Blok Kode (CodeMirror), dan Tabel GFM.
+- **Mode Markdown Mentah & Fallback Error**: Menyediakan tombol "Mode Markdown" untuk mengedit markdown mentah (cocok untuk paster Obsidian) dan secara otomatis jatuh kembali (*fallback*) ke textarea mentah jika ada sintaks markdown tak tersupport / error parser.
+- **Tema & Responsivitas**: Gaya disesuaikan dengan variabel CSS project (`--background`, `--foreground`, `--border`, dll.) melalui `markdown-editor.css`, mendukung dark mode serta toolbar yang dapat di-scroll horizontal pada HP Android (~380px).
 
 ---
 
@@ -134,8 +139,9 @@ Editor markdown utama adalah `src/components/document/MarkdownEditor.tsx` yang m
 3. Hubungkan halaman UI dengan `src/lib/services` menggantikan `mockData`
 4. Autentikasi sungguhan + RBAC (VIEWER / EDITOR / ADMIN)
 5. CRUD Document / Collection + editor markdown
-6. Search (PostgreSQL full-text)
-7. Favorit & Recent persisten
-8. PWA + offline-baca
-9. Polish, testing, verifikasi Vercel
-10. (Opsional) Ekspor markdown untuk Obsidian
+6. Integrasi Rich-Text Markdown Editor (MDXEditor)
+7. Search (PostgreSQL full-text)
+8. Favorit & Recent persisten
+9. PWA + offline-baca
+10. Polish, testing, verifikasi Vercel
+11. (Opsional) Ekspor markdown untuk Obsidian
