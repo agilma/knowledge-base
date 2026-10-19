@@ -23,7 +23,7 @@ Alur utama pengguna: **Search → Read → Related Knowledge**.
 | Sumber kebenaran data | PostgreSQL (Neon) via Prisma | Bisa diakses lintas-device, mendukung relasi, search, dan role |
 | Markdown / Obsidian | Obsidian hanya sebagai **cermin ekspor**, bukan sumber data. Opsional, tahap akhir | Push/pull Git dari HP tidak practical |
 | Hosting | Vercel | Deploy otomatis dari GitHub |
-| Offline | **Tahap 1: offline-baca** (PWA + cache halaman yang pernah dibuka). Offline-tulis + sinkron **belum** masuk scope | Offline-tulis butuh IndexedDB, antrian sinkron, dan resolusi konflik; dikerjakan setelah fitur dasar stabil |
+| Offline | **Tahap 1: offline-baca** (PWA Serwist + cache halaman yang pernah dibuka). Offline-tulis + sinkron **belum** masuk scope | Offline-tulis butuh IndexedDB, antrian sinkron, dan resolusi konflik; dikerjakan setelah fitur dasar stabil |
 | Editor konten | MDXEditor (`@mdxeditor/editor`) | Mengedit visual (WYSIWYG) rasa markdown, ramah untuk HP Android, menghasilkan markdown bersih, serta mendukung Mode Markdown mentah |
 | Bahasa UI | Indonesia | Pengguna internal |
 | Mode tampilan | Light mode utama; dark mode diselaraskan via variabel CSS | — |
@@ -40,6 +40,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 - Prisma 5.22.0, PostgreSQL (target: Neon)
 - Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
 - Validasi: `zod` (`^3.24.x`)
+- PWA: `@serwist/next` `9.5.13` + `serwist` `9.5.13`
 - Font: Inter + JetBrains Mono via `next/font/google`
 
 Catatan: `AGENTS.md` dan `CLAUDE.md` di repo adalah file auto-generated Next.js. Ikuti peringatannya (baca `node_modules/next/dist/docs/` sebelum menulis kode Next.js), tetapi konteks project yang sebenarnya ada di folder `_AI_CONTEXT/` ini.
@@ -76,7 +77,7 @@ Aturan relasi & visualisasi:
   - Email yang terdaftar di env `AUTH_ADMIN_EMAILS` (dipisah koma) secara otomatis diberi role `ADMIN` saat pembuatan user maupun login.
   - Role user yang sudah dinaikkan (misal ke `EDITOR` atau `ADMIN`) tidak akan diturunkan secara otomatis.
 - **Proteksi Rute**:
-  - Seluruh rute aplikasi terlindungi via Next.js 16 `src/proxy.ts` (kecuali `/login`, `/api/auth/*`, dan aset statis).
+  - Seluruh rute aplikasi terlindungi via Next.js 16 `src/proxy.ts` (kecuali `/login`, `/api/auth/*`, `/offline`, `/manifest.webmanifest`, `/icons/*`, dan SW assets).
   - Request tanpa autentikasi otomatis didorong ke `/login?callbackUrl=...`.
 - **Helper Server Session**:
   - `getCurrentUser()` — Mengambil objek user aktif dari server session.
@@ -107,7 +108,21 @@ Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/edito
 
 ---
 
-## 7. Aturan Khusus Project
+## 7. PWA & Offline-Baca
+
+PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`):
+- **Build**: Karena Next.js 16 menggunakan Turbopack secara default pada `next build` sementara Serwist menambahkan konfigurasi Webpack custom, `next build --webpack` digunakan dalam script `build` di `package.json` untuk menjamin build Vercel dan lokal berjalan mulus.
+- **Strategi Cache**:
+  - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`).
+  - `StaleWhileRevalidate` untuk aset statis (`/_next/static/*`, font Google, `/icons/*`).
+  - `NetworkOnly` (tanpa cache) untuk `/api/auth/*`, `/login`, request non-GET, dan halaman editor/pembuatan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
+- **Halaman Fallback Offline**: Menampilkan halaman statis `/offline` dalam Bahasa Indonesia ketika pengguna offline dan membuka halaman yang belum pernah di-cache. Halaman `/offline` di-precache otomatis via `additionalPrecacheEntries` di `next.config.ts`.
+- **Keputusan Auth-Offline**: Saat offline, halaman yang telah di-cache tetap dapat dibaca meskipun sesi tidak dapat diverifikasi oleh server (dikarenakan koneksi terputus). Sebagai mitigasi keamanan, saat pengguna menekan "Keluar" (`UserMenu.tsx`), Service Worker dan Cache Storage secara otomatis menghapus seluruh cache runtime halaman (`pages-rsc-cache`).
+- **Indikator Offline & Refresh**: Komponen `OfflineIndicator.tsx` menampilkan banner saat offline dan memanggil `router.refresh()` **sekali** saat koneksi internet kembali pulih untuk menyegarkan data dari server.
+
+---
+
+## 8. Aturan Khusus Project
 
 - **Hapus `src/lib/mockData.ts` dari jalur produksi** begitu service Prisma dipakai oleh komponen UI. Tidak boleh ada data palsu di production.
 - Semua akses data lewat lapisan service (`src/lib/services/`), bukan query Prisma langsung di komponen halaman.
@@ -120,19 +135,19 @@ Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/edito
 
 ---
 
-## 8. Alur Kerja Agent
+## 9. Alur Kerja Agent
 
 1. Baca `_AI_CONTEXT/` (semua file) dan `project-status.md`.
 2. Periksa branch, commit, dan PR terkini di GitHub — jangan anggap `project-status.md` selalu mutakhir.
 3. Buat plan sebelum implementasi untuk task yang substansial.
 4. Kerjakan dalam scope task; jangan memperluas scope.
-5. Validasi dengan `npm run lint`, `npx tsc --noEmit`, dan `npx next build`. Laporkan hasil yang **benar-benar dijalankan**.
+5. Validasi dengan `npm run lint`, `npx tsc --noEmit`, dan `npx next build --webpack`. Laporkan hasil yang **benar-benar dijalankan**.
 6. Laporkan: file yang berubah, perintah yang dijalankan beserta hasilnya, masalah yang belum selesai, dan detail commit/PR.
 7. Perbarui `project-status.md` di PR yang sama jika task mengubah status project.
 
 ---
 
-## 9. Urutan Implementasi yang Disepakati
+## 10. Urutan Implementasi yang Disepakati
 
 1. Konteks project di `_AI_CONTEXT/` + rapikan metadata repo (package name, README)
 2. Align Prisma Schema (Collection → Document), Service layer, Idempotent Seed, dan build di Vercel

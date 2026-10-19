@@ -7,8 +7,13 @@ export const proxy = auth((req) => {
 
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
   const isLoginPage = nextUrl.pathname === "/login";
+  const isOfflinePage = nextUrl.pathname === "/offline";
+  const isPwaAsset =
+    nextUrl.pathname === "/manifest.webmanifest" ||
+    nextUrl.pathname === "/sw.js" ||
+    nextUrl.pathname.startsWith("/icons/");
 
-  if (isApiAuthRoute) {
+  if (isApiAuthRoute || isOfflinePage || isPwaAsset) {
     return NextResponse.next();
   }
 
@@ -43,8 +48,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - PWA assets (sw.js, manifest.webmanifest, icons)
      * - Static asset extensions
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest\\.webmanifest|sw\\.js|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|webmanifest)$).*)",
   ],
 };

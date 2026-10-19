@@ -18,6 +18,20 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 export function UserMenu() {
   const { data: session, status } = useSession();
 
+  const handleSignOut = async () => {
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: "CLEAR_PAGE_CACHE" });
+    }
+    if ("caches" in window) {
+      try {
+        await caches.delete("pages-rsc-cache");
+      } catch {
+        // ignore
+      }
+    }
+    await signOut({ callbackUrl: "/login" });
+  };
+
   if (status === "loading") {
     return (
       <div className="flex h-12 w-full items-center px-4">
@@ -85,7 +99,7 @@ export function UserMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Keluar</span>
