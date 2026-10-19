@@ -1,50 +1,25 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { WifiOff } from "lucide-react";
+import { useOnlineStatus } from "@/lib/use-online-status";
 
 export function OfflineIndicator() {
   const router = useRouter();
-  const [isOffline, setIsOffline] = useState(false);
+  const isOnline = useOnlineStatus();
   const wasOfflineRef = useRef(false);
 
   useEffect(() => {
-    // Initial status check
-    const checkStatus = () => {
-      const offline = !navigator.onLine;
-      setIsOffline(offline);
-      if (offline) {
-        wasOfflineRef.current = true;
-      }
-    };
-
-    checkStatus();
-
-    const handleOnline = () => {
-      setIsOffline(false);
-      // Automatically refresh data once when connection is restored
-      if (wasOfflineRef.current) {
-        wasOfflineRef.current = false;
-        router.refresh();
-      }
-    };
-
-    const handleOffline = () => {
-      setIsOffline(true);
+    if (!isOnline) {
       wasOfflineRef.current = true;
-    };
+    } else if (wasOfflineRef.current) {
+      wasOfflineRef.current = false;
+      router.refresh();
+    }
+  }, [isOnline, router]);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [router]);
-
-  if (!isOffline) {
+  if (isOnline) {
     return null;
   }
 

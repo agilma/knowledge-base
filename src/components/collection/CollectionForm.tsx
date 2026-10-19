@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, FormEvent } from "react";
 import { CollectionStatus } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { slugify } from "@/lib/slug";
+import { useOnlineStatus } from "@/lib/use-online-status";
 import { createCollectionAction, updateCollectionAction, ActionState } from "@/app/collections/actions";
 
 interface CollectionFormProps {
@@ -22,16 +23,35 @@ interface CollectionFormProps {
 
 export function CollectionForm({ initialData }: CollectionFormProps) {
   const isEditing = !!initialData;
+  const isOnline = useOnlineStatus();
   const [name, setName] = useState(initialData?.name ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const action = isEditing
     ? updateCollectionAction.bind(null, initialData.id)
     : createCollectionAction;
 
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    action,
+    async (prevState, formData) => {
+      setClientError(null);
+      if (!navigator.onLine) {
+        return {
+          error: "Gagal mengirim data. Anda sedang offline.",
+        };
+      }
+      try {
+        return await action(prevState, formData);
+      } catch (err) {
+        if (err instanceof Error && err.message === "NEXT_REDIRECT") {
+          throw err;
+        }
+        return {
+          error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil.",
+        };
+      }
+    },
     {}
   );
 
@@ -48,11 +68,20 @@ export function CollectionForm({ initialData }: CollectionFormProps) {
     setIsSlugManuallyEdited(true);
   };
 
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    if (!isOnline) {
+      e.preventDefault();
+      setClientError("Anda sedang offline. Koneksikan internet untuk menyimpan koleksi.");
+    }
+  };
+
+  const errorMessage = clientError || state?.error;
+
   return (
-    <form action={formAction} className="space-y-6 max-w-2xl">
-      {state?.error && (
+    <form action={formAction} onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      {errorMessage && (
         <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
-          {state.error}
+          {errorMessage}
         </div>
       )}
 
@@ -132,8 +161,14 @@ export function CollectionForm({ initialData }: CollectionFormProps) {
         )}
       </div>
 
+      {!isOnline && (
+        <div className="p-3 text-xs text-amber-800 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          Anda sedang offline. Koneksikan internet untuk menyimpan perubahan koleksi.
+        </div>
+      )}
+
       <div className="flex items-center gap-3 pt-4">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || !isOnline}>
           {isPending
             ? "Menyimpan..."
             : isEditing

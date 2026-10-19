@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState, FormEvent, useCallback, useRef } from "react";
 import { DocumentStatus, DocumentType } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,24 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
 import { slugify } from "@/lib/slug";
+import { useOnlineStatus } from "@/lib/use-online-status";
 import { createDocumentAction, updateDocumentAction, ActionState } from "@/app/docs/actions";
 
 interface CollectionOption {
   id: string;
   name: string;
   slug: string;
+}
+
+interface LocalDraft {
+  title: string;
+  slug: string;
+  collectionId: string;
+  type: DocumentType;
+  excerpt: string;
+  content: string;
+  status: DocumentStatus;
+  savedAt: number;
 }
 
 interface DocumentFormProps {
@@ -29,6 +41,7 @@ interface DocumentFormProps {
     excerpt?: string | null;
     content: string;
     status: DocumentStatus;
+    updatedAt?: Date | string;
   };
 }
 
@@ -39,18 +52,158 @@ export function DocumentForm({
 }: DocumentFormProps) {
   const isEditing = !!initialData;
   const isSlugLocked = isEditing && initialData.status !== DocumentStatus.DRAFT;
+  const isOnline = useOnlineStatus();
+
+  // Storage key determination
+  const draftKey = isEditing
+    ? `kb:draft:doc:${initialData.id}`
+    : `kb:draft:doc:new:${defaultCollectionId ? collections.find(c => c.id === defaultCollectionId)?.slug || "none" : "none"}`;
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [collectionId, setCollectionId] = useState(
+    initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? ""
+  );
+  const [type, setType] = useState<DocumentType>(initialData?.type ?? DocumentType.PANDUAN);
+  const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
+  const [status, setStatus] = useState<DocumentStatus>(initialData?.status ?? DocumentStatus.DRAFT);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
 
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  // Track initial mount and initial data timestamps
+  const serverUpdatedAt = initialData?.updatedAt
+    ? new Date(initialData.updatedAt).getTime()
+    : 0;
+
+  // Initialize draft state lazily
+  const [localDraft, setLocalDraft] = useState<LocalDraft | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as LocalDraft;
+        if (parsed && typeof parsed.savedAt === "number") {
+          if (!isEditing || parsed.savedAt > serverUpdatedAt) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Gagal membaca draf lokal:", e);
+    }
+    return null;
+  });
+
+  const [showDraftBanner, setShowDraftBanner] = useState<boolean>(() => !!localDraft);
+
+  // Debounced autosave to localStorage
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveDraftLocally = useCallback(() => {
+    // Only save if there's actual input content or title
+    if (!title.trim() && !content.trim()) return;
+
+    const draftData: LocalDraft = {
+      title,
+      slug,
+      collectionId,
+      type,
+      excerpt,
+      content,
+      status,
+      savedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(draftData));
+    } catch (e) {
+      console.warn("Gagal menyimpan draf lokal:", e);
+    }
+  }, [title, slug, collectionId, type, excerpt, content, status, draftKey]);
+
+  useEffect(() => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = setTimeout(() => {
+      saveDraftLocally();
+    }, 1000);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, [saveDraftLocally]);
+
+  // Restore draft handler
+  const handleRestoreDraft = () => {
+    if (!localDraft) return;
+    setTitle(localDraft.title ?? "");
+    if (!isSlugLocked) {
+      setSlug(localDraft.slug ?? "");
+    }
+    if (localDraft.collectionId) {
+      setCollectionId(localDraft.collectionId);
+    }
+    if (localDraft.type) {
+      setType(localDraft.type);
+    }
+    setExcerpt(localDraft.excerpt ?? "");
+    setContent(localDraft.content ?? "");
+    if (localDraft.status) {
+      setStatus(localDraft.status);
+    }
+    setShowDraftBanner(false);
+  };
+
+  // Discard draft handler
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch (e) {
+      console.warn("Gagal menghapus draf lokal:", e);
+    }
+    setLocalDraft(null);
+    setShowDraftBanner(false);
+  };
+
+  // Action definition
   const action = isEditing
     ? updateDocumentAction.bind(null, initialData.id)
     : createDocumentAction;
 
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    action,
+    async (prevState, formData) => {
+      setClientError(null);
+
+      if (!navigator.onLine) {
+        return {
+          error: "Gagal mengirim data. Anda sedang offline. Perubahan Anda aman di draf lokal.",
+        };
+      }
+
+      try {
+        // Clear local draft right before submitting to server action
+        // If server action succeeds, redirect happens. If error returns, user can re-save.
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {}
+
+        const result = await action(prevState, formData);
+        return result;
+      } catch (err) {
+        if (err instanceof Error && err.message === "NEXT_REDIRECT") {
+          throw err;
+        }
+        return {
+          error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil. Perubahan tersimpan di draf lokal.",
+        };
+      }
+    },
     {}
   );
 
@@ -68,11 +221,61 @@ export function DocumentForm({
     setIsSlugManuallyEdited(true);
   };
 
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    if (!isOnline) {
+      e.preventDefault();
+      // Ensure current changes are written to local draft immediately on attempted submit
+      saveDraftLocally();
+      setClientError(
+        "Anda sedang offline. Perubahan disimpan sebagai draf lokal di perangkat ini dan bisa dikirim setelah koneksi kembali."
+      );
+    }
+  };
+
+  const errorMessage = clientError || state?.error;
+
+  const formattedSavedAt = localDraft?.savedAt
+    ? new Date(localDraft.savedAt).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+
   return (
-    <form action={formAction} className="space-y-6 max-w-3xl">
-      {state?.error && (
+    <form action={formAction} onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
+      {showDraftBanner && localDraft && (
+        <div className="p-3 text-sm bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-200 rounded-lg flex flex-wrap items-center justify-between gap-2">
+          <span>
+            Ada draf lokal yang belum tersimpan ({formattedSavedAt}).
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleRestoreDraft}
+              className="h-7 text-xs px-2.5"
+            >
+              Pulihkan
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleDiscardDraft}
+              className="h-7 text-xs px-2.5"
+            >
+              Buang
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {errorMessage && (
         <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
-          {state.error}
+          {errorMessage}
         </div>
       )}
 
@@ -139,7 +342,8 @@ export function DocumentForm({
           <Select
             id="collectionId"
             name="collectionId"
-            defaultValue={initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id}
+            value={collectionId}
+            onChange={(e) => setCollectionId(e.target.value)}
             required
           >
             {collections.map((col) => (
@@ -158,7 +362,8 @@ export function DocumentForm({
           <Select
             id="type"
             name="type"
-            defaultValue={initialData?.type ?? DocumentType.PANDUAN}
+            value={type}
+            onChange={(e) => setType(e.target.value as DocumentType)}
           >
             <option value={DocumentType.PANDUAN}>Panduan</option>
             <option value={DocumentType.MASALAH}>Masalah</option>
@@ -176,7 +381,8 @@ export function DocumentForm({
         <Textarea
           id="excerpt"
           name="excerpt"
-          defaultValue={initialData?.excerpt ?? ""}
+          value={excerpt}
+          onChange={(e) => setExcerpt(e.target.value)}
           placeholder="Ringkasan singkat yang tampil di daftar..."
           rows={2}
         />
@@ -202,7 +408,8 @@ export function DocumentForm({
         <Select
           id="status"
           name="status"
-          defaultValue={initialData?.status ?? DocumentStatus.DRAFT}
+          value={status}
+          onChange={(e) => setStatus(e.target.value as DocumentStatus)}
         >
           <option value={DocumentStatus.DRAFT}>Draf</option>
           <option value={DocumentStatus.PUBLISHED}>Terbit (Published)</option>
@@ -213,8 +420,14 @@ export function DocumentForm({
         )}
       </div>
 
+      {!isOnline && (
+        <div className="p-3 text-xs text-amber-800 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          Anda sedang offline. Perubahan disimpan sebagai draf lokal di perangkat ini dan bisa dikirim setelah koneksi kembali.
+        </div>
+      )}
+
       <div className="flex items-center gap-3 pt-4">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || !isOnline}>
           {isPending
             ? "Menyimpan..."
             : isEditing
