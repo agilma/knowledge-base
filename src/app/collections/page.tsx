@@ -1,19 +1,34 @@
 import Link from "next/link";
+import { FolderOpen, Plus } from "lucide-react";
+import { Role } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCollectionsWithDocumentCount } from "@/lib/services/collections";
-import { FolderOpen } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionsIndexPage() {
+  const user = await getCurrentUser();
   const collections = await getCollectionsWithDocumentCount();
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
-      <header className="space-y-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Koleksi</h1>
-        <p className="text-lg text-muted-foreground">
-          Jelajahi semua koleksi basis pengetahuan.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">Koleksi</h1>
+          <p className="text-lg text-muted-foreground">
+            Jelajahi semua koleksi basis pengetahuan.
+          </p>
+        </div>
+        {user?.role === Role.ADMIN && (
+          <Link
+            href="/collections/new"
+            className={buttonVariants({ variant: "default", size: "sm" })}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Koleksi Baru
+          </Link>
+        )}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

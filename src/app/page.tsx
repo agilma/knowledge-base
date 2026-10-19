@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { Role, DocumentStatus } from "@prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCollections } from "@/lib/services/collections";
 import { getRecentlyUpdatedDocuments } from "@/lib/services/documents";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const user = await getCurrentUser();
+  const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+
   const collections = await getCollections();
-  const recentDocs = await getRecentlyUpdatedDocuments(5);
+  const recentDocs = await getRecentlyUpdatedDocuments(5, { includeDrafts: canSeeDrafts });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 pb-20 md:pb-10 space-y-12">
@@ -33,9 +39,19 @@ export default async function Home() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-          Koleksi
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
+            Koleksi
+          </h2>
+          {user?.role === Role.ADMIN && (
+            <Link
+              href="/collections/new"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              + Koleksi Baru
+            </Link>
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {collections.map((collection) => (
             <Link
@@ -55,9 +71,19 @@ export default async function Home() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-tight">Terbaru Diperbarui</h2>
-          <Link href="/recent" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Lihat semua
-          </Link>
+          <div className="flex items-center gap-4">
+            {canSeeDrafts && (
+              <Link
+                href="/docs/new"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                + Dokumen Baru
+              </Link>
+            )}
+            <Link href="/search" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Lihat semua
+            </Link>
+          </div>
         </div>
         {recentDocs.length > 0 ? (
           <div className="space-y-2">
@@ -67,7 +93,19 @@ export default async function Home() {
                 href={`/docs/${doc.slug}`}
                 className="block p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50"
               >
-                <h3 className="font-medium truncate">{doc.title}</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-medium truncate">{doc.title}</h3>
+                  {doc.status === DocumentStatus.DRAFT && (
+                    <Badge variant="outline" className="text-xs shrink-0 border-amber-500/50 text-amber-600 dark:text-amber-400">
+                      Draf
+                    </Badge>
+                  )}
+                  {doc.status === DocumentStatus.ARCHIVED && (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      Diarsipkan
+                    </Badge>
+                  )}
+                </div>
                 {doc.excerpt && (
                   <p className="text-sm text-muted-foreground truncate mt-1">{doc.excerpt}</p>
                 )}
@@ -76,7 +114,7 @@ export default async function Home() {
           </div>
         ) : (
           <div className="py-8 text-center border rounded-xl border-dashed border-border bg-muted/20">
-            <p className="text-sm text-muted-foreground">Belum ada dokumen yang diterbitkan.</p>
+            <p className="text-sm text-muted-foreground">Belum ada dokumen.</p>
           </div>
         )}
       </section>
