@@ -65,6 +65,14 @@ prisma migrate deploy && prisma db seed && next build --webpack
 
 Aplikasi didukung PWA (Progressive Web App) menggunakan **Serwist** (`@serwist/next` + `serwist`) dengan kemampuan offline-baca untuk halaman yang telah dibuka sebelumnya.
 
+### Menulis saat Offline & Draf Lokal
+Saat koneksi internet terputus (offline):
+- Tombol Simpan pada form dokumen & koleksi akan dinonaktifkan secara otomatis, dan pesan peringatan offline ditampilkan.
+- Pengiriman form dicegah agar tidak memicu kegagalan navigasi/koneksi browser.
+- Setiap ketikan pada form dokumen disimpan secara otomatis ke `localStorage` perangkat sebagai **draf lokal** (`kb:draft:doc:<id>` atau `kb:draft:doc:new:<collection>`).
+- Saat form dibuka kembali dan terdapat draf lokal yang lebih baru dari data server, aplikasi akan menampilkan banner konfirmasi untuk memulihkan ("Pulihkan") atau menghapus ("Buang") draf lokal tersebut.
+- Setelah formulir berhasil disimpan ke server saat online, draf lokal untuk dokumen tersebut dibersihkan secara otomatis.
+
 ### Strategi Cache
 - **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session` (tersimpan di `pages-rsc-cache` agar status login tetap terjaga saat offline).
 - **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker melakukan fetch satu kali di latar belakang untuk menyimpan dokumen HTML dari rute tersebut ke `pages-rsc-cache` (dengan batas penyegaran ulang 5 menit). Hal ini memastikan halaman dapat dibuka kembali secara offline baik dari reload browser maupun ikon PWA.

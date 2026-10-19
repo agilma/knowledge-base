@@ -1,6 +1,7 @@
 "use client";
 
 import type { ForwardedRef } from "react";
+import { useTheme } from "next-themes";
 import {
   MDXEditor,
   MDXEditorMethods,
@@ -46,13 +47,17 @@ export default function InitializedMDXEditor({
   editorRef,
   onError,
 }: InitializedMDXEditorProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   return (
-    <div className={`mdxeditor-container ${className}`}>
+    <div className={`mdxeditor-container ${isDark ? "dark-theme" : ""} ${className}`}>
       <MDXEditor
         ref={editorRef}
         markdown={markdown}
         onChange={onChange}
         placeholder={placeholder}
+        className={isDark ? "dark-theme" : ""}
         contentEditableClassName="prose prose-neutral dark:prose-invert max-w-none min-h-[280px] p-4 focus:outline-none"
         onError={(err) => {
           if (onError) {

@@ -23,10 +23,10 @@ Alur utama pengguna: **Search → Read → Related Knowledge**.
 | Sumber kebenaran data | PostgreSQL (Neon) via Prisma | Bisa diakses lintas-device, mendukung relasi, search, dan role |
 | Markdown / Obsidian | Obsidian hanya sebagai **cermin ekspor**, bukan sumber data. Opsional, tahap akhir | Push/pull Git dari HP tidak practical |
 | Hosting | Vercel | Deploy otomatis dari GitHub |
-| Offline | **Tahap 1: offline-baca** (PWA Serwist + cache halaman yang pernah dibuka). Offline-tulis + sinkron **belum** masuk scope | Offline-tulis butuh IndexedDB, antrian sinkron, dan resolusi konflik; dikerjakan setelah fitur dasar stabil |
-| Editor konten | MDXEditor (`@mdxeditor/editor`) | Mengedit visual (WYSIWYG) rasa markdown, ramah untuk HP Android, menghasilkan markdown bersih, serta mendukung Mode Markdown mentah |
+| Offline | **Tahap 1: offline-baca** (PWA Serwist + cache halaman yang pernah dibuka). Penulisan offline disokong via **Draf Lokal (localStorage)**. Antrian sinkron otomatis **belum** masuk scope | Offline-tulis penuh butuh IndexedDB, antrian sinkron, dan resolusi konflik; draf lokal menangani kegagalan form secara anggun tanpa kehilangan tulisan |
+| Editor konten | MDXEditor (`@mdxeditor/editor`) | Mengedit visual (WYSIWYG) rasa markdown, ramah untuk HP Android, menghasilkan markdown bersih, serta mendukung Mode Markdown mentah dan Dark Mode token CSS |
 | Bahasa UI | Indonesia | Pengguna internal |
-| Mode tampilan | Light mode utama; dark mode diselaraskan via variabel CSS | — |
+| Mode tampilan | Light mode & dark mode diselaraskan via variabel CSS project dan MDXEditor | — |
 
 Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project.
 
@@ -104,22 +104,28 @@ Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/edito
 - **Antarmuka Props**: Menjaga antarmuka props persis `{ value: string; onChange: (value: string) => void; id?: string; name?: string; placeholder?: string; rows?: number; className?: string }` tanpa mengubah `DocumentForm.tsx`.
 - **Fitur Toolbar & GFM**: Mendukung Headings (H1-H6), Bold, Italic, List (peluru, nomor, checklist), Link, Quote, Kode inline, Blok Kode (CodeMirror), dan Tabel GFM.
 - **Mode Markdown Mentah & Fallback Error**: Menyediakan tombol "Mode Markdown" untuk mengedit markdown mentah (cocok untuk paster Obsidian) dan secara otomatis jatuh kembali (*fallback*) ke textarea mentah jika ada sintaks markdown tak tersupport / error parser.
-- **Tema & Responsivitas**: Gaya disesuaikan dengan variabel CSS project (`--background`, `--foreground`, `--border`, dll.) melalui `markdown-editor.css`, mendukung dark mode serta toolbar yang dapat di-scroll horizontal pada HP Android (~380px).
+- **Tema Dark Mode & Responsivitas**: Seluruh variabel CSS internal MDXEditor (`--baseBg`, `--baseText`, `--baseBorder`, `--accentBg`, dll.) dipetakan ke design tokens project di `markdown-editor.css`. `InitializedMDXEditor` juga meneruskan class `dark-theme` dari `next-themes` (`resolvedTheme`) agar dialog/popover portal otomatis berwarna gelap. Toolbar dapat di-scroll horizontal pada HP Android (~380px).
 
 ---
 
-## 7. PWA & Offline-Baca
+## 7. PWA, Offline-Baca, & Draf Lokal
 
 PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`):
-- **Build**: Karena Next.js 16 menggunakan Turbopack secara default pada `next build` sementara Serwist menambahkan konfigurasi Webpack custom, `next build --webpack` digunakan dalam script `build` di `package.json` untuk menjamin build Vercel dan lokal berjalan mulus.
+- **Build**: `next build --webpack` digunakan dalam script `build` di `package.json` untuk menjamin build Vercel dan lokal berjalan mulus.
 - **Strategi Cache**:
   - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session`.
   - **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker mengambil dokumen HTML dari rute tersebut satu kali di latar belakang dan menyimpan hasilnya di `pages-rsc-cache` (deduplikasi 5 menit) agar rute dapat dibuka kembali saat offline via reload/PWA icon.
   - `StaleWhileRevalidate` untuk aset statis (`/_next/static/*`, font Google, `/icons/*`).
   - `NetworkOnly` (tanpa cache) untuk `/api/auth/*` (selain `GET /api/auth/session`), `/login`, request non-GET, dan halaman editor/pembuatan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
-- **Halaman Fallback Offline**: Menampilkan halaman statis `/offline` dalam Bahasa Indonesia ketika pengguna offline dan membuka halaman yang belum pernah di-cache. Halaman `/offline` di-precache otomatis via `additionalPrecacheEntries` di `next.config.ts`.
-- **Keputusan Auth-Offline**: Sesi JSON (`GET /api/auth/session`) ikut disimpan di `pages-rsc-cache` via `NetworkFirst` agar `SessionProvider` tidak menganggap pengguna keluar saat offline. Sebagai mitigasi keamanan, saat pengguna menekan "Keluar" (`UserMenu.tsx`), Service Worker dan Cache Storage secara otomatis menghapus seluruh cache runtime halaman (`pages-rsc-cache`) termasuk data sesi tersimpan.
-- **Indikator Offline & Refresh**: Komponen `OfflineIndicator.tsx` menampilkan banner saat offline dan memanggil `router.refresh()` **sekali** saat koneksi internet kembali pulih untuk menyegarkan data dari server.
+- **Simpan saat Offline & Draf Lokal**:
+  - Form dokumen dan koleksi memantau status jaringan via hook `useOnlineStatus`.
+  - Saat offline, tombol submit dinonaktifkan, submit via Enter diblokir, dan pesan peringatan offline ditampilkan.
+  - Form dokumen secara otomatis menyimpan isian ke `localStorage` (`kb:draft:doc:<id>` atau `kb:draft:doc:new:<collection>`) dengan debounce ~1 detik.
+  - Ketika halaman form dibuka dan draf lokal tersedia (serta lebih baru dari data server), banner konfirmasi "Pulihkan" / "Buang" ditampilkan tanpa menimpa data server secara otomatis.
+  - Setelah pengiriman server action berhasil, draf lokal untuk dokumen tersebut otomatis dihapus.
+  - Catatan: Ini adalah **draf lokal**, bukan antrian sinkron otomatis.
+- **Halaman Fallback Offline**: Menampilkan halaman statis `/offline` dalam Bahasa Indonesia ketika pengguna offline dan membuka halaman yang belum pernah di-cache.
+- **Indikator Offline & Refresh**: Komponen `OfflineIndicator.tsx` menggunakan `useOnlineStatus` untuk menampilkan banner saat offline dan memanggil `router.refresh()` **sekali** saat koneksi internet kembali pulih.
 
 ---
 
