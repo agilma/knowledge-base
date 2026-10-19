@@ -1,6 +1,6 @@
 # Thunderlab Knowledge Base — Project Status
 
-Terakhir diperbarui: 2026-10-19 oleh Jules (software engineer), setelah mengimplementasikan Rich-Text Markdown Editor menggunakan MDXEditor (`@mdxeditor/editor` `^4.3.3`).
+Terakhir diperbarui: 2026-10-19 oleh Jules (software engineer), setelah mengimplementasikan Rich-Text Markdown Editor menggunakan MDXEditor (`@mdxeditor/editor` `4.3.2`).
 
 Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, Vercel) sebelum mempercayai isinya.
 
@@ -10,7 +10,7 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 
 - `main`: berisi CRUD Koleksi & Dokumen, autentikasi Google OAuth v5, proxy Next.js 16, helper session RBAC, serta baca data dari Prisma services.
 - Branch `feat/rich-text-markdown-editor`:
-  - Mengintegrasikan MDXEditor (`@mdxeditor/editor` `^4.3.3`) menggantikan textarea mentah di `MarkdownEditor.tsx` tanpa mengubah antarmuka props atau `DocumentForm.tsx`.
+  - Mengintegrasikan MDXEditor (`@mdxeditor/editor` `4.3.2`) menggantikan textarea mentah di `MarkdownEditor.tsx` tanpa mengubah antarmuka props atau `DocumentForm.tsx`.
   - Memuat editor secara dinamis dengan `next/dynamic` (`ssr: false`) dan skeleton fallback.
   - Mendukung GFM: Headings, Bold, Italic, List (peluru, nomor, checklist), Link, Quote, Kode inline, Blok Kode (CodeMirror), dan Tabel GFM.
   - Sediakan tombol "Mode Markdown" untuk mengedit markdown mentah dan penanganan *error boundary* yang otomatis jatuh kembali (*fallback*) ke textarea mentah jika terdapat sintaks tidak didukung.
@@ -64,4 +64,4 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 - 2026-10-18 — UI terhubung penuh ke Prisma services, mockData & types dihapus, markdown rendering dengan react-markdown & remark-gfm, searchParams server component, UI berbahasa Indonesia, dan vercel.json ditambahkan.
 - 2026-10-19 — Autentikasi Google OAuth sungguhan (Auth.js v5 + Prisma adapter), domain restriction, ADMIN role bootstrap, route proxy protection Next.js 16, dan pembersihan total mock auth.
 - 2026-10-19 — CRUD Koleksi & Dokumen dengan validasi Zod, proteksi server actions RBAC, komponen form & markdown editor, serta visibilitas draf untuk editor/admin.
-- 2026-10-19 — Rich-Text Markdown Editor (`MDXEditor` `^4.3.3`) dengan mode markdown mentah, fallback error handling, tema token CSS/dark mode, dan responsivitas HP Android.
+- 2026-10-19 — Rich-Text Markdown Editor (`MDXEditor` `4.3.2`) dengan mode markdown mentah, fallback error handling, tema token CSS/dark mode, dan responsivitas HP Android.

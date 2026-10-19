@@ -35,7 +35,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 ## 3. Stack Aktual (terverifikasi dari kode)
 
 - Next.js 16.3.5 (App Router), React 19.2.8, TypeScript 5
-- Editor: MDXEditor (`@mdxeditor/editor` `^4.3.3`)
+- Editor: MDXEditor (`@mdxeditor/editor` `4.3.2`)
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
 - Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
@@ -99,7 +99,7 @@ Aturan relasi & visualisasi:
 
 ## 6. Editor Content
 
-Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/editor` `^4.3.3`) di `src/components/document/MarkdownEditor.tsx` (yang secara dinamis memuat `InitializedMDXEditor.tsx` dengan `ssr: false`).
+Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/editor` `4.3.2`) di `src/components/document/MarkdownEditor.tsx` (yang secara dinamis memuat `InitializedMDXEditor.tsx` dengan `ssr: false`).
 - **Antarmuka Props**: Menjaga antarmuka props persis `{ value: string; onChange: (value: string) => void; id?: string; name?: string; placeholder?: string; rows?: number; className?: string }` tanpa mengubah `DocumentForm.tsx`.
 - **Fitur Toolbar & GFM**: Mendukung Headings (H1-H6), Bold, Italic, List (peluru, nomor, checklist), Link, Quote, Kode inline, Blok Kode (CodeMirror), dan Tabel GFM.
 - **Mode Markdown Mentah & Fallback Error**: Menyediakan tombol "Mode Markdown" untuk mengedit markdown mentah (cocok untuk paster Obsidian) dan secara otomatis jatuh kembali (*fallback*) ke textarea mentah jika ada sintaks markdown tak tersupport / error parser.
