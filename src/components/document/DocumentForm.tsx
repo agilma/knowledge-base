@@ -181,6 +181,7 @@ export function DocumentForm({
       setClientError(null);
 
       if (!navigator.onLine) {
+        saveDraftLocally();
         return {
           error: "Gagal mengirim data. Anda sedang offline. Perubahan Anda aman di draf lokal.",
         };
@@ -196,12 +197,13 @@ export function DocumentForm({
         const result = await action(prevState, formData);
         return result;
       } catch (err) {
-        if (err instanceof Error && err.message === "NEXT_REDIRECT") {
-          throw err;
+        if (err instanceof TypeError) {
+          saveDraftLocally();
+          return {
+            error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil. Perubahan tersimpan di draf lokal.",
+          };
         }
-        return {
-          error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil. Perubahan tersimpan di draf lokal.",
-        };
+        throw err;
       }
     },
     {}

@@ -44,12 +44,12 @@ export function CollectionForm({ initialData }: CollectionFormProps) {
       try {
         return await action(prevState, formData);
       } catch (err) {
-        if (err instanceof Error && err.message === "NEXT_REDIRECT") {
-          throw err;
+        if (err instanceof TypeError) {
+          return {
+            error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil.",
+          };
         }
-        return {
-          error: "Terjadi kesalahan jaringan saat menyimpan. Pastikan koneksi Anda stabil.",
-        };
+        throw err;
       }
     },
     {}
