@@ -28,6 +28,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Thunderlab Knowledge Base",
   description: "Internal knowledge and documentation",
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
