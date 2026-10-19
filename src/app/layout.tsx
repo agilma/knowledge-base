@@ -28,6 +28,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Thunderlab Knowledge Base",
   description: "Internal knowledge and documentation",
+  manifest: "/manifest.webmanifest",
   icons: {
     apple: "/apple-touch-icon.png",
   },
