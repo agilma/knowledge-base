@@ -8,6 +8,7 @@ Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk men
 - **Styling**: Tailwind CSS 4, shadcn/ui, next-themes
 - **Database & ORM**: PostgreSQL (Neon), Prisma 5.22
 - **Autentikasi**: Auth.js v5 (`next-auth@5`) dengan `@auth/prisma-adapter` & Google OAuth
+- **PWA**: `@serwist/next` `9.5.13` + `serwist` `9.5.13`
 
 ## Cara Menjalankan Lokal
 
@@ -54,11 +55,35 @@ Saat mendaftarkan OAuth Client ID di Google Cloud Console, tambahkan URL callbac
 
 Proses build aplikasi (`npm run build`) dikonfigurasi untuk menjalankan:
 ```bash
-prisma migrate deploy && prisma db seed && next build
+prisma migrate deploy && prisma db seed && next build --webpack
 ```
 
 - **Migrasi**: Menjalankan migrasi database PostgreSQL secara otomatis saat deploy di Vercel.
 - **Seed**: Script seed (`prisma/seed.ts`) bersifat idempoten. Seed hanya akan mengisi data awal jika tabel `Collection` di database masih kosong (count = 0). Apabila database sudah berisi data, proses seed dilewati secara aman.
+
+## PWA & Offline-Baca
+
+Aplikasi didukung PWA (Progressive Web App) menggunakan **Serwist** (`@serwist/next` + `serwist`) dengan kemampuan offline-baca untuk halaman yang telah dibuka sebelumnya.
+
+### Strategi Cache
+- **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`).
+- **StaleWhileRevalidate**: Aset statis (`/_next/static/*`, font Google, `/icons/*`).
+- **Tidak Di-cache (NetworkOnly)**:
+  - Route autentikasi (`/api/auth/*`, `/login`).
+  - Request non-GET (`POST`, `PUT`, `DELETE`, Server Actions).
+  - Halaman pembuatan/pengeditan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
+- **Halaman Fallback Offline (`/offline`)**: Tampil saat pengguna offline dan mencoba mengakses halaman yang belum pernah disimpan/dibuka sebelumnya. Halaman ini di-precache otomatis.
+- **Pembersihan Cache Logout**: Saat pengguna menekan "Keluar", Service Worker dan Cache Storage secara otomatis menghapus cache runtime halaman (`pages-rsc-cache`).
+
+### Panduan Pengujian di Android
+1. **Install PWA**: Buka aplikasi di Google Chrome pada HP Android, lalu pilih menu **"Tambahkan ke Layar Utama" / "Install Aplikasi"**.
+2. **Buka Beberapa Halaman**: Login, lalu kunjungi Halaman Utama, satu Koleksi, dan satu Dokumen dalam kondisi online.
+3. **Uji Mode Pesawat**: Aktifkan **Mode Pesawat (Offline)** pada HP Android.
+4. **Buka Ulang Halaman**: Buka kembali 3 halaman yang pernah dikunjungi dari ikon PWA di Layar Utama (halaman dapat dibaca dengan lancar dari cache, indikator offline kuning akan muncul di bagian atas).
+5. **Akses Halaman Belum Disimpan**: Coba buka dokumen yang belum pernah dikunjungi saat offline — aplikasi akan menampilkan halaman `/offline` berbahasa Indonesia.
+6. **Matikan Mode Pesawat**: Matikan Mode Pesawat (Online kembali). Indikator offline otomatis hilang dan data halaman segar dimuat ulang dari server (`router.refresh()`).
+7. **Uji Logout**: Tekan menu user dan pilih **"Keluar"**.
+8. **Verifikasi Keamanan Cache**: Aktifkan kembali Mode Pesawat. Konten KB internal tidak lagi tertinggal atau dapat diakses dari cache perangkat.
 
 ---
 
