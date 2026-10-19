@@ -1,6 +1,6 @@
 # Thunderlab Knowledge Base — Project Status
 
-Terakhir diperbarui: 2026-10-19 oleh Jules (software engineer), setelah mengimplementasikan PWA & Offline-Baca menggunakan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`).
+Terakhir diperbarui: 2026-10-19 oleh Jules (software engineer), setelah perbaikan PWA hasil uji Android (favicon, background document HTML cache, dan offline auth session).
 
 Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, Vercel) sebelum mempercayai isinya.
 
@@ -9,13 +9,10 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 ## Kondisi Repo
 
 - `main`: berisi CRUD Koleksi & Dokumen, autentikasi Google OAuth v5, proxy Next.js 16, helper session RBAC, serta baca data dari Prisma services.
-- Branch `feat/pwa-offline-read`:
-  - Mengintegrasikan PWA dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`).
-  - Web App Manifest (`src/app/manifest.ts`), ikon kustom minimalis (PNG 192, PNG 512, SVG) di `public/icons/`, dan viewport `themeColor` + `appleWebApp` metadata.
-  - Strategi cache `NetworkFirst` (3s timeout, 100 max entri, 30 hari) untuk navigasi & RSC halaman KB, `StaleWhileRevalidate` untuk aset statis, dan `NetworkOnly` untuk auth/login/edit routes.
-  - Halaman fallback offline Bahasa Indonesia (`/offline`, di-precache via `additionalPrecacheEntries`) dan komponen `OfflineIndicator.tsx` dengan auto-refresh (`router.refresh()`) saat online kembali.
-  - Pembersihan cache runtime halaman (`pages-rsc-cache`) saat `signOut` di `UserMenu.tsx`.
-  - Pengecualian matcher proxy di `src/proxy.ts` untuk aset PWA & `/offline`.
+- Branch `fix/pwa-android-issues`:
+  - Mengganti favicon Vercel bawaan dengan ikon "T" kuning (`src/app/icon.png`) via konvensi file Next.js 16 metadata dan menambahkan `manifest: "/manifest.webmanifest"` di `layout.tsx`.
+  - Mengimplementasikan caching dokumen HTML latar belakang pada `sw.ts` saat navigasi client RSC, dengan pencatatan `pages-rsc-cache` dan deduplikasi 5 menit.
+  - Mengonfigurasi `GET /api/auth/session` ke `NetworkFirst` (cached di `pages-rsc-cache`, timeout 3s) agar status login pengguna tidak hilang saat offline, dan tetap dibersihkan saat logout.
 
 ## Yang Sudah Ada
 
@@ -68,3 +65,4 @@ Dokumen ini adalah snapshot. Agent wajib memeriksa GitHub (branch, commit, PR, V
 - 2026-10-19 — CRUD Koleksi & Dokumen dengan validasi Zod, proteksi server actions RBAC, komponen form & markdown editor, serta visibilitas draf untuk editor/admin.
 - 2026-10-19 — Rich-Text Markdown Editor (`MDXEditor` `4.3.2`) dengan mode markdown mentah, fallback error handling, tema token CSS/dark mode, dan responsivitas HP Android.
 - 2026-10-19 — PWA & Offline-Baca dengan Serwist (`9.5.13`), Web App Manifest (`manifest.ts`), ikon kustom 192/512/SVG, Service Worker NetworkFirst strategy, offline page & indicator banner, auto-refresh on reconnect, dan logout cache purge.
+- 2026-10-19 — Perbaikan PWA hasil uji Android: ikon favicon kustom (`src/app/icon.png`), caching dokumen HTML di latar belakang saat navigasi client RSC, dan `GET /api/auth/session` NetworkFirst untuk menjaga status sesi offline.

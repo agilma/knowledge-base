@@ -66,17 +66,22 @@ prisma migrate deploy && prisma db seed && next build --webpack
 Aplikasi didukung PWA (Progressive Web App) menggunakan **Serwist** (`@serwist/next` + `serwist`) dengan kemampuan offline-baca untuk halaman yang telah dibuka sebelumnya.
 
 ### Strategi Cache
-- **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`).
+- **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session` (tersimpan di `pages-rsc-cache` agar status login tetap terjaga saat offline).
+- **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker melakukan fetch satu kali di latar belakang untuk menyimpan dokumen HTML dari rute tersebut ke `pages-rsc-cache` (dengan batas penyegaran ulang 5 menit). Hal ini memastikan halaman dapat dibuka kembali secara offline baik dari reload browser maupun ikon PWA.
 - **StaleWhileRevalidate**: Aset statis (`/_next/static/*`, font Google, `/icons/*`).
 - **Tidak Di-cache (NetworkOnly)**:
-  - Route autentikasi (`/api/auth/*`, `/login`).
+  - Route autentikasi selain `GET /api/auth/session` (`/api/auth/signin`, `/callback`, `/csrf`, `/signout`, `/providers`, dan request non-GET).
+  - Halaman login (`/login`).
   - Request non-GET (`POST`, `PUT`, `DELETE`, Server Actions).
   - Halaman pembuatan/pengeditan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
 - **Halaman Fallback Offline (`/offline`)**: Tampil saat pengguna offline dan mencoba mengakses halaman yang belum pernah disimpan/dibuka sebelumnya. Halaman ini di-precache otomatis.
-- **Pembersihan Cache Logout**: Saat pengguna menekan "Keluar", Service Worker dan Cache Storage secara otomatis menghapus cache runtime halaman (`pages-rsc-cache`).
+- **Pembersihan Cache Logout**: Saat pengguna menekan "Keluar", Service Worker dan Cache Storage secara otomatis menghapus cache runtime halaman (`pages-rsc-cache`) termasuk data sesi JSON tersimpan.
+
+> **Catatan**: Kunjungan pertama setelah instalasi PWA atau pembaruan Service Worker mungkin memerlukan satu kali pemuatan ulang halaman agar Service Worker aktif sepenuhnya dan mulai mencatat cache latar belakang.
 
 ### Panduan Pengujian di Android
-1. **Install PWA**: Buka aplikasi di Google Chrome pada HP Android, lalu pilih menu **"Tambahkan ke Layar Utama" / "Install Aplikasi"**.
+1. **Hapus Data Lama**: Sebelum menguji, hapus PWA lama dari Layar Utama dan bersihkan data situs di Chrome agar Service Worker dan ikon lama terhapus penuh.
+2. **Install PWA**: Buka aplikasi di Google Chrome pada HP Android, lalu pilih menu **"Tambahkan ke Layar Utama" / "Install Aplikasi"**. Pastikan ikon yang muncul adalah ikon "T" kuning.
 2. **Buka Beberapa Halaman**: Login, lalu kunjungi Halaman Utama, satu Koleksi, dan satu Dokumen dalam kondisi online.
 3. **Uji Mode Pesawat**: Aktifkan **Mode Pesawat (Offline)** pada HP Android.
 4. **Buka Ulang Halaman**: Buka kembali 3 halaman yang pernah dikunjungi dari ikon PWA di Layar Utama (halaman dapat dibaca dengan lancar dari cache, indikator offline kuning akan muncul di bagian atas).

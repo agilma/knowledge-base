@@ -12,13 +12,58 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+const docCacheTimestamps = new Map<string, number>();
+
+function isTargetPageRoute(pathname: string): boolean {
+  const isTarget =
+    pathname === "/" ||
+    pathname === "/favorites" ||
+    pathname === "/recent" ||
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/collections") ||
+    pathname.startsWith("/docs");
+
+  if (!isTarget) return false;
+
+  if (
+    pathname === "/docs/new" ||
+    pathname === "/collections/new" ||
+    pathname.match(/^\/docs\/[^/]+\/edit$/) ||
+    pathname.match(/^\/collections\/[^/]+\/edit$/)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 const runtimeCaching: RuntimeCaching[] = [
-  // 1. Explicitly exclude Auth, Login, POST/Server actions, and Edit/New creation pages -> NetworkOnly
+  // 1. GET /api/auth/session -> NetworkFirst (cached in pages-rsc-cache)
+  {
+    matcher: ({ url, request }) => {
+      return request.method === "GET" && url.pathname === "/api/auth/session";
+    },
+    handler: new NetworkFirst({
+      cacheName: "pages-rsc-cache",
+      networkTimeoutSeconds: 3,
+      plugins: [
+        new CacheableResponsePlugin({
+          statuses: [200],
+        }),
+      ],
+    }),
+  },
+
+  // 2. Explicitly exclude Auth (except GET session), Login, POST/Server actions, and Edit/New creation pages -> NetworkOnly
   {
     matcher: ({ url, request }) => {
       if (request.method !== "GET") return true;
       const { pathname } = url;
-      if (pathname.startsWith("/api/auth") || pathname === "/login") return true;
+      if (pathname.startsWith("/api/auth")) {
+        if (pathname === "/api/auth/session") return false;
+        return true;
+      }
+      if (pathname === "/login") return true;
       if (
         pathname === "/docs/new" ||
         pathname === "/collections/new" ||
@@ -71,6 +116,68 @@ const runtimeCaching: RuntimeCaching[] = [
           maxEntries: 100,
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
         }),
+        {
+          async fetchDidSucceed({ request, response, event }) {
+            if (request.method === "GET") {
+              const url = new URL(request.url);
+              const isRsc = url.searchParams.has("_rsc") || request.headers.get("RSC") === "1";
+              if (isRsc) {
+                const docUrl = new URL(request.url);
+                docUrl.searchParams.delete("_rsc");
+
+                if (isTargetPageRoute(docUrl.pathname)) {
+                  const key = docUrl.toString();
+                  const now = Date.now();
+                  const lastCached = docCacheTimestamps.get(key) || 0;
+
+                  if (now - lastCached > 5 * 60 * 1000) {
+                    const fetchAndCacheDoc = async () => {
+                      try {
+                        const cache = await caches.open("pages-rsc-cache");
+                        const cachedResp = await cache.match(key);
+                        if (cachedResp) {
+                          const dateHeader = cachedResp.headers.get("date");
+                          if (dateHeader) {
+                            const cachedTime = new Date(dateHeader).getTime();
+                            if (!isNaN(cachedTime) && now - cachedTime < 5 * 60 * 1000) {
+                              docCacheTimestamps.set(key, cachedTime);
+                              return;
+                            }
+                          }
+                        }
+
+                        const docReq = new Request(key, {
+                          headers: {
+                            Accept:
+                              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                          },
+                          credentials: "same-origin",
+                        });
+                        const docRes = await fetch(docReq);
+                        if (
+                          docRes.status === 200 &&
+                          docRes.headers.get("content-type")?.includes("text/html")
+                        ) {
+                          await cache.put(key, docRes.clone());
+                          docCacheTimestamps.set(key, now);
+                        }
+                      } catch {
+                        // ignore background fetch failures when offline
+                      }
+                    };
+
+                    if (event && typeof event.waitUntil === "function") {
+                      event.waitUntil(fetchAndCacheDoc());
+                    } else {
+                      fetchAndCacheDoc();
+                    }
+                  }
+                }
+              }
+            }
+            return response;
+          },
+        },
       ],
     }),
   },

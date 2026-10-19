@@ -113,11 +113,12 @@ Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/edito
 PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`):
 - **Build**: Karena Next.js 16 menggunakan Turbopack secara default pada `next build` sementara Serwist menambahkan konfigurasi Webpack custom, `next build --webpack` digunakan dalam script `build` di `package.json` untuk menjamin build Vercel dan lokal berjalan mulus.
 - **Strategi Cache**:
-  - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`).
+  - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session`.
+  - **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker mengambil dokumen HTML dari rute tersebut satu kali di latar belakang dan menyimpan hasilnya di `pages-rsc-cache` (deduplikasi 5 menit) agar rute dapat dibuka kembali saat offline via reload/PWA icon.
   - `StaleWhileRevalidate` untuk aset statis (`/_next/static/*`, font Google, `/icons/*`).
-  - `NetworkOnly` (tanpa cache) untuk `/api/auth/*`, `/login`, request non-GET, dan halaman editor/pembuatan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
+  - `NetworkOnly` (tanpa cache) untuk `/api/auth/*` (selain `GET /api/auth/session`), `/login`, request non-GET, dan halaman editor/pembuatan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).
 - **Halaman Fallback Offline**: Menampilkan halaman statis `/offline` dalam Bahasa Indonesia ketika pengguna offline dan membuka halaman yang belum pernah di-cache. Halaman `/offline` di-precache otomatis via `additionalPrecacheEntries` di `next.config.ts`.
-- **Keputusan Auth-Offline**: Saat offline, halaman yang telah di-cache tetap dapat dibaca meskipun sesi tidak dapat diverifikasi oleh server (dikarenakan koneksi terputus). Sebagai mitigasi keamanan, saat pengguna menekan "Keluar" (`UserMenu.tsx`), Service Worker dan Cache Storage secara otomatis menghapus seluruh cache runtime halaman (`pages-rsc-cache`).
+- **Keputusan Auth-Offline**: Sesi JSON (`GET /api/auth/session`) ikut disimpan di `pages-rsc-cache` via `NetworkFirst` agar `SessionProvider` tidak menganggap pengguna keluar saat offline. Sebagai mitigasi keamanan, saat pengguna menekan "Keluar" (`UserMenu.tsx`), Service Worker dan Cache Storage secara otomatis menghapus seluruh cache runtime halaman (`pages-rsc-cache`) termasuk data sesi tersimpan.
 - **Indikator Offline & Refresh**: Komponen `OfflineIndicator.tsx` menampilkan banner saat offline dan memanggil `router.refresh()` **sekali** saat koneksi internet kembali pulih untuk menyegarkan data dari server.
 
 ---
