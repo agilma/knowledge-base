@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { LogOut, User as UserIcon, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,9 +45,15 @@ export function UserMenu() {
   if (!user) {
     return (
       <div className="flex w-full items-center justify-between p-4">
-        <Button variant="outline" className="w-full justify-start" render={<Link href="/login" />}>
+        <Link
+          href="/login"
+          className={buttonVariants({
+            variant: "outline",
+            className: "min-w-0 flex-1 justify-start",
+          })}
+        >
           Masuk
-        </Button>
+        </Link>
         <div className="ml-2">
           <ThemeToggle />
         </div>
