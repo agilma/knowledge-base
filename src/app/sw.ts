@@ -14,6 +14,37 @@ declare const self: ServiceWorkerGlobalScope;
 
 const docCacheTimestamps = new Map<string, number>();
 
+// Next.js appends a fresh `_rsc` hash to every client-side navigation, so
+// caching requests under their own URL stored one throwaway entry per
+// navigation and pushed the real documents out past `maxEntries`. Collapse
+// every RSC payload for a route onto one stable key, kept distinct from the
+// clean URL that holds the HTML document.
+function cacheKeyFor(request: Request): string {
+  const url = new URL(request.url);
+  const isRsc = url.searchParams.has("_rsc") || request.headers.get("RSC") === "1";
+  if (!isRsc) return url.toString();
+
+  url.searchParams.delete("_rsc");
+  url.searchParams.set("__rsc", "1");
+  return url.toString();
+}
+
+// The clients cannot see that a navigation was served from cache, and
+// `navigator.onLine` stays true whenever the device has any connection at all.
+// Tell them what actually happened on the wire instead.
+let networkReachable = true;
+
+async function broadcastNetworkStatus(reachable: boolean): Promise<void> {
+  const changed = reachable !== networkReachable;
+  networkReachable = reachable;
+  if (!changed) return;
+
+  const clients = await self.clients.matchAll({ type: "window" });
+  for (const client of clients) {
+    client.postMessage({ type: "NETWORK_STATUS", reachable });
+  }
+}
+
 function isTargetPageRoute(pathname: string): boolean {
   const isTarget =
     pathname === "/" ||
@@ -117,7 +148,12 @@ const runtimeCaching: RuntimeCaching[] = [
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
         }),
         {
+          cacheKeyWillBeUsed: async ({ request }) => cacheKeyFor(request),
+          async fetchDidFail() {
+            await broadcastNetworkStatus(false);
+          },
           async fetchDidSucceed({ request, response, event }) {
+            await broadcastNetworkStatus(true);
             if (request.method === "GET") {
               const url = new URL(request.url);
               const isRsc = url.searchParams.has("_rsc") || request.headers.get("RSC") === "1";
@@ -224,6 +260,18 @@ const serwist = new Serwist({
 
 // Listener for clearing runtime page cache on sign out
 self.addEventListener("message", (event) => {
+  // A page that has just loaded missed any earlier broadcast, so let it ask.
+  if (event.data && event.data.type === "QUERY_NETWORK_STATUS") {
+    const source = event.source;
+    if (source && "postMessage" in source) {
+      (source as Client).postMessage({
+        type: "NETWORK_STATUS",
+        reachable: networkReachable,
+      });
+    }
+    return;
+  }
+
   if (event.data && event.data.type === "CLEAR_PAGE_CACHE") {
     event.waitUntil(
       caches.delete("pages-rsc-cache").then(() => {
