@@ -3,6 +3,10 @@
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
 
+/* Tailwind v4 needs plugins declared here; without this every prose-* class
+   on rendered Markdown is a no-op. */
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
