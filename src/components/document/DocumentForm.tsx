@@ -317,13 +317,17 @@ export function DocumentForm({
         </div>
         <Input
           id="slug"
-          name="slug"
+          name={isSlugLocked ? undefined : "slug"}
           value={slug}
           onChange={handleSlugChange}
           placeholder="cara-konfigurasi-database-neon"
           disabled={isSlugLocked}
-          required
+          required={!isSlugLocked}
         />
+        {/* A disabled input is left out of the submitted FormData, so a locked
+            slug arrived at the action as null and failed validation — no
+            published document could be saved. Carry the value separately. */}
+        {isSlugLocked && <input type="hidden" name="slug" value={slug} />}
         {isSlugLocked ? (
           <p className="text-xs text-muted-foreground">
             Slug tidak dapat diubah karena dokumen ini sudah pernah dipublikasi.
