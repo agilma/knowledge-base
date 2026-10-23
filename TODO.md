@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-23
+Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loading sudah selesai)
 
 ---
 
@@ -29,18 +29,13 @@ Terakhir diperbarui: 2026-10-23
       merender ulang di klien — memperlambat setiap halaman. Curigai
       `layout.tsx` atau theme provider.
 
-- [ ] **`requireRole` menolak tanpa penjelasan.** `src/lib/auth/session.ts:23`
-      memanggil `redirect("/")` saat role tidak cukup. Seorang VIEWER yang
-      mencoba aksi EDITOR hanya terlempar ke beranda — terlihat seperti bug,
-      bukan penolakan izin.
-
 - [ ] **`shadcn` ada di `dependencies`, bukan `devDependencies`** (1.9 MB).
       Itu CLI, tidak pernah di-import kode. Memindahkannya memangkas install
       production di Vercel tanpa efek ke runtime.
 
 ## Jaring pengaman
 
-- [ ] **Tidak ada CI sendiri.** Tidak ada `.github/`. Preview deployment Vercel
+- [ ] **Tidak ada CI sendiri.** `.github/` baru berisi template PR, belum ada workflow. Preview deployment Vercel
       menjalankan `next build` di setiap PR, dan karena `next.config.ts` tidak
       mematikan pengecekan tipe, error tipe dan build memang tertangkap di
       sana. Yang belum ada: `eslint`, dan gerbang yang tidak bergantung pada
@@ -53,12 +48,6 @@ Terakhir diperbarui: 2026-10-23
         sebaliknya).
       - `src/auth.ts` callback `signIn` — menentukan siapa boleh masuk.
         Salah sedikit berarti orang luar bisa membaca knowledge base internal.
-
-- [ ] **Tidak ada `error.tsx`, `not-found.tsx`, `loading.tsx`.** Kalau query
-      Prisma gagal di server component, pengguna dapat layar error bawaan Next.
-      Janggal untuk aplikasi yang menjual diri sebagai tahan-offline.
-      `loading.tsx` juga akan mengaktifkan streaming UI yang sekarang tidak
-      terpakai.
 
 - [ ] **Env tidak divalidasi.** `src/auth.ts:37` mengoper
       `process.env.AUTH_GOOGLE_ID` langsung ke provider. Kalau kosong, yang

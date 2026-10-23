@@ -22,6 +22,8 @@ rencana per fase ada di bagian bawah.
 | Penjaga offline pada form | selesai | `src/lib/use-online-status.ts` | Tombol simpan nonaktif saat offline |
 | Mode terang / gelap | selesai | `src/components/theme/` | |
 | Identitas aplikasi (nama, logo, favicon) | selesai | `src/components/brand/Mark.tsx` | PR #19 |
+| Halaman galat, tidak ditemukan, dan memuat | selesai | `src/app/error.tsx`, `not-found.tsx`, `loading.tsx` | Pesan berbahasa Indonesia, membedakan offline dari galat server |
+| Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
 
 ## Halaman yang belum aktif
 
@@ -33,8 +35,8 @@ rencana per fase ada di bagian bawah.
 ## Direncanakan
 
 ### Fase 0 — Jaring pengaman
-Banner draf palsu, hydration error #418, pesan penolakan izin, halaman
-`error`/`not-found`/`loading`, validasi env, CI, test, dan pemisahan database Preview.
+Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`.
+Belum: banner draf palsu, hydration error #418, validasi env, CI, test, dan pemisahan database Preview.
 
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil · UI Pengetahuan

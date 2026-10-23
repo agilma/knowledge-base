@@ -33,6 +33,11 @@ Pasang aplikasi ke layar utama (menu browser, lalu **Tambahkan ke layar utama**)
 Halaman yang pernah Anda buka tetap bisa dibaca saat offline. Menyimpan perubahan
 butuh internet; tombol simpan nonaktif saat offline.
 
+## Kalau muncul "Akses Ditolak"
+
+Akun Anda berperan Viewer: hanya bisa membaca. Minta administrator menaikkan
+peran Anda menjadi Editor untuk menulis dan mengubah dokumen.
+
 ## Yang belum tersedia
 
 Favorit dan riwayat terakhir dilihat belum aktif. Lihat
