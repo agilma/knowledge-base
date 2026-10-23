@@ -15,7 +15,9 @@ rencana per fase ada di bagian bawah.
 | Dokumen: buat, ubah, terbit, arsip | selesai | `src/app/docs/`, `src/lib/services/documents.ts` | Tipe: Panduan, Masalah, Referensi. Status: Draf, Terbit, Arsip |
 | Template per tipe dokumen | selesai | `src/lib/document-templates.ts` | Kerangka bagian untuk tiap tipe |
 | Editor rich-text + mode markdown | selesai | `src/components/document/` | MDXEditor, mendukung dark mode |
-| Draf lokal otomatis | sebagian | `src/components/document/DocumentForm.tsx` | Banner draf kadang muncul padahal isinya sama (lihat `TODO.md`) |
+| Draf lokal otomatis | selesai | `src/components/document/DocumentForm.tsx` | Draf yang hanya beda format dari versi tersimpan tidak disimpan dan tidak memunculkan banner |
+| Test otomatis dan CI | selesai | `npm test`, `.github/workflows/ci.yml` | Aturan route service worker, izin login, normalisasi markdown. CI: lint, tsc, test, build |
+| Validasi env | sebagian | `src/lib/env.ts` | Kredensial Google kosong memberi pesan jelas; `DATABASE_URL` belum divalidasi |
 | Pencarian | sebagian | `src/app/search/page.tsx`, `documents.ts` | Memakai `ILIKE`, melambat seiring data bertambah |
 | Pengetahuan Terkait | sebagian | `getRelatedDocuments` di `documents.ts` | Tampil jika data relasi ada, belum ada UI untuk mengelola relasi |
 | PWA dan offline-baca | selesai | `src/app/sw.ts`, `src/app/manifest.ts` | Halaman yang pernah dibuka bisa dibaca offline |
@@ -35,8 +37,8 @@ rencana per fase ada di bagian bawah.
 ## Direncanakan
 
 ### Fase 0 — Jaring pengaman
-Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`.
-Belum: banner draf palsu, hydration error #418, validasi env, CI, test, dan pemisahan database Preview.
+Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`, banner draf palsu, validasi env Google, test (`npm test`), dan CI GitHub Actions (belum terverifikasi di runner).
+Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan pemisahan database Preview.
 
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil · UI Pengetahuan
