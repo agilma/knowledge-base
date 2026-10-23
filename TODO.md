@@ -100,19 +100,12 @@ Terakhir diperbarui: 2026-10-23
       kalau memang sama, pisahkan databasenya atau keluarkan langkah prisma
       dari build untuk Preview.
 
-- [ ] **Deploy production pertama setelah merge 23 Okt 2026.** Tiga hal baru
-      sekaligus masuk ke production dan semuanya baru terbukti benar di lokal:
-      function pindah region ke `sin1`, service worker dengan skema kunci cache
-      yang berbeda (pengguna lama akan membangun ulang cache-nya), dan tampilan
-      seluruh dokumen berubah karena typography serta batas ukuran heading.
-      Pastikan build-nya lolos dan halaman dokumen tampil benar.
-
-- [ ] **Region Vercel.** `vercel.json` sudah dipin ke `sin1` (database di
-      `ap-southeast-1`), tapi region sebelumnya belum terkonfirmasi. Kalau
-      memang `iad1` (default, Washington DC), setiap query menyeberangi
-      Pasifik — sekitar 220 ms sekali jalan, bukan 50 ms. Itu kemungkinan
-      penjelasan utama lambatnya aplikasi di production. Butuh akses dashboard
-      Vercel.
+- [ ] **Deploy production 23 Okt 2026 — sebagian sudah terverifikasi.**
+      Build-nya **sukses**, dan header `x-vercel-id` menunjukkan `sin1::`,
+      jadi pemindahan region memang berlaku. Yang belum diperiksa: tampilan
+      dokumen setelah perubahan typography, dan apakah service worker lama di
+      perangkat yang sudah pernah membuka aplikasi benar-benar tergantikan
+      (skema kunci cache-nya berubah, jadi cache lama akan dibangun ulang).
 
 - [ ] **18 branch menumpuk di remote**, sisa pekerjaan yang sudah di-merge.
       Empat branch dari pekerjaan Oktober 2026 sudah dihapus; sisanya dari
