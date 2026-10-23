@@ -37,10 +37,11 @@ Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loadi
       normalisasi markdown. Belum ada untuk server action, service Prisma, dan
       komponen. Jalankan dengan `npm test` (`node:test` + `tsx`, tanpa dependensi baru).
 
-- [ ] **CI belum diverifikasi di GitHub.** `.github/workflows/ci.yml` baru ditulis;
-      lint, tsc, test, dan build sudah dijalankan lokal tapi workflow-nya belum
-      pernah jalan di runner. Periksa run pertamanya, lalu jadikan check wajib
-      di branch protection jika sudah hijau.
+- [ ] **`check` belum menjadi syarat merge.** Workflow `.github/workflows/ci.yml`
+      (lint, tsc, test, build) sudah terbukti hijau di PR #21, tapi branch
+      protection di `main` belum mewajibkannya, jadi PR yang merah masih bisa
+      di-merge. Pengaturannya di GitHub: Settings → Branches → Require status
+      checks → `check`. Hanya pemilik repo yang bisa mengubahnya.
 
 ## Skala
 

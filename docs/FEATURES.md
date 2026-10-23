@@ -37,7 +37,7 @@ rencana per fase ada di bagian bawah.
 ## Direncanakan
 
 ### Fase 0 — Jaring pengaman
-Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`, banner draf palsu, validasi env Google, test (`npm test`), dan CI GitHub Actions (belum terverifikasi di runner).
+Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`, banner draf palsu, validasi env Google, test (`npm test`), dan CI GitHub Actions (hijau di PR #21; belum diwajibkan lewat branch protection).
 Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan pemisahan database Preview.
 
 ### Fase 1 — Mudah dipakai
