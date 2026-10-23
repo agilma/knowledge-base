@@ -1,14 +1,14 @@
-# Thunderlab Knowledge Base — Project Context
+# Knowledge Base — Project Context
 
 Dokumen ini adalah konteks project untuk AI agent (Claude, ChatGPT, Jules, dll). Baca dokumen ini bersama `thinking.md`, `coding-principles.md`, `architecture-principles.md`, dan `ui-ux-principles.md` sebelum mengerjakan task apa pun.
 
-Untuk kondisi terkini project, baca `project-status.md`.
+Untuk kondisi terkini project, baca `project-status.md`. Katalog fitur dan arsitektur ada di `docs/`.
 
 ---
 
 ## 1. Tujuan Produk
 
-Knowledge Base internal Thunderlab untuk menyimpan problem, solusi, dan konteks project agar bisa dicari dan dibaca ulang oleh tim.
+Knowledge Base untuk menyimpan problem, solusi, dan konteks project agar bisa dicari dan dibaca ulang oleh tim.
 
 Latar belakang: owner project terbiasa menulis di Obsidian dan menyukai tampilan Outline, tetapi sinkronisasi Obsidian lintas-device (HP Android ↔ laptop) tanpa layanan berbayar sulit dilakukan. Web app ini dibuat agar knowledge bisa diakses dari device mana pun, termasuk offline, tanpa bergantung pada sinkronisasi file manual.
 
@@ -54,7 +54,7 @@ Didefinisikan di `prisma/schema.prisma` (Model Collection → Document, serta Au
 - **User** — `id`, `email` (unique), `name`, `emailVerified`, `image`, `role` (`VIEWER` | `EDITOR` | `ADMIN`, default `VIEWER`)
 - **Account**, **Session**, **VerificationToken** — tabel pendukung adapter Auth.js / NextAuth
 - **Collection** — `id`, `slug` (unique), `name`, `description`, `icon`, `status` (`ACTIVE` | `ARCHIVED`, default `ACTIVE`)
-- **Document** — `id`, `slug` (unique), `title`, `excerpt`, `content` (markdown), `type` (`PANDUAN` | `MASALAH` | `SOLUSI` | `REFERENSI`, default `PANDUAN`), `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`, default `DRAFT`), `collectionId` (relasi wajib ke Collection, `onDelete: Restrict`), `authorId` (opsional, relasi ke User, `onDelete: SetNull`)
+- **Document** — `id`, `slug` (unique), `title`, `excerpt`, `content` (markdown), `type` (`PANDUAN` | `MASALAH` | `REFERENSI`, default `PANDUAN`; `SOLUSI` digabung ke `MASALAH` oleh migrasi `2_merge_solusi_into_masalah`), `status` (`DRAFT` | `PUBLISHED` | `ARCHIVED`, default `DRAFT`), `collectionId` (relasi wajib ke Collection, `onDelete: Restrict`), `authorId` (opsional, relasi ke User, `onDelete: SetNull`)
 - **DocumentRelation** — relasi many-to-many antar Document untuk "Related Knowledge" (`fromId`, `toId`, `createdAt`, `onDelete: Cascade`)
 - **Favorite** — `userId` + `entityType` + `entityId` (unique)
 - **RecentView** — `userId`, `entityType`, `entityId`, `viewedAt`
@@ -151,6 +151,7 @@ PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.
 5. Validasi dengan `npm run lint`, `npx tsc --noEmit`, dan `npx next build --webpack`. Laporkan hasil yang **benar-benar dijalankan**.
 6. Laporkan: file yang berubah, perintah yang dijalankan beserta hasilnya, masalah yang belum selesai, dan detail commit/PR.
 7. Perbarui `project-status.md` di PR yang sama jika task mengubah status project.
+8. Catat setiap fitur baru atau perubahan fitur di `docs/FEATURES.md` di PR yang sama. Dokumentasi lengkap ada di `docs/`.
 
 ---
 
