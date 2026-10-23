@@ -28,7 +28,7 @@ function LoginContent() {
     if (!errorCode) return null;
 
     if (errorCode === "DomainAccessDenied" || errorCode === "AccessDenied") {
-      return "Akses ditolak: Email atau domain Google Anda tidak diizinkan untuk mengakses Knowledge Base ini.";
+      return "Akses ditolak: akun Google ini belum terdaftar. Minta administrator menambahkan alamatnya, lalu coba lagi.";
     }
 
     return "Gagal masuk. Silakan coba beberapa saat lagi atau hubungi administrator.";

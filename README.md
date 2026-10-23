@@ -46,6 +46,12 @@ Login ditolak kecuali email cocok dengan salah satu dari dua yang pertama.
 Mengosongkan `AUTH_ALLOWED_DOMAIN` **tidak** membuka akses untuk semua
 orang — justru menyisakan `AUTH_ALLOWED_EMAILS` sebagai satu-satunya pintu.
 
+`AUTH_ALLOWED_DOMAIN` hanya berguna kalau domainnya benar-benar dipakai
+sebagai akun Google (Google Workspace). Domain yang cuma meneruskan email
+(*forwarding*) tidak bisa dipakai login lewat Google, jadi aturan domainnya
+tidak akan pernah cocok — pakai `AUTH_ALLOWED_EMAILS` berisi alamat Google
+tiap orang.
+
 ### URL Callback / Redirect Google Cloud Console
 
 Saat mendaftarkan OAuth Client ID di Google Cloud Console, tambahkan URL callback berikut pada **Authorized redirect URIs**:
