@@ -150,9 +150,13 @@ export function DocumentForm({
     // Nothing to protect: drop any stale draft instead of writing a copy of
     // what the server already has.
     if (isUnchanged({ title, slug, collectionId, type, excerpt, content, status })) {
-      try {
-        localStorage.removeItem(draftKey);
-      } catch {}
+      // While the restore banner is up the form still shows the saved version;
+      // clearing now would destroy the draft the author is being asked about.
+      if (!showDraftBanner) {
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {}
+      }
       return;
     }
 
@@ -172,7 +176,7 @@ export function DocumentForm({
     } catch (e) {
       console.warn("Gagal menyimpan draf lokal:", e);
     }
-  }, [title, slug, collectionId, type, excerpt, content, status, draftKey, isUnchanged]);
+  }, [title, slug, collectionId, type, excerpt, content, status, draftKey, isUnchanged, showDraftBanner]);
 
   useEffect(() => {
     if (autosaveTimerRef.current) {

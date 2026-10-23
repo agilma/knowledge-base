@@ -44,6 +44,13 @@ Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loadi
 
 ## Skala
 
+- [ ] **Database mati terlihat seperti logout.** Saat database tidak terjangkau,
+      pencarian sesi gagal dan `auth()` memperlakukan pengguna sebagai belum
+      login, jadi yang tampil halaman login, bukan pesan galat. Terlihat saat
+      menguji lokal dengan database dimatikan. `src/app/global-error.tsx` ada
+      untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
+      tidak sampai melemparkan galat.
+
 - [ ] **Pencarian akan melambat.** `src/lib/services/documents.ts:97` memakai
       `contains` + `mode: "insensitive"` pada `title`, `excerpt`, dan `content`.
       Itu `ILIKE '%kata%'` — tidak bisa memakai index, selalu full scan, dan

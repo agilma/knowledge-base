@@ -7,10 +7,10 @@ import { useOnlineStatus } from "@/lib/use-online-status";
 
 export default function Error({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   const online = useOnlineStatus();
 
@@ -37,7 +37,7 @@ export default function Error({
       )}
 
       <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-        <Button onClick={reset}>
+        <Button onClick={() => retry()}>
           <RotateCw className="mr-2 h-4 w-4" />
           Coba Lagi
         </Button>
