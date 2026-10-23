@@ -20,7 +20,7 @@ export default async function Home() {
     <div className="max-w-4xl mx-auto px-6 py-10 pb-20 md:pb-10 space-y-12">
       <header className="space-y-4">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-          Selamat datang di Knowledge Base Thunderlab
+          Selamat datang di Knowledge Base
         </h1>
         <p className="text-lg text-muted-foreground">
           Temukan pengetahuan internal, standar rekayasa, dan keputusan proyek.

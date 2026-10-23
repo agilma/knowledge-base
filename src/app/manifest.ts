@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Thunderlab Knowledge Base",
-    short_name: "Thunderlab KB",
-    description: "Internal knowledge base and documentation",
+    name: "Knowledge Base",
+    short_name: "KB",
+    description: "Catatan masalah, solusi, dan konteks project",
     lang: "id",
     start_url: "/",
     display: "standalone",

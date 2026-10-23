@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Home, Search, Star, Clock, FolderOpen, PenLine } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
+import { Mark } from "@/components/brand/Mark";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Role } from "@prisma/client";
 import { buttonVariants } from "@/components/ui/button";
@@ -25,7 +26,8 @@ export async function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
       <div className="p-4 flex items-center h-14 border-b border-border/50 shrink-0">
-        <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
+        <Mark className="h-5 w-5 mr-2.5 shrink-0" />
+        <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-6">
