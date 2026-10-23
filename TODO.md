@@ -10,18 +10,6 @@ Terakhir diperbarui: 2026-10-23
 
 ---
 
-## Menunggu merge
-
-- [ ] **PR `feat/document-authoring`** — markdown bisa dibaca, dokumen terbit
-      bisa disimpan, alur buat dokumen, migrasi jenis dokumen.
-      **Merge ini duluan:** database production sudah memakai 3 jenis dokumen
-      sementara kode yang berjalan masih mengenal 4. Selama timpang, memilih
-      "Solusi" lalu menyimpan akan ditolak Postgres.
-- [ ] **PR `fix/platform-perf-offline`** — semantik tombol, hapus komponen mati,
-      perf query, cache offline. Tidak ada irisan file dengan PR di atas.
-- [ ] Hapus branch `fix/button-link-semantics-sidebar-overflow` di remote —
-      isinya kini duplikat dari kedua branch di atas, berisiko keliru di-merge.
-
 ## Bug
 
 - [ ] **Banner draf palsu.** Editor MDX menormalkan markdown saat memuat
@@ -52,9 +40,11 @@ Terakhir diperbarui: 2026-10-23
 
 ## Jaring pengaman
 
-- [ ] **Tidak ada CI.** Tidak ada `.github/`, jadi tidak ada yang menjalankan
-      `tsc`, `eslint`, atau `next build` sebelum merge ke `main`. Perbaikan
-      termurah dengan manfaat terbesar di daftar ini.
+- [ ] **Tidak ada CI sendiri.** Tidak ada `.github/`. Preview deployment Vercel
+      menjalankan `next build` di setiap PR, dan karena `next.config.ts` tidak
+      mematikan pengecekan tipe, error tipe dan build memang tertangkap di
+      sana. Yang belum ada: `eslint`, dan gerbang yang tidak bergantung pada
+      deploy — begitu ada test, tidak ada tempat untuk menjalankannya.
 
 - [ ] **Tidak ada test sama sekali.** Dua area paling menuntut:
       - `src/app/sw.ts` — `isTargetPageRoute()` dan matcher-nya punya
@@ -98,6 +88,25 @@ Terakhir diperbarui: 2026-10-23
 
 ## Perlu dicek sendiri
 
+- [ ] **Preview deployment kemungkinan menyentuh database production.** Script
+      build adalah `prisma migrate deploy && prisma db seed && next build`, dan
+      Vercel menjalankannya di **setiap** PR, bukan hanya di `main` — PR #18
+      yang isinya cuma satu file markdown pun ikut menjalankannya. Kalau
+      `DATABASE_URL` di environment Preview menunjuk ke database yang sama
+      dengan production, maka setiap PR menjalankan migrasi ke sana.
+      Praktisnya selama ini aman (`migrate deploy` idempoten, seed berhenti
+      kalau sudah ada data), tapi satu migrasi yang salah akan terlanjur jalan
+      sebelum PR-nya sempat di-review. Cek env var Preview di dashboard Vercel;
+      kalau memang sama, pisahkan databasenya atau keluarkan langkah prisma
+      dari build untuk Preview.
+
+- [ ] **Deploy production pertama setelah merge 23 Okt 2026.** Tiga hal baru
+      sekaligus masuk ke production dan semuanya baru terbukti benar di lokal:
+      function pindah region ke `sin1`, service worker dengan skema kunci cache
+      yang berbeda (pengguna lama akan membangun ulang cache-nya), dan tampilan
+      seluruh dokumen berubah karena typography serta batas ukuran heading.
+      Pastikan build-nya lolos dan halaman dokumen tampil benar.
+
 - [ ] **Region Vercel.** `vercel.json` sudah dipin ke `sin1` (database di
       `ap-southeast-1`), tapi region sebelumnya belum terkonfirmasi. Kalau
       memang `iad1` (default, Washington DC), setiap query menyeberangi
@@ -105,8 +114,9 @@ Terakhir diperbarui: 2026-10-23
       penjelasan utama lambatnya aplikasi di production. Butuh akses dashboard
       Vercel.
 
-- [ ] **19 branch menumpuk di remote**, sebagian besar sisa pekerjaan yang
-      sudah di-merge.
+- [ ] **18 branch menumpuk di remote**, sisa pekerjaan yang sudah di-merge.
+      Empat branch dari pekerjaan Oktober 2026 sudah dihapus; sisanya dari
+      pekerjaan sebelumnya dan belum diperiksa satu per satu.
 
 ## Dokumen yang belum lengkap
 
