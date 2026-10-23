@@ -11,6 +11,11 @@ import { MarkdownEditor } from "@/components/document/MarkdownEditor";
 import { slugify } from "@/lib/slug";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { createDocumentAction, updateDocumentAction, ActionState } from "@/app/docs/actions";
+import {
+  DOCUMENT_TEMPLATES,
+  DOCUMENT_TYPE_HINTS,
+  isUntouchedTemplate,
+} from "@/lib/document-templates";
 
 interface CollectionOption {
   id: string;
@@ -32,6 +37,7 @@ interface LocalDraft {
 interface DocumentFormProps {
   collections: CollectionOption[];
   defaultCollectionId?: string;
+  defaultTitle?: string;
   initialData?: {
     id: string;
     title: string;
@@ -48,6 +54,7 @@ interface DocumentFormProps {
 export function DocumentForm({
   collections,
   defaultCollectionId,
+  defaultTitle,
   initialData,
 }: DocumentFormProps) {
   const isEditing = !!initialData;
@@ -59,14 +66,18 @@ export function DocumentForm({
     ? `kb:draft:doc:${initialData.id}`
     : `kb:draft:doc:new:${defaultCollectionId ? collections.find(c => c.id === defaultCollectionId)?.slug || "none" : "none"}`;
 
-  const [title, setTitle] = useState(initialData?.title ?? "");
-  const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [title, setTitle] = useState(initialData?.title ?? defaultTitle ?? "");
+  const [slug, setSlug] = useState(
+    initialData?.slug ?? (defaultTitle ? slugify(defaultTitle) : "")
+  );
   const [collectionId, setCollectionId] = useState(
     initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? ""
   );
   const [type, setType] = useState<DocumentType>(initialData?.type ?? DocumentType.PANDUAN);
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "");
-  const [content, setContent] = useState(initialData?.content ?? "");
+  const [content, setContent] = useState(
+    initialData?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN]
+  );
   const [status, setStatus] = useState<DocumentStatus>(initialData?.status ?? DocumentStatus.DRAFT);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
 
@@ -209,6 +220,15 @@ export function DocumentForm({
     {}
   );
 
+  const handleTypeChange = (nextType: DocumentType) => {
+    setType(nextType);
+    // Only swap the skeleton while nothing has been written over it, so
+    // changing your mind about the type never costs you a draft.
+    if (!isEditing && isUntouchedTemplate(content)) {
+      setContent(DOCUMENT_TEMPLATES[nextType]);
+    }
+  };
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setTitle(val);
@@ -317,13 +337,17 @@ export function DocumentForm({
         </div>
         <Input
           id="slug"
-          name="slug"
+          name={isSlugLocked ? undefined : "slug"}
           value={slug}
           onChange={handleSlugChange}
           placeholder="cara-konfigurasi-database-neon"
           disabled={isSlugLocked}
-          required
+          required={!isSlugLocked}
         />
+        {/* A disabled input is left out of the submitted FormData, so a locked
+            slug arrived at the action as null and failed validation — no
+            published document could be saved. Carry the value separately. */}
+        {isSlugLocked && <input type="hidden" name="slug" value={slug} />}
         {isSlugLocked ? (
           <p className="text-xs text-muted-foreground">
             Slug tidak dapat diubah karena dokumen ini sudah pernah dipublikasi.
@@ -365,13 +389,15 @@ export function DocumentForm({
             id="type"
             name="type"
             value={type}
-            onChange={(e) => setType(e.target.value as DocumentType)}
+            onChange={(e) => handleTypeChange(e.target.value as DocumentType)}
           >
             <option value={DocumentType.PANDUAN}>Panduan</option>
             <option value={DocumentType.MASALAH}>Masalah</option>
-            <option value={DocumentType.SOLUSI}>Solusi</option>
             <option value={DocumentType.REFERENSI}>Referensi</option>
           </Select>
+          <p className="text-xs text-muted-foreground">
+            {DOCUMENT_TYPE_HINTS[type]}
+          </p>
           {state?.fieldErrors?.type && (
             <p className="text-xs text-destructive">{state.fieldErrors.type}</p>
           )}

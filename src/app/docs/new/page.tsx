@@ -8,11 +8,11 @@ export const dynamic = "force-dynamic";
 export default async function NewDocumentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ collection?: string }>;
+  searchParams: Promise<{ collection?: string; title?: string }>;
 }) {
   await requireRole([Role.EDITOR, Role.ADMIN]);
 
-  const { collection: collectionSlug } = await searchParams;
+  const { collection: collectionSlug, title: defaultTitle } = await searchParams;
   const collections = await getCollections();
 
   let defaultCollectionId: string | undefined;
@@ -35,6 +35,7 @@ export default async function NewDocumentPage({
       <DocumentForm
         collections={collections}
         defaultCollectionId={defaultCollectionId}
+        defaultTitle={defaultTitle?.slice(0, 150)}
       />
     </div>
   );

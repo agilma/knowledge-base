@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Search as SearchIcon, FileText, ChevronRight } from "lucide-react";
+import { Search as SearchIcon, FileText, ChevronRight, Plus } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { searchDocuments } from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
 import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 
@@ -157,6 +158,28 @@ export default async function SearchPage({
                   <p className="text-sm mt-2 text-muted-foreground">
                     Coba sesuaikan filter atau kata kunci pencarian Anda.
                   </p>
+                  {/* Someone who searched and found nothing knows better than
+                      anyone which document is missing, and will never be more
+                      motivated to write it than right now. */}
+                  {canSeeDrafts && query.trim() && (
+                    <div className="mt-6">
+                      <Link
+                        href={{
+                          pathname: "/docs/new",
+                          query: {
+                            title: query.trim(),
+                            ...(selectedCollection
+                              ? { collection: selectedCollection.slug }
+                              : {}),
+                          },
+                        }}
+                        className={buttonVariants({ variant: "outline" })}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Buat dokumen &ldquo;{query.trim()}&rdquo;
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

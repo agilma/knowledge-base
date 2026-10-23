@@ -29,6 +29,7 @@ import {
 } from "@mdxeditor/editor";
 
 import "./markdown-editor.css";
+import { PROSE_CLASSNAME } from "@/lib/prose";
 
 export interface InitializedMDXEditorProps {
   markdown: string;
@@ -58,7 +59,7 @@ export default function InitializedMDXEditor({
         onChange={onChange}
         placeholder={placeholder}
         className={isDark ? "dark-theme" : ""}
-        contentEditableClassName="prose prose-neutral dark:prose-invert max-w-none prose-lg prose-headings:font-semibold prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-relaxed prose-p:text-foreground/90 min-h-[280px] p-4 focus:outline-none"
+        contentEditableClassName={`${PROSE_CLASSNAME} min-h-[280px] p-4 focus:outline-none`}
         onError={(err) => {
           if (onError) {
             onError(err);

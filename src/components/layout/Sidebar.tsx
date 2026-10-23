@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { Home, Search, Star, Clock, FolderOpen } from "lucide-react";
+import { Home, Search, Star, Clock, FolderOpen, PenLine } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
+import { getCurrentUser } from "@/lib/auth/session";
+import { Role } from "@prisma/client";
+import { buttonVariants } from "@/components/ui/button";
 
 export async function Sidebar() {
   let collections: Awaited<ReturnType<typeof getCollections>> = [];
@@ -11,6 +14,14 @@ export async function Sidebar() {
     collections = [];
   }
 
+  let canWrite = false;
+  try {
+    const user = await getCurrentUser();
+    canWrite = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+  } catch {
+    canWrite = false;
+  }
+
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
       <div className="p-4 flex items-center h-14 border-b border-border/50 shrink-0">
@@ -18,6 +29,21 @@ export async function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-6">
+        {/* Writing usually occurs to you while reading something else, and the
+            only entry points used to be the home page and a collection page. */}
+        {canWrite && (
+          <Link
+            href="/docs/new"
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full justify-start",
+            })}
+          >
+            <PenLine className="mr-2 h-4 w-4" />
+            Dokumen Baru
+          </Link>
+        )}
+
         <div className="space-y-1">
           <Link href="/" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <Home className="w-4 h-4 text-muted-foreground" />
