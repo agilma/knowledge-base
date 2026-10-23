@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { WifiOff, Home, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-static";
 
@@ -21,14 +21,14 @@ export default function OfflinePage() {
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <Button variant="outline" render={<Link href="/" />}>
+        <Link href="/" className={buttonVariants({ variant: "outline" })}>
           <Home className="mr-2 h-4 w-4" />
           Beranda
-        </Button>
-        <Button variant="ghost" render={<Link href="/collections" />}>
+        </Link>
+        <Link href="/collections" className={buttonVariants({ variant: "ghost" })}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Lihat Koleksi Tersimpan
-        </Button>
+        </Link>
       </div>
     </div>
   );

@@ -1,12 +1,14 @@
 import { CollectionStatus, DocumentStatus } from "@prisma/client";
 import { db } from "../db";
 import { collectionSchema, CollectionInput } from "../validation/collection";
+import { cache } from "react";
 
-export async function getCollections() {
+// Rendered by the sidebar on every page, so dedupe it within a request.
+export const getCollections = cache(async () => {
   return db.collection.findMany({
     orderBy: { name: "asc" },
   });
-}
+});
 
 export async function getCollectionBySlug(slug: string) {
   return db.collection.findUnique({

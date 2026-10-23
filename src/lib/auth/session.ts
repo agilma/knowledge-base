@@ -1,9 +1,15 @@
 import { auth } from "@/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { cache } from "react";
+
+// `auth()` hits the sessions + users tables on every call, and a single render
+// resolves it several times (proxy, layout, page). `cache` collapses those into
+// one lookup per request.
+export const getSession = cache(async () => auth());
 
 export async function getCurrentUser() {
-  const session = await auth();
+  const session = await getSession();
   return session?.user ?? null;
 }
 
