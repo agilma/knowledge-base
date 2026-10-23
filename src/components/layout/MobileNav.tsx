@@ -5,6 +5,7 @@ import { Menu, Home, Search, Star, Clock, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { Mark } from "@/components/brand/Mark";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -13,7 +14,8 @@ export function MobileNav() {
 
   return (
     <div className="md:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10 h-14">
-      <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
+      <Mark className="h-5 w-5 mr-2.5 shrink-0" />
+      <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger className="p-2 rounded-md hover:bg-muted transition-colors">
@@ -23,7 +25,8 @@ export function MobileNav() {
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
           <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
           <div className="p-4 border-b border-border/50 h-14 flex items-center shrink-0">
-            <span className="font-semibold text-lg tracking-tight">Thunderlab KB</span>
+            <Mark className="h-5 w-5 mr-2.5 shrink-0" />
+      <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
           </div>
 
           <nav className="flex-1 p-3 space-y-6 overflow-y-auto">

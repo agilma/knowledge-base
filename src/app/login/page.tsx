@@ -4,7 +4,8 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderOpen, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Mark } from "@/components/brand/Mark";
 import { Suspense, useState } from "react";
 
 function LoginContent() {
@@ -40,7 +41,7 @@ function LoginContent() {
       <CardHeader>
         <CardTitle className="text-xl">Masuk ke Akun</CardTitle>
         <CardDescription>
-          Gunakan akun Google internal Thunderlab Anda untuk melanjutkan.
+          Gunakan akun Google yang diizinkan untuk melanjutkan.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -87,12 +88,12 @@ export default function LoginPage() {
     <div className="flex min-h-full flex-col items-center justify-center p-4">
       <div className="mb-8 flex flex-col items-center space-y-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-          <FolderOpen className="h-6 w-6 text-primary" />
+          <Mark className="h-6 w-6 text-primary" />
         </div>
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Thunderlab KB</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Knowledge Base</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Internal Knowledge Base
+            Catatan masalah, solusi, dan konteks project
           </p>
         </div>
       </div>

@@ -27,16 +27,19 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Thunderlab Knowledge Base",
-  description: "Internal knowledge and documentation",
+  title: "Knowledge Base",
+  description: "Catatan masalah, solusi, dan konteks project",
   manifest: "/manifest.webmanifest",
   icons: {
+    // Listing `apple` alone silently disabled Next's file-based icon
+    // convention, so the app shipped without a favicon at all. Name both.
+    icon: "/icons/favicon.svg",
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Thunderlab KB",
+    title: "KB",
   },
 };
 

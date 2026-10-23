@@ -1,6 +1,6 @@
-# Thunderlab Knowledge Base
+# Knowledge Base
 
-Thunderlab Knowledge Base adalah sistem manajemen pengetahuan internal untuk menyimpan problem, solusi, dan konteks project agar mudah dicari dan diakses oleh tim. Aplikasi ini dirancang agar pengetahuan dapat diakses dari device mana pun secara cepat dan efisien.
+Knowledge Base adalah sistem manajemen pengetahuan untuk menyimpan problem, solusi, dan konteks project agar mudah dicari dan diakses. Aplikasi ini dirancang agar pengetahuan dapat diakses dari device mana pun secara cepat dan efisien.
 
 ## Tech Stack
 
@@ -38,9 +38,13 @@ Aplikasi menggunakan Auth.js v5 (`next-auth@5`) dengan login khusus Google OAuth
 - `AUTH_SECRET`: Key enkripsi sesi (dapat dibuat dengan `npx auth secret`).
 - `AUTH_GOOGLE_ID`: Client ID Google OAuth dari Google Cloud Console.
 - `AUTH_GOOGLE_SECRET`: Client Secret Google OAuth dari Google Cloud Console.
-- `AUTH_ALLOWED_DOMAIN`: Domain email utama yang diizinkan (contoh: `thunderlab.id`).
-- `AUTH_ALLOWED_EMAILS`: Daftar email di luar domain utama yang diizinkan (dipisah koma).
-- `AUTH_ADMIN_EMAILS`: Daftar email yang otomatis diberikan role `ADMIN` saat login (dipisah koma).
+- `AUTH_ALLOWED_DOMAIN`: Domain email yang diizinkan, tanpa `@` (contoh: `contoh.com`). Boleh dikosongkan.
+- `AUTH_ALLOWED_EMAILS`: Email di luar domain itu yang tetap diizinkan (dipisah koma).
+- `AUTH_ADMIN_EMAILS`: Email yang otomatis diberi role `ADMIN` saat login (dipisah koma).
+
+Login ditolak kecuali email cocok dengan salah satu dari dua yang pertama.
+Mengosongkan `AUTH_ALLOWED_DOMAIN` **tidak** membuka akses untuk semua
+orang — justru menyisakan `AUTH_ALLOWED_EMAILS` sebagai satu-satunya pintu.
 
 ### URL Callback / Redirect Google Cloud Console
 
