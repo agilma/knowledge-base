@@ -16,7 +16,6 @@ enum Role {
 enum DocumentType {
   PANDUAN
   MASALAH
-  SOLUSI
   REFERENSI
 }
 

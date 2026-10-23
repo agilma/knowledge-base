@@ -393,7 +393,6 @@ export function DocumentForm({
           >
             <option value={DocumentType.PANDUAN}>Panduan</option>
             <option value={DocumentType.MASALAH}>Masalah</option>
-            <option value={DocumentType.SOLUSI}>Solusi</option>
             <option value={DocumentType.REFERENSI}>Referensi</option>
           </Select>
           <p className="text-xs text-muted-foreground">

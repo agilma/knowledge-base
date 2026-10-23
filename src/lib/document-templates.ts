@@ -54,24 +54,6 @@ Kapan berhenti mencoba sendiri, ke siapa dieskalasi, dan data apa yang harus dis
 Keluhan ini biasanya masuk dengan kalimat apa, dan pertanyaan penyaring apa yang perlu diajukan lebih dulu.
 `,
 
-  [DocumentType.SOLUSI]: `## Konteks
-
-Masalah apa yang diselesaikan oleh solusi ini.
-
-## Langkah Penyelesaian
-
-1. Langkah pertama.
-2. Langkah kedua.
-
-## Verifikasi
-
-Bagaimana cara tahu solusinya berhasil.
-
-## Jika Masih Gagal
-
-Kapan dieskalasi, ke siapa, dan data apa yang harus disertakan.
-`,
-
   [DocumentType.REFERENSI]: `## Ringkasan
 
 Informasi apa yang dikumpulkan di sini dan kapan dibutuhkan.
@@ -99,8 +81,6 @@ export const DOCUMENT_TYPE_HINTS: Record<DocumentType, string> = {
     "Cara mengerjakan sesuatu yang rutin, bukan karena ada yang rusak.",
   [DocumentType.MASALAH]:
     "Ada yang tidak berjalan semestinya — gejala, pemeriksaan, dan penanganannya.",
-  [DocumentType.SOLUSI]:
-    "Penyelesaian satu masalah tertentu, tanpa bagian diagnosis.",
   [DocumentType.REFERENSI]:
     "Data atau daftar untuk dilihat sewaktu-waktu, bukan prosedur.",
 };
