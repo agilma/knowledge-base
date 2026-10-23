@@ -14,8 +14,10 @@ export function MobileNav() {
 
   return (
     <div className="md:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10 h-14">
-      <Mark className="h-5 w-5 mr-2.5 shrink-0" />
-      <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
+      <div className="flex items-center">
+        <Mark className="h-5 w-5 mr-2.5 shrink-0" />
+        <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
+      </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger className="p-2 rounded-md hover:bg-muted transition-colors">
@@ -26,7 +28,7 @@ export function MobileNav() {
           <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
           <div className="p-4 border-b border-border/50 h-14 flex items-center shrink-0">
             <Mark className="h-5 w-5 mr-2.5 shrink-0" />
-      <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
+            <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
           </div>
 
           <nav className="flex-1 p-3 space-y-6 overflow-y-auto">

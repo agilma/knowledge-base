@@ -5,7 +5,7 @@ import { cn } from "cn";
  *
  * Drawn in `currentColor` and in one colour only, so it sits correctly in the
  * sidebar, on the login screen and in either theme without a second asset.
- * `src/app/icon.svg` and the PNGs under `public/icons/` carry the same
+ * `public/icons/favicon.svg` and the PNGs under `public/icons/` carry the same
  * geometry — change one and change the others.
  */
 export function Mark({ className }: { className?: string }) {
