@@ -26,7 +26,8 @@ export async function requireRole(allowedRoles: Role | Role[]) {
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
   if (!roles.includes(user.role)) {
-    redirect("/");
+    // Sending a VIEWER to "/" looked like a bug; say that it is a permission.
+    redirect("/akses-ditolak");
   }
 
   return user;

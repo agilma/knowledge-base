@@ -4,6 +4,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { parseAuthEnv } from "@/lib/env";
+import { isAdminEmail, isEmailAllowed, readAccessConfig } from "@/lib/auth/access";
 
 declare module "next-auth" {
   interface Session {
@@ -16,6 +18,19 @@ declare module "next-auth" {
   interface User {
     role?: Role;
   }
+}
+
+// `next build` evaluates this module without the runtime secrets; only the
+// running app needs them.
+function getGoogleCredentials(): { clientId?: string; clientSecret?: string } {
+  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) {
+    return {
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    };
+  }
+  const env = parseAuthEnv(process.env);
+  return { clientId: env.AUTH_GOOGLE_ID, clientSecret: env.AUTH_GOOGLE_SECRET };
 }
 
 function getAuthSecret(): string {
@@ -33,10 +48,7 @@ function getAuthSecret(): string {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
+    Google(getGoogleCredentials()),
   ],
   pages: {
     signIn: "/login",
@@ -47,28 +59,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.email) return false;
       const email = user.email.toLowerCase();
 
-      const allowedDomain = process.env.AUTH_ALLOWED_DOMAIN?.trim().toLowerCase();
-      const allowedEmailsStr = process.env.AUTH_ALLOWED_EMAILS || "";
-      const allowedEmails = allowedEmailsStr
-        .split(",")
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
+      const access = readAccessConfig();
 
-      const isDomainAllowed = allowedDomain ? email.endsWith(`@${allowedDomain}`) : false;
-      const isEmailAllowed = allowedEmails.includes(email);
-
-      if (!isDomainAllowed && !isEmailAllowed) {
+      if (!isEmailAllowed(email, access)) {
         return "/login?error=DomainAccessDenied";
       }
 
       // Check and update role to ADMIN if email is listed in AUTH_ADMIN_EMAILS
-      const adminEmailsStr = process.env.AUTH_ADMIN_EMAILS || "";
-      const adminEmails = adminEmailsStr
-        .split(",")
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
-
-      if (adminEmails.includes(email)) {
+      if (isAdminEmail(email, access)) {
         try {
           const existingUser = await db.user.findUnique({
             where: { email },
@@ -101,13 +99,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.email) return;
       const email = user.email.toLowerCase();
 
-      const adminEmailsStr = process.env.AUTH_ADMIN_EMAILS || "";
-      const adminEmails = adminEmailsStr
-        .split(",")
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
-
-      if (adminEmails.includes(email)) {
+      if (isAdminEmail(email, readAccessConfig())) {
         try {
           await db.user.update({
             where: { id: user.id },

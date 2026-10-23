@@ -6,21 +6,11 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-23
+Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loading sudah selesai)
 
 ---
 
 ## Bug
-
-- [ ] **Banner draf palsu.** Editor MDX menormalkan markdown saat memuat
-      (`_italic_` → `*italic*`, `- item` → `* item`), autosave 1 detik
-      menangkapnya sebagai perubahan, lalu kunjungan berikutnya memperingatkan
-      ada "draf belum tersimpan" yang isinya identik dengan versi terbit.
-      Melatih orang menekan "Buang" tanpa membaca — sampai suatu hari draf yang
-      dibuang benar-benar berisi pekerjaan.
-      Perbaikannya: bandingkan bentuk, bukan byte. Helper-nya sudah ada di
-      `src/lib/document-templates.ts` (`normalizeMarkdown`).
-      Lihat `src/components/document/DocumentForm.tsx` (autosave ~baris 126).
 
 - [ ] **React hydration error #418** di seluruh aplikasi — muncul di
       `/collections` maupun `/docs/new`, jadi bukan dari editor MDX. Sudah ada
@@ -28,11 +18,13 @@ Terakhir diperbarui: 2026-10-23
       `049c9f8`). Tidak merusak fungsi, tapi React membuang HTML server dan
       merender ulang di klien — memperlambat setiap halaman. Curigai
       `layout.tsx` atau theme provider.
-
-- [ ] **`requireRole` menolak tanpa penjelasan.** `src/lib/auth/session.ts:23`
-      memanggil `redirect("/")` saat role tidak cukup. Seorang VIEWER yang
-      mencoba aksi EDITOR hanya terlempar ke beranda — terlihat seperti bug,
-      bukan penolakan izin.
+      **Belum bisa direproduksi lokal:** build production dengan sesi login,
+      database lokal, mode terang dan gelap, zona waktu Asia/Jakarta — tidak ada
+      error di konsol pada `/`, `/collections`, `/docs/new`, `/docs/[slug]`,
+      `/search`. Kemungkinan hanya muncul di Vercel (zona waktu server UTC vs
+      klien, PWA terpasang, atau service worker lama). Ambil teks lengkap error
+      dari konsol production atau build dev. Kandidat: `formatDate` di
+      `src/lib/format.ts` tanpa `timeZone`.
 
 - [ ] **`shadcn` ada di `dependencies`, bukan `devDependencies`** (1.9 MB).
       Itu CLI, tidak pernah di-import kode. Memindahkannya memangkas install
@@ -40,32 +32,24 @@ Terakhir diperbarui: 2026-10-23
 
 ## Jaring pengaman
 
-- [ ] **Tidak ada CI sendiri.** Tidak ada `.github/`. Preview deployment Vercel
-      menjalankan `next build` di setiap PR, dan karena `next.config.ts` tidak
-      mematikan pengecekan tipe, error tipe dan build memang tertangkap di
-      sana. Yang belum ada: `eslint`, dan gerbang yang tidak bergantung pada
-      deploy — begitu ada test, tidak ada tempat untuk menjalankannya.
+- [ ] **Cakupan test masih tipis.** Ada test untuk aturan route service worker
+      (`src/lib/sw-routes.ts`), aturan izin login (`src/lib/auth/access.ts`), dan
+      normalisasi markdown. Belum ada untuk server action, service Prisma, dan
+      komponen. Jalankan dengan `npm test` (`node:test` + `tsx`, tanpa dependensi baru).
 
-- [ ] **Tidak ada test sama sekali.** Dua area paling menuntut:
-      - `src/app/sw.ts` — `isTargetPageRoute()` dan matcher-nya punya
-        percabangan yang tidak sedikit, semuanya fungsi murni, dan kalau salah
-        efeknya senyap (halaman ter-cache padahal tidak seharusnya, atau
-        sebaliknya).
-      - `src/auth.ts` callback `signIn` — menentukan siapa boleh masuk.
-        Salah sedikit berarti orang luar bisa membaca knowledge base internal.
-
-- [ ] **Tidak ada `error.tsx`, `not-found.tsx`, `loading.tsx`.** Kalau query
-      Prisma gagal di server component, pengguna dapat layar error bawaan Next.
-      Janggal untuk aplikasi yang menjual diri sebagai tahan-offline.
-      `loading.tsx` juga akan mengaktifkan streaming UI yang sekarang tidak
-      terpakai.
-
-- [ ] **Env tidak divalidasi.** `src/auth.ts:37` mengoper
-      `process.env.AUTH_GOOGLE_ID` langsung ke provider. Kalau kosong, yang
-      muncul HTTP 500 `There was a problem with the server configuration` —
-      butuh beberapa langkah untuk melacak penyebabnya. `zod` sudah terpasang.
+- [ ] **CI belum diverifikasi di GitHub.** `.github/workflows/ci.yml` baru ditulis;
+      lint, tsc, test, dan build sudah dijalankan lokal tapi workflow-nya belum
+      pernah jalan di runner. Periksa run pertamanya, lalu jadikan check wajib
+      di branch protection jika sudah hijau.
 
 ## Skala
+
+- [ ] **Database mati terlihat seperti logout.** Saat database tidak terjangkau,
+      pencarian sesi gagal dan `auth()` memperlakukan pengguna sebagai belum
+      login, jadi yang tampil halaman login, bukan pesan galat. Terlihat saat
+      menguji lokal dengan database dimatikan. `src/app/global-error.tsx` ada
+      untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
+      tidak sampai melemparkan galat.
 
 - [ ] **Pencarian akan melambat.** `src/lib/services/documents.ts:97` memakai
       `contains` + `mode: "insensitive"` pada `title`, `excerpt`, dan `content`.

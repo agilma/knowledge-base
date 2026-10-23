@@ -257,4 +257,5 @@ Task dianggap selesai apabila:
 - error sudah diperbaiki;
 - hasil sudah diverifikasi;
 - fitur existing yang berkaitan tetap berjalan;
+- fitur baru atau perubahan fitur sudah dicatat di `docs/FEATURES.md` (dan `docs/USER-GUIDE.md` / `docs/ARCHITECTURE.md` bila relevan) dalam PR yang sama;
 - laporan pekerjaan sudah diberikan dengan jelas.

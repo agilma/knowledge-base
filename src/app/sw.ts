@@ -3,6 +3,7 @@
 import { CacheableResponsePlugin, ExpirationPlugin } from "serwist";
 import type { PrecacheEntry, RuntimeCaching } from "serwist";
 import { Serwist, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from "serwist";
+import { isNetworkOnlyRequest, isTargetPageRoute } from "../lib/sw-routes";
 
 declare global {
   interface WorkerGlobalScope {
@@ -45,29 +46,6 @@ async function broadcastNetworkStatus(reachable: boolean): Promise<void> {
   }
 }
 
-function isTargetPageRoute(pathname: string): boolean {
-  const isTarget =
-    pathname === "/" ||
-    pathname === "/favorites" ||
-    pathname === "/recent" ||
-    pathname.startsWith("/search") ||
-    pathname.startsWith("/collections") ||
-    pathname.startsWith("/docs");
-
-  if (!isTarget) return false;
-
-  if (
-    pathname === "/docs/new" ||
-    pathname === "/collections/new" ||
-    pathname.match(/^\/docs\/[^/]+\/edit$/) ||
-    pathname.match(/^\/collections\/[^/]+\/edit$/)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
 const runtimeCaching: RuntimeCaching[] = [
   // 1. GET /api/auth/session -> NetworkFirst (cached in pages-rsc-cache)
   {
@@ -87,55 +65,14 @@ const runtimeCaching: RuntimeCaching[] = [
 
   // 2. Explicitly exclude Auth (except GET session), Login, POST/Server actions, and Edit/New creation pages -> NetworkOnly
   {
-    matcher: ({ url, request }) => {
-      if (request.method !== "GET") return true;
-      const { pathname } = url;
-      if (pathname.startsWith("/api/auth")) {
-        if (pathname === "/api/auth/session") return false;
-        return true;
-      }
-      if (pathname === "/login") return true;
-      if (
-        pathname === "/docs/new" ||
-        pathname === "/collections/new" ||
-        pathname.match(/^\/docs\/[^/]+\/edit$/) ||
-        pathname.match(/^\/collections\/[^/]+\/edit$/)
-      ) {
-        return true;
-      }
-      return false;
-    },
+    matcher: ({ url, request }) => isNetworkOnlyRequest(request.method, url.pathname),
     handler: new NetworkOnly(),
   },
 
   // 2. NetworkFirst for navigation pages and RSC requests
   {
-    matcher: ({ url, request }) => {
-      if (request.method !== "GET") return false;
-      const { pathname } = url;
-
-      const isTargetRoute =
-        pathname === "/" ||
-        pathname === "/favorites" ||
-        pathname === "/recent" ||
-        pathname.startsWith("/search") ||
-        pathname.startsWith("/collections") ||
-        pathname.startsWith("/docs");
-
-      if (!isTargetRoute) return false;
-
-      // Exclude creation and edit pages
-      if (
-        pathname === "/docs/new" ||
-        pathname === "/collections/new" ||
-        pathname.match(/^\/docs\/[^/]+\/edit$/) ||
-        pathname.match(/^\/collections\/[^/]+\/edit$/)
-      ) {
-        return false;
-      }
-
-      return true;
-    },
+    matcher: ({ url, request }) =>
+      request.method === "GET" && isTargetPageRoute(url.pathname),
     handler: new NetworkFirst({
       cacheName: "pages-rsc-cache",
       networkTimeoutSeconds: 3,

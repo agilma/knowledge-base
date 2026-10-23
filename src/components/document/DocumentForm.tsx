@@ -14,6 +14,7 @@ import { createDocumentAction, updateDocumentAction, ActionState } from "@/app/d
 import {
   DOCUMENT_TEMPLATES,
   DOCUMENT_TYPE_HINTS,
+  isEquivalentMarkdown,
   isUntouchedTemplate,
 } from "@/lib/document-templates";
 
@@ -88,6 +89,33 @@ export function DocumentForm({
     ? new Date(initialData.updatedAt).getTime()
     : 0;
 
+  // What the form would hold if the author touched nothing. Editing starts
+  // from the stored document; a new document starts from the template.
+  const [baseline] = useState(() => ({
+    title: initialData?.title ?? defaultTitle ?? "",
+    slug: initialData?.slug ?? (defaultTitle ? slugify(defaultTitle) : ""),
+    collectionId:
+      initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? "",
+    type: initialData?.type ?? DocumentType.PANDUAN,
+    excerpt: initialData?.excerpt ?? "",
+    content: initialData?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN],
+    status: initialData?.status ?? DocumentStatus.DRAFT,
+  }));
+
+  // The editor rewrites markdown as it loads (`_a_` → `*a*`), so a draft whose
+  // only difference is formatting is not work worth warning about.
+  const isUnchanged = useCallback(
+    (d: Omit<LocalDraft, "savedAt">) =>
+      d.title === baseline.title &&
+      d.slug === baseline.slug &&
+      d.collectionId === baseline.collectionId &&
+      d.type === baseline.type &&
+      d.excerpt === baseline.excerpt &&
+      d.status === baseline.status &&
+      isEquivalentMarkdown(d.content, baseline.content),
+    [baseline]
+  );
+
   // Initialize draft state lazily
   const [localDraft, setLocalDraft] = useState<LocalDraft | null>(() => {
     if (typeof window === "undefined") return null;
@@ -96,7 +124,10 @@ export function DocumentForm({
       if (raw) {
         const parsed = JSON.parse(raw) as LocalDraft;
         if (parsed && typeof parsed.savedAt === "number") {
-          if (!isEditing || parsed.savedAt > serverUpdatedAt) {
+          if (
+            (!isEditing || parsed.savedAt > serverUpdatedAt) &&
+            !isUnchanged(parsed)
+          ) {
             return parsed;
           }
         }
@@ -116,6 +147,19 @@ export function DocumentForm({
     // Only save if there's actual input content or title
     if (!title.trim() && !content.trim()) return;
 
+    // Nothing to protect: drop any stale draft instead of writing a copy of
+    // what the server already has.
+    if (isUnchanged({ title, slug, collectionId, type, excerpt, content, status })) {
+      // While the restore banner is up the form still shows the saved version;
+      // clearing now would destroy the draft the author is being asked about.
+      if (!showDraftBanner) {
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {}
+      }
+      return;
+    }
+
     const draftData: LocalDraft = {
       title,
       slug,
@@ -132,7 +176,7 @@ export function DocumentForm({
     } catch (e) {
       console.warn("Gagal menyimpan draf lokal:", e);
     }
-  }, [title, slug, collectionId, type, excerpt, content, status, draftKey]);
+  }, [title, slug, collectionId, type, excerpt, content, status, draftKey, isUnchanged, showDraftBanner]);
 
   useEffect(() => {
     if (autosaveTimerRef.current) {

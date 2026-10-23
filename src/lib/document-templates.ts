@@ -90,9 +90,13 @@ export const DOCUMENT_TYPE_HINTS: Record<DocumentType, string> = {
  * `* item`, blank lines get collapsed — so a byte comparison would report an
  * untouched skeleton as edited. Compare the shape instead.
  */
-function normalizeMarkdown(markdown: string): string {
+export function normalizeMarkdown(markdown: string): string {
   return markdown
     .replace(/\r\n/g, "\n")
+    // The editor rewrites emphasis and bullets on load (`_a_` → `*a*`,
+    // `__a__` → `**a**`, `* x` → `- x`) without the author changing anything.
+    .replace(/(^|[^\w\\])__(?=\S)(.+?)(?<=\S)__(?!\w)/g, "$1**$2**")
+    .replace(/(^|[^\w\\])_(?=\S)(.+?)(?<=\S)_(?!\w)/g, "$1*$2*")
     .replace(/^\s*[*+-]\s+/gm, "- ")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
@@ -106,4 +110,9 @@ export function isUntouchedTemplate(content: string): boolean {
   return Object.values(DOCUMENT_TEMPLATES).some(
     (template) => normalizeMarkdown(template) === normalized
   );
+}
+
+/** True when two markdown strings differ only in how the editor writes them. */
+export function isEquivalentMarkdown(a: string, b: string): boolean {
+  return normalizeMarkdown(a) === normalizeMarkdown(b);
 }
