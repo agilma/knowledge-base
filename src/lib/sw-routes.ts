@@ -16,12 +16,20 @@ export function isEditorRoute(pathname: string): boolean {
   );
 }
 
+/**
+ * Pages whose content belongs to the signed-in user. The cache is keyed by URL
+ * alone, so a cached copy would be served to whoever uses the browser next,
+ * including someone who is not signed in, since the proxy does not run when
+ * the service worker answers.
+ */
+export function isPersonalRoute(pathname: string): boolean {
+  return pathname === "/favorites" || pathname === "/recent";
+}
+
 /** Readable pages that are cached for offline reading. */
 export function isTargetPageRoute(pathname: string): boolean {
   const isTarget =
     pathname === "/" ||
-    pathname === "/favorites" ||
-    pathname === "/recent" ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/collections") ||
     pathname.startsWith("/docs");
@@ -31,7 +39,8 @@ export function isTargetPageRoute(pathname: string): boolean {
 
 /**
  * Requests that must never be served from cache: anything but GET, auth
- * endpoints (the session lookup excepted), the login page, and editors.
+ * endpoints (the session lookup excepted), the login page, editors, and
+ * pages that hold one user's own lists.
  */
 export function isNetworkOnlyRequest(method: string, pathname: string): boolean {
   if (method !== "GET") return true;
@@ -39,5 +48,5 @@ export function isNetworkOnlyRequest(method: string, pathname: string): boolean 
     return pathname !== "/api/auth/session";
   }
   if (pathname === "/login") return true;
-  return isEditorRoute(pathname);
+  return isEditorRoute(pathname) || isPersonalRoute(pathname);
 }

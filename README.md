@@ -84,7 +84,7 @@ Saat koneksi internet terputus (offline):
 - Setelah formulir berhasil disimpan ke server saat online, draf lokal untuk dokumen tersebut dibersihkan secara otomatis.
 
 ### Strategi Cache
-- **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session` (tersimpan di `pages-rsc-cache` agar status login tetap terjaga saat offline).
+- **NetworkFirst (Timeout 3 detik)**: Navigasi halaman dan request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`), serta `GET /api/auth/session` (tersimpan di `pages-rsc-cache` agar status login tetap terjaga saat offline).
 - **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker melakukan fetch satu kali di latar belakang untuk menyimpan dokumen HTML dari rute tersebut ke `pages-rsc-cache` (dengan batas penyegaran ulang 5 menit). Hal ini memastikan halaman dapat dibuka kembali secara offline baik dari reload browser maupun ikon PWA.
 - **StaleWhileRevalidate**: Aset statis (`/_next/static/*`, font Google, `/icons/*`).
 - **Tidak Di-cache (NetworkOnly)**:

@@ -26,15 +26,19 @@ export function isDocumentVisible(
 
 /**
  * Returns the documents in the order of `ids`, dropping ids that no longer
- * resolve (deleted, or filtered out because the reader may not see them).
+ * resolve (deleted, or filtered out because the reader may not see them) and
+ * repeated ids, so a duplicate row never shows a document twice.
  */
 export function orderByIds<T extends { id: string }>(
   ids: string[],
   documents: T[]
 ): T[] {
   const byId = new Map(documents.map((doc) => [doc.id, doc]));
+  const seen = new Set<string>();
   const ordered: T[] = [];
   for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
     const doc = byId.get(id);
     if (doc) ordered.push(doc);
   }

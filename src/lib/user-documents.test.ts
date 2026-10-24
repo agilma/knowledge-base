@@ -34,6 +34,11 @@ test("orderByIds drops ids that no longer resolve", () => {
   assert.deepEqual(orderByIds([], docs), []);
 });
 
+test("orderByIds lists a document once even if its id repeats", () => {
+  const docs = [{ id: "a" }, { id: "b" }];
+  assert.deepEqual(orderByIds(["a", "b", "a"], docs), [{ id: "a" }, { id: "b" }]);
+});
+
 test("idsToPrune returns only what is beyond the limit, newest kept", () => {
   const rows = ["1", "2", "3", "4", "5"].map((id) => ({ id }));
   assert.deepEqual(idsToPrune(rows, 3), ["4", "5"]);

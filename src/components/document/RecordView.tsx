@@ -11,7 +11,8 @@ import { recordViewAction } from "@/app/docs/user-actions";
 export function RecordView({ documentId }: { documentId: string }) {
   useEffect(() => {
     if (!navigator.onLine) return;
-    void recordViewAction(documentId);
+    // navigator.onLine stays true on a dead connection; a failed record is not worth surfacing.
+    recordViewAction(documentId).catch(() => {});
   }, [documentId]);
 
   return null;

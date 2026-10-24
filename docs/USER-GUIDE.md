@@ -42,7 +42,7 @@ peran Anda menjadi Editor untuk menulis dan mengubah dokumen.
 
 - Di halaman dokumen, pilih **Tambah favorit** untuk menyimpannya. Semua favorit Anda ada di menu **Favorit**.
 - Dokumen yang Anda baca otomatis tercatat di **Terakhir Dibuka** (maksimal 50, yang terbaru di atas).
-- Keduanya khusus untuk akun Anda dan butuh internet; saat offline tombol favorit nonaktif.
+- Keduanya khusus untuk akun Anda. Halaman Favorit dan Terakhir Dibuka butuh internet dan tidak tersimpan untuk dibaca offline, supaya daftar Anda tidak terlihat oleh orang lain yang memakai browser yang sama. Saat offline tombol favorit juga nonaktif.
 
 ## Yang belum tersedia
 

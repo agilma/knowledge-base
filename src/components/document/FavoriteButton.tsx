@@ -36,21 +36,27 @@ export function FavoriteButton({
   };
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={isPending || !isOnline}
-      aria-pressed={favorite}
-      title={isOnline ? undefined : "Tidak bisa mengubah favorit saat offline"}
-      className="flex items-center gap-1 hover:text-yellow-500 transition-colors ml-auto disabled:opacity-50"
-    >
-      <Star
-        className={
-          favorite ? "w-4 h-4 text-yellow-500 fill-yellow-500" : "w-4 h-4"
-        }
-      />
-      <span>{favorite ? "Favorit" : "Tambah favorit"}</span>
-      {error && <span className="sr-only" role="alert">{error}</span>}
-    </button>
+    <span className="ml-auto flex items-center gap-3">
+      {error && (
+        <span role="alert" className="text-xs text-destructive">
+          {error}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={isPending || !isOnline}
+        aria-pressed={favorite}
+        title={isOnline ? undefined : "Tidak bisa mengubah favorit saat offline"}
+        className="flex items-center gap-1 hover:text-yellow-500 transition-colors disabled:opacity-50"
+      >
+        <Star
+          className={
+            favorite ? "w-4 h-4 text-yellow-500 fill-yellow-500" : "w-4 h-4"
+          }
+        />
+        <span>{favorite ? "Favorit" : "Tambah favorit"}</span>
+      </button>
+    </span>
   );
 }

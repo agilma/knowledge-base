@@ -25,6 +25,11 @@ export async function recordView(
   if (!doc || !isDocumentVisible(doc.status, role)) return false;
 
   await db.$transaction(async (tx) => {
+    // Without a unique key, two simultaneous views both find nothing to delete
+    // and both insert. Serialise this user's writes for the length of the
+    // transaction instead; the lock is released on commit.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))`;
+
     await tx.recentView.deleteMany({
       where: { userId, entityType: ENTITY_DOCUMENT, entityId: documentId },
     });
@@ -49,7 +54,7 @@ export async function recordView(
 export async function getRecentDocuments(
   userId: string,
   role: Role | undefined,
-  limit: number = 20
+  limit: number = RECENT_LIMIT
 ) {
   const rows = await db.recentView.findMany({
     where: { userId, entityType: ENTITY_DOCUMENT },

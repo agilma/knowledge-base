@@ -12,7 +12,7 @@ Katalog fitur yang selalu diperbarui: [`docs/FEATURES.md`](../docs/FEATURES.md).
 
 - `main` berisi CRUD Koleksi & Dokumen, login Google (Auth.js v5), proxy Next.js 16, RBAC, PWA offline-baca, draf lokal, pencarian `ILIKE`, Favorit dan Terakhir Dibuka per pengguna, template dokumen per tipe, dan identitas aplikasi "Knowledge Base".
 - Production di Vercel region `sin1`, database Neon `ap-southeast-1`.
-- Tidak ada CI sendiri dan tidak ada test (lihat `TODO.md`).
+- CI GitHub Actions (`check`: lint, tsc, test, build) dan test `node:test` (`npm test`). Test berbasis database ada di `*.integration.test.ts`, dilewati di CI, dijalankan dengan `KB_DB_TESTS=1`.
 
 ## Belum ada
 
