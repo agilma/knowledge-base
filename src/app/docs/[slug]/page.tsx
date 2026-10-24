@@ -7,6 +7,7 @@ import { ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { DocumentActions } from "@/components/document/DocumentActions";
+import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
 import { isFavorite } from "@/lib/services/favorites";
@@ -116,6 +117,19 @@ export default async function DocumentPage({
 
         {user && <RecordView documentId={doc.id} />}
 
+        {/* The side column only exists on wide screens; on a phone the same
+            links fold away above the text. */}
+        {headings.length > 0 && (
+          <details className="xl:hidden rounded-lg border border-border/60 px-4 py-3">
+            <summary className="cursor-pointer select-none text-sm font-medium text-muted-foreground">
+              Di halaman ini ({headings.length} bagian)
+            </summary>
+            <div className="mt-3">
+              <TableOfContents headings={headings} />
+            </div>
+          </details>
+        )}
+
         {/* Document Content Sections */}
         <MarkdownContent content={doc.content} />
 
@@ -148,17 +162,7 @@ export default async function DocumentPage({
             <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">
               Di halaman ini
             </h4>
-            <nav className="space-y-2">
-              {headings.map((heading) => (
-                <a
-                  key={heading.id}
-                  href={`#${heading.id}`}
-                  className="block text-sm text-muted-foreground hover:text-foreground transition-colors border-l-2 border-transparent hover:border-foreground pl-3 py-1"
-                >
-                  {heading.title}
-                </a>
-              ))}
-            </nav>
+            <TableOfContents headings={headings} />
           </div>
         </aside>
       )}

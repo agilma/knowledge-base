@@ -12,6 +12,13 @@ administrator menambahkan alamat email Anda.
 2. Buka hasil yang cocok. Di bawah dokumen ada **Pengetahuan Terkait** jika ada.
 3. **Koleksi** mengelompokkan dokumen per topik.
 
+## Daftar isi dan tautan ke bagian
+
+Dokumen yang panjang punya daftar isi: di layar lebar ada di kolom kanan, di HP ada lipatan
+**Di halaman ini** di atas teks. Arahkan kursor ke judul bagian (di HP, ikon tautan tampak samar di
+sebelahnya) dan ketuk ikon tautan untuk menyalin alamat langsung ke bagian itu, misalnya untuk dikirim
+ke rekan: "buka bagian Verifikasi".
+
 ## Jenis dokumen
 
 - **Panduan**: langkah mengerjakan sesuatu.
