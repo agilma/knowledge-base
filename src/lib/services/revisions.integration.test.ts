@@ -130,6 +130,18 @@ test("setting the status a document already has records nothing", { skip: !enabl
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
 });
 
+test("an invalid status is rejected and records nothing", { skip: !enabled }, async () => {
+  const [col, ana] = [await collection(), await user("ana21")];
+  const doc = await createDocument(input(col.id, 21), ana.id);
+  created.documents.push(doc.id);
+
+  for (const bad of [undefined, null, "BOGUS"]) {
+    await assert.rejects(setDocumentStatus(doc.id, bad as unknown as DocumentStatus, ana.id), /tidak valid/);
+  }
+
+  assert.equal((await getRevisionList(doc.id)).length, 1);
+});
+
 test("a status change made with the text is one version, not two", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana9")];
   const doc = await createDocument(input(col.id, 9, "## lama"), ana.id);

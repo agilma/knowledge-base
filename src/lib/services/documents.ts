@@ -457,6 +457,10 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
  * records nothing.
  */
 export async function setDocumentStatus(id: string, status: DocumentStatus, editorId?: string) {
+  // Server actions can be called directly with any payload.
+  if (typeof id !== "string" || !Object.values(DocumentStatus).includes(status)) {
+    throw new Error("Status dokumen tidak valid");
+  }
   return db.$transaction(async (tx) => {
     let latest = await lockRevisions(tx, id);
 
