@@ -1,5 +1,14 @@
-import { DocumentStatus } from "@prisma/client";
+import { DocumentStatus, DocumentType, Prisma } from "@prisma/client";
 import { db } from "../db";
+import {
+  HIGHLIGHT_MARKERS,
+  HIGHLIGHT_START,
+  HIGHLIGHT_STOP,
+  SEARCH_CONFIG,
+  SEARCH_VECTOR_SQL,
+  cleanSnippet,
+  toTsQuery,
+} from "../search-query";
 import { documentSchema, DocumentInput } from "../validation/document";
 
 export interface ReadOptions {
@@ -78,32 +87,83 @@ export async function getRelatedDocuments(
   return documents.filter((doc) => doc.status === DocumentStatus.PUBLISHED);
 }
 
-export async function searchDocuments(
-  query: string,
-  options?: ReadOptions & { collectionId?: string }
-) {
-  const trimmed = query.trim();
-  if (!trimmed) return [];
+export const SEARCH_RESULT_LIMIT = 50;
 
-  const whereStatus = options?.includeDrafts
-    ? undefined
-    : DocumentStatus.PUBLISHED;
+export interface SearchOptions extends ReadOptions {
+  collectionId?: string;
+  type?: DocumentType;
+}
 
-  return db.document.findMany({
-    where: {
-      ...(whereStatus ? { status: whereStatus } : {}),
-      ...(options?.collectionId ? { collectionId: options.collectionId } : {}),
-      OR: [
-        { title: { contains: trimmed, mode: "insensitive" } },
-        { excerpt: { contains: trimmed, mode: "insensitive" } },
-        { content: { contains: trimmed, mode: "insensitive" } },
-      ],
-    },
-    include: {
-      collection: true,
-    },
-    orderBy: { updatedAt: "desc" },
+interface SearchRow {
+  id: string;
+  total: bigint;
+  titleHighlight: string;
+  excerptHighlight: string | null;
+  snippet: string;
+}
+
+/**
+ * Full-text search, most relevant first. Highlights come back marked with
+ * HIGHLIGHT_START / HIGHLIGHT_STOP; use `splitHighlights` to render them.
+ *
+ * Visibility is decided here, in SQL, and nowhere else: without
+ * `includeDrafts` only PUBLISHED documents can match.
+ */
+export async function searchDocuments(query: string, options?: SearchOptions) {
+  const tsQuery = toTsQuery(query);
+  if (!tsQuery) return { results: [], total: 0 };
+
+  const vector = Prisma.raw(SEARCH_VECTOR_SQL);
+  // translate() drops the marker characters from the text first, so content
+  // that happens to contain them cannot masquerade as a match.
+  const headline = (column: Prisma.Sql, extra: string) =>
+    Prisma.sql`ts_headline(${SEARCH_CONFIG}::regconfig, translate(${column}, ${HIGHLIGHT_MARKERS}, ''), q.query,
+      ${`StartSel=${HIGHLIGHT_START}, StopSel=${HIGHLIGHT_STOP}, ${extra}`})`;
+
+  const rows = await db.$queryRaw<SearchRow[]>`
+    WITH q AS (SELECT to_tsquery(${SEARCH_CONFIG}::regconfig, ${tsQuery}) AS query),
+    hits AS (
+      SELECT d.id, d.title, d.excerpt, d.content, d."updatedAt",
+             ts_rank(${vector}, q.query, 1) AS rank,
+             count(*) OVER () AS total
+      FROM documents d, q
+      WHERE ${vector} @@ q.query
+        ${options?.includeDrafts ? Prisma.empty : Prisma.sql`AND d.status = 'PUBLISHED'`}
+        ${options?.collectionId ? Prisma.sql`AND d."collectionId" = ${options.collectionId}` : Prisma.empty}
+        ${options?.type ? Prisma.sql`AND d.type = ${options.type}::"DocumentType"` : Prisma.empty}
+      ORDER BY rank DESC, d."updatedAt" DESC
+      LIMIT ${SEARCH_RESULT_LIMIT}
+    )
+    SELECT hits.id, hits.total,
+           ${headline(Prisma.sql`hits.title`, "HighlightAll=true")} AS "titleHighlight",
+           CASE WHEN hits.excerpt IS NULL THEN NULL
+                ELSE ${headline(Prisma.sql`hits.excerpt`, "HighlightAll=true")} END AS "excerptHighlight",
+           ${headline(Prisma.sql`left(hits.content, 200000)`, "MinWords=12, MaxWords=28")} AS snippet
+    FROM hits, q
+    ORDER BY hits.rank DESC, hits."updatedAt" DESC`;
+
+  if (rows.length === 0) return { results: [], total: 0 };
+
+  const documents = await db.document.findMany({
+    where: { id: { in: rows.map((row) => row.id) } },
+    include: { collection: true },
   });
+  const byId = new Map(documents.map((doc) => [doc.id, doc]));
+
+  const results = rows.flatMap((row) => {
+    const doc = byId.get(row.id);
+    if (!doc) return [];
+    return [
+      {
+        ...doc,
+        titleHighlight: row.titleHighlight,
+        excerptHighlight: row.excerptHighlight,
+        snippet: cleanSnippet(row.snippet),
+      },
+    ];
+  });
+
+  return { results, total: Number(rows[0].total) };
 }
 
 export async function getRecentlyUpdatedDocuments(

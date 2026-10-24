@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-24
+Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ---
 
@@ -60,14 +60,6 @@ Terakhir diperbarui: 2026-10-24
       untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
       tidak sampai melemparkan galat.
 
-- [ ] **Pencarian akan melambat.** `src/lib/services/documents.ts:97` memakai
-      `contains` + `mode: "insensitive"` pada `title`, `excerpt`, dan `content`.
-      Itu `ILIKE '%kata%'` — tidak bisa memakai index, selalu full scan, dan
-      `content` kolom teks panjang. Tidak ada index teks di tabel `documents`.
-      Pencarian adalah fitur yang paling sering dipakai; begitu lambat, orang
-      berhenti memakai knowledge base-nya. Solusinya Postgres full-text
-      (`tsvector` + index GIN), didukung Neon.
-
 - [ ] **Tidak ada catatan penyunting terakhir.** `Document` punya `authorId`
       tapi tidak `lastEditedById` atau riwayat versi. Begitu beberapa orang
       menyunting, "ini terakhir diubah siapa, dan kenapa" jadi pertanyaan
@@ -78,6 +70,18 @@ Terakhir diperbarui: 2026-10-24
       terpisah. Pindah ke JWT session strategy menghilangkannya sepenuhnya,
       dengan konsekuensi: perubahan role baru berlaku setelah login ulang.
       Keputusan produk, bukan teknis.
+
+## Offline
+
+- [ ] **`/search` di-cache service worker dan memuat draf untuk EDITOR.**
+      Pencarian EDITOR menyertakan draf dan arsip, dan halamannya masuk
+      `pages-rsc-cache` per URL. Jika perangkat lalu dipakai VIEWER tanpa lewat
+      tombol keluar (sesi kedaluwarsa, orang lain login) dan sedang offline,
+      `/search?q=...` dari cache menampilkan judul draf. Online tidak bocor
+      (NetworkFirst, proxy tetap menegakkan sesi). Bukan regresi pencarian
+      full-text: `/docs/<draf>` bocor dengan cara yang sama, dan `CLEAR_PAGE_CACHE`
+      hanya dipanggil dari `UserMenu`. Opsi: `/search` network-only (masuk
+      `isPersonalRoute` di `src/lib/sw-routes.ts`) dan samakan dengan `/docs/*`.
 
 ## Perlu dicek sendiri
 

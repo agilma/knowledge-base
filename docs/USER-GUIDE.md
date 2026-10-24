@@ -12,6 +12,18 @@ administrator menambahkan alamat email Anda.
 2. Buka hasil yang cocok. Di bawah dokumen ada **Pengetahuan Terkait** jika ada.
 3. **Koleksi** mengelompokkan dokumen per topik.
 
+Tips pencarian:
+
+- Hasil diurutkan dari yang paling cocok; judul lebih berbobot daripada isi.
+- Kata berimbuhan dikenali: mencari "memotong" juga menemukan "dipotong" dan "pemotongan".
+- Beberapa kata berarti semuanya harus ada di dokumen. Awalan kata juga cocok ("kupo" menemukan "kupon").
+- Pakai tanda kutip untuk frasa yang kata-katanya harus berurutan, misalnya "gagal closing".
+- Pilih **Panduan**, **Masalah**, atau **Referensi**, dan satu koleksi, untuk mempersempit hasil.
+- Kata yang cocok ditebalkan. Kalau cocoknya hanya di isi dokumen, potongan kalimatnya ditampilkan.
+- Yang tampil paling banyak 50 hasil teratas. Tambahkan kata atau filter bila belum ketemu.
+- Pencarian mencocokkan kata utuh atau awalan kata, bukan potongan di tengah kata.
+- Draf dan arsip hanya muncul di hasil pencarian Editor dan Admin.
+
 ## Daftar isi dan tautan ke bagian
 
 Dokumen yang panjang punya daftar isi: di layar lebar ada di kolom kanan, di HP ada lipatan
