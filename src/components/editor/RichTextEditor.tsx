@@ -234,6 +234,15 @@ export default function RichTextEditor({ markdown, onChange, placeholder, onUnsu
   useEffect(() => {
     onUnsupportedRef.current = onUnsupported;
   });
+  // the menu is placed once, so it would be left behind by a scrolling page
+  const slashOpen = !!slash;
+  useEffect(() => {
+    if (!slashOpen) return;
+    const close = () => store.handlers.onUpdate(null);
+    window.addEventListener("scroll", close, { passive: true });
+    return () => window.removeEventListener("scroll", close);
+  }, [slashOpen, store]);
+
   // let assistive technology know the menu is open and which option is chosen
   useEffect(() => {
     const dom = editor?.view.dom;

@@ -98,7 +98,13 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       dan `visualViewport` buatan (bilah alat tepat di atas keyboard simulasi). Yang belum terbukti: keyboard
       Android sungguhan (Gboard, IME, koreksi otomatis di dalam editor), mode gelap, dan dokumen panjang. Tautan
       masih memakai `window.prompt`; kalau terasa kasar di HP, ganti dengan isian kecil di bilah alat.
-      Belum ada toolbar melayang dekat teks terpilih dan belum ada gambar (menunggu object storage). Toolbar
+      Belum ada toolbar melayang dekat teks terpilih dan belum ada gambar (menunggu object storage).
+      Dari review ulang: pemeriksaan "aman disimpan" hanya jalan saat dokumen dimuat, bukan saat mengetik;
+      mengetik `# ` lalu Backspace lalu `# teks` menghasilkan `# # teks` (bug penulisan ulang Tiptap).
+      Dokumen dengan tautan yang ditebalkan (`**[a](url)**`) atau kode di dalam daftar bernomor dialihkan ke
+      mode Markdown walau maknanya setara (aman, tetapi bisa mengganggu SOP). Test `editor-roundtrip.test.ts`
+      memakai `MarkdownManager` di Node yang tidak menjalankan skema ProseMirror penuh, jadi sebagian kasus
+      HTML-dalam-tabel berbeda dari di browser; keduanya tetap tertangkap pemeriksaan produksi. Toolbar
       belum bisa dinavigasi dengan panah (15 tombol semuanya masuk urutan Tab). Dokumen dengan gambar,
       catatan kaki, atau HTML kini selalu dibuka sebagai markdown; kalau itu terlalu sering, tambahkan ekstensi
       Image atau catatan kaki yang setia sebagai pekerjaan terpisah.

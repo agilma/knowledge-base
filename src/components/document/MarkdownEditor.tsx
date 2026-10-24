@@ -93,23 +93,25 @@ export function MarkdownEditor({
       <div className={`space-y-2 ${className}`}>
         {unsupported && (
           <div className="p-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-md">
-            Dokumen ini memuat sintaks yang belum didukung editor visual (misalnya gambar, catatan kaki, atau HTML);
-            menyimpannya dari sana akan menghilangkannya. Dokumen diedit dalam mode Markdown.
+            Dokumen ini memuat bagian yang akan berubah atau hilang bila disimpan dari editor visual (misalnya gambar,
+            catatan kaki, HTML, atau tautan yang ditebalkan). Karena itu dokumen diedit dalam mode Markdown.
           </div>
         )}
         <div className="flex items-center justify-between border-b pb-2">
           <span className="text-xs font-medium text-muted-foreground">Mode Markdown (Mentah)</span>
-          {!unsupported && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => chooseMode(false)}
-              className="text-xs h-7 px-2"
-            >
-              Beralih ke Editor Visual
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              // the editor checks the text again and comes straight back here if it still cannot hold it
+              setUnsupported(false);
+              chooseMode(false);
+            }}
+            className="text-xs h-7 px-2"
+          >
+            {unsupported ? "Coba Editor Visual" : "Beralih ke Editor Visual"}
+          </Button>
         </div>
         <Textarea
           id={id}
