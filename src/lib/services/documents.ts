@@ -10,6 +10,7 @@ import {
   toTsQuery,
 } from "../search-query";
 import { documentSchema, DocumentInput } from "../validation/document";
+import { diffRelations, parseRelatedIds } from "../related";
 
 export interface ReadOptions {
   includeDrafts?: boolean;
@@ -63,28 +64,103 @@ export async function getDocumentById(id: string) {
   });
 }
 
+/** Ids on the other end of every relation of a document, whichever way it was written. */
+export async function getRelatedDocumentIds(documentId: string): Promise<string[]> {
+  const rows = await db.documentRelation.findMany({
+    where: { OR: [{ fromId: documentId }, { toId: documentId }] },
+    select: { fromId: true, toId: true },
+  });
+  return [...new Set(rows.map((row) => (row.fromId === documentId ? row.toId : row.fromId)))];
+}
+
+/**
+ * Documents related to this one, in either direction, titled A to Z. A reader
+ * sees published ones only; editors also see drafts and archived ones.
+ */
 export async function getRelatedDocuments(
   documentId: string,
   options?: ReadOptions
 ) {
-  const relations = await db.documentRelation.findMany({
-    where: { fromId: documentId },
-    include: {
-      to: {
-        include: {
-          collection: true,
-        },
-      },
+  const ids = await getRelatedDocumentIds(documentId);
+  if (ids.length === 0) return [];
+
+  return db.document.findMany({
+    where: {
+      id: { in: ids },
+      ...(options?.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
     },
+    include: { collection: true },
+    orderBy: { title: "asc" },
   });
+}
 
-  const documents = relations.map((rel) => rel.to);
+/** What an editor may pick from when relating a document: everything but itself. */
+export async function getRelationCandidates(excludeId?: string) {
+  return db.document.findMany({
+    where: excludeId ? { id: { not: excludeId } } : {},
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      collection: { select: { name: true } },
+    },
+    orderBy: { title: "asc" },
+    take: 500,
+  });
+}
 
-  if (options?.includeDrafts) {
-    return documents;
-  }
+/**
+ * Makes the documents related to `documentId` exactly `relatedIds`. The pair is
+ * one relation whichever way it is stored, so removing deletes both directions
+ * and adding does not duplicate a pair that exists in the other direction.
+ * Unknown ids are ignored rather than failing the whole save.
+ */
+export async function setRelatedDocuments(documentId: string, relatedIds: string[]) {
+  const desired = parseRelatedIds(relatedIds, documentId);
 
-  return documents.filter((doc) => doc.status === DocumentStatus.PUBLISHED);
+  await db.$transaction(async (tx) => {
+    // One lock for every relation write, not one per document: A saving [B] and
+    // B saving [A] at the same moment touch different documents but the same
+    // pair, and each would otherwise see no row and insert its own. Relations
+    // change rarely, so serialising them costs nothing.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_relations'))`;
+
+    const existing = await tx.document.findMany({
+      where: { id: { in: desired } },
+      select: { id: true },
+    });
+    const valid = new Set(existing.map((doc) => doc.id));
+
+    const rows = await tx.documentRelation.findMany({
+      where: { OR: [{ fromId: documentId }, { toId: documentId }] },
+      select: { fromId: true, toId: true },
+    });
+    const current = [
+      ...new Set(rows.map((row) => (row.fromId === documentId ? row.toId : row.fromId))),
+    ];
+
+    const { add, remove } = diffRelations(
+      current,
+      desired.filter((id) => valid.has(id))
+    );
+
+    if (remove.length > 0) {
+      await tx.documentRelation.deleteMany({
+        where: {
+          OR: [
+            { fromId: documentId, toId: { in: remove } },
+            { toId: documentId, fromId: { in: remove } },
+          ],
+        },
+      });
+    }
+    if (add.length > 0) {
+      await tx.documentRelation.createMany({
+        data: add.map((toId) => ({ fromId: documentId, toId })),
+        skipDuplicates: true,
+      });
+    }
+  });
 }
 
 export const SEARCH_RESULT_LIMIT = 50;

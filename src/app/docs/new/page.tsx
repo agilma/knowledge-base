@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { getCollections } from "@/lib/services/collections";
+import { getRelationCandidates } from "@/lib/services/documents";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function NewDocumentPage({
 
   const { collection: collectionSlug, title: defaultTitle } = await searchParams;
   const collections = await getCollections();
+  const relatedCandidates = await getRelationCandidates();
 
   let defaultCollectionId: string | undefined;
   if (collectionSlug) {
@@ -34,6 +36,7 @@ export default async function NewDocumentPage({
 
       <DocumentForm
         collections={collections}
+        relatedCandidates={relatedCandidates}
         defaultCollectionId={defaultCollectionId}
         defaultTitle={defaultTitle?.slice(0, 150)}
       />

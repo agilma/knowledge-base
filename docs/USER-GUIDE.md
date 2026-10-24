@@ -9,7 +9,7 @@ administrator menambahkan alamat email Anda.
 ## Mencari dan membaca
 
 1. Buka **Cari** di menu, lalu ketik kata dari gejala atau judul.
-2. Buka hasil yang cocok. Di bawah dokumen ada **Pengetahuan Terkait** jika ada.
+2. Buka hasil yang cocok. Di bawah dokumen ada **Pengetahuan Terkait**: dokumen lain yang sebaiknya dibaca bersamanya.
 3. **Koleksi** mengelompokkan dokumen per topik.
 
 Tips pencarian:
@@ -41,7 +41,8 @@ ke rekan: "buka bagian Verifikasi".
 
 1. Buka koleksi, pilih **Dokumen Baru**, lalu pilih jenisnya. Kerangka bagian akan terisi.
 2. Tulis isinya. Tombol **Mode Markdown** dipakai untuk menempel dari Obsidian.
-3. Simpan sebagai **Draf** dulu. Ubah ke **Terbit** saat siap dibaca orang lain.
+3. Di bagian **Pengetahuan Terkait**, ketik judul dokumen lain lalu pilih untuk menautkannya (maksimal 20). Hubungannya dua arah: dokumen yang Anda pilih juga akan menampilkan dokumen ini, dan menghapusnya dari salah satu sisi menghapus keduanya. Pembaca biasa hanya melihat yang sudah terbit.
+4. Simpan sebagai **Draf** dulu. Ubah ke **Terbit** saat siap dibaca orang lain.
 
 Tulisan Anda disimpan otomatis di perangkat sebagai draf lokal. Kalau halaman
 tertutup sebelum tersimpan, akan ada tawaran **Pulihkan** saat dibuka lagi.

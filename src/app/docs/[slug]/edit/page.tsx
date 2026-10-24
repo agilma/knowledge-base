@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
-import { getDocumentBySlug } from "@/lib/services/documents";
+import {
+  getDocumentBySlug,
+  getRelatedDocumentIds,
+  getRelationCandidates,
+} from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
@@ -21,7 +25,11 @@ export default async function EditDocumentPage({
     notFound();
   }
 
-  const collections = await getCollections();
+  const [collections, relatedCandidates, initialRelatedIds] = await Promise.all([
+    getCollections(),
+    getRelationCandidates(document.id),
+    getRelatedDocumentIds(document.id),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
@@ -34,6 +42,8 @@ export default async function EditDocumentPage({
 
       <DocumentForm
         collections={collections}
+        relatedCandidates={relatedCandidates}
+        initialRelatedIds={initialRelatedIds}
         initialData={document}
       />
     </div>
