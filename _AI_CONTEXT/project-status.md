@@ -17,6 +17,7 @@ Katalog fitur yang selalu diperbarui: [`docs/FEATURES.md`](../docs/FEATURES.md).
 ## Belum ada
 
 - Pemulihan versi dari riwayat revisi (riwayat bisa dibaca).
+- Perubahan status (terbit, arsip) di riwayat: disetujui, belum dikerjakan (`docs/FEATURES.md`).
 - Lampiran (object storage).
 - `error.tsx`, `not-found.tsx`, `loading.tsx`.
 

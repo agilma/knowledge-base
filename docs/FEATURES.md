@@ -33,6 +33,25 @@ rencana per fase ada di bagian bawah.
 | Penyunting terakhir dan riwayat revisi | selesai | `prisma/migrations/4_document_revisions`, `src/lib/services/revisions.ts`, `src/lib/revisions.ts`, `src/app/docs/[slug]/history/` | Halaman dokumen menampilkan "diperbarui ... oleh ..."; editor/admin membuka Riwayat (daftar versi, selisih karakter) dan melihat isi tiap versi (hanya baca). Simpan yang tidak mengubah isi tidak mencatat versi; maksimal 100 versi per dokumen. Perubahan status (terbit/arsip) tidak tercatat di riwayat, hanya di "diperbarui oleh". Memulihkan versi belum ada |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
 
+## Disetujui, belum dikerjakan
+
+### Perubahan status masuk riwayat
+Disetujui pemilik 24 Okt 2026; belum ada kode. Sekarang terbit, arsip, dan kembali ke draf hanya
+memperbarui "diperbarui oleh" dan tidak muncul di riwayat, sehingga "siapa yang mengarsipkan ini,
+kapan" tidak terjawab (lihat `TODO.md`). Catatan rancangan:
+
+- Setiap perubahan status mencatat satu revisi (isi disalin, `status` berisi status barunya), baik
+  dari tombol terbit/arsip maupun dari kolom status di form.
+- Daftar riwayat menurunkan labelnya dari perbandingan dengan versi sebelumnya, misalnya
+  "Diterbitkan", "Diarsipkan", "Dikembalikan ke draf", jadi kemungkinan **tidak butuh migrasi**:
+  kolom `status` sudah ada di `DocumentRevision`.
+- Harga yang perlu diputuskan saat mengerjakan: setiap perubahan status menyalin isi (sampai 200 ribu
+  karakter) dan ikut dihitung dalam batas 100 versi, jadi dokumen yang sering berganti status
+  mendorong versi teks lama keluar lebih cepat. Alternatifnya tabel peristiwa terpisah yang tidak
+  menyalin isi dan tidak ikut batas itu.
+- Perlu test database: status berubah dua kali berturut-turut, perubahan status bersamaan dengan
+  perubahan teks (satu revisi, bukan dua), dan simpan bersamaan.
+
 ## Dipertimbangkan (belum diputuskan dipakai atau tidak)
 
 ### Ekspor dokumen ke `.md` di GitHub
