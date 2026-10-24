@@ -16,7 +16,6 @@ Katalog fitur yang selalu diperbarui: [`docs/FEATURES.md`](../docs/FEATURES.md).
 
 ## Belum ada
 
-- UI Pengetahuan Terkait (data relasi bisa dibaca, belum bisa dikelola).
 - Riwayat revisi dan penyunting terakhir.
 - Lampiran (object storage).
 - `error.tsx`, `not-found.tsx`, `loading.tsx`.

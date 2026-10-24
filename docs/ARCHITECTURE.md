@@ -30,7 +30,7 @@ Didefinisikan di `prisma/schema.prisma`.
 - **User** (`role`: VIEWER, EDITOR, ADMIN) beserta tabel Auth.js: Account, Session, VerificationToken.
 - **Collection** berisi banyak **Document**. Menghapus koleksi yang masih berisi dokumen ditolak (`onDelete: Restrict`).
 - **Document**: `type` (PANDUAN, MASALAH, REFERENSI), `status` (DRAFT, PUBLISHED, ARCHIVED), `content` berupa markdown, `authorId` opsional.
-- **DocumentRelation**: relasi antar dokumen untuk "Pengetahuan Terkait".
+- **DocumentRelation**: relasi antar dokumen untuk "Pengetahuan Terkait". Bagi pembaca relasi itu dua arah (A menunjuk B berarti B juga menampilkan A), tetapi satu pasangan disimpan sebagai satu baris, searah penulisan pertamanya. Karena itu membaca dan mengubah selalu memperlakukan kedua arah sebagai relasi yang sama (`getRelatedDocumentIds`, `setRelatedDocuments`), dan semua penulisan relasi diserialkan dengan satu `pg_advisory_xact_lock`: kunci per dokumen terbukti tidak cukup, karena A menyimpan [B] bersamaan dengan B menyimpan [A] menulis dua baris (40 dari 40 percobaan). Maksimal 20 per dokumen (`MAX_RELATED`).
 - **Favorite**, **RecentView**: daftar per pengguna (`entityType` = `DOCUMENT`). Keduanya tanpa foreign key, jadi baris bisa menunjuk dokumen yang sudah dihapus atau tidak boleh dilihat pembaca; saat dibaca baris seperti itu disaring. `RecentView` tidak punya unique key: satu dokumen satu baris dijaga dengan menghapus lalu menulis di dalam transaksi yang diserialkan per pengguna (`pg_advisory_xact_lock`), dipangkas ke 50 terbaru.
 
 Hanya dokumen `PUBLISHED` terlihat oleh VIEWER. Draf dan arsip hanya untuk EDITOR dan ADMIN.

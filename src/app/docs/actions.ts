@@ -10,7 +10,9 @@ import {
   setDocumentStatus,
   deleteDocument,
   getDocumentById,
+  setRelatedDocuments,
 } from "@/lib/services/documents";
+import { parseRelatedIds } from "@/lib/related";
 import { documentSchema, DocumentInput } from "@/lib/validation/document";
 
 export type ActionState = {
@@ -51,6 +53,7 @@ export async function createDocumentAction(
 
   try {
     const newDoc = await createDocument(parsed.data, user.id);
+    await setRelatedDocuments(newDoc.id, parseRelatedIds(formData.getAll("relatedIds"), newDoc.id));
     const createdWithCol = await getDocumentById(newDoc.id);
     revalidatePath("/collections");
     if (createdWithCol?.collection) {
@@ -103,6 +106,7 @@ export async function updateDocumentAction(
   try {
     const oldDoc = await getDocumentById(id);
     const updatedDoc = await updateDocument(id, parsed.data);
+    await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id));
     const newDocWithCol = await getDocumentById(updatedDoc.id);
 
     revalidatePath("/collections");

@@ -19,7 +19,7 @@ rencana per fase ada di bagian bawah.
 | Test otomatis dan CI | selesai | `npm test`, `.github/workflows/ci.yml` | Aturan route service worker, izin login, normalisasi markdown. CI: lint, tsc, test, build |
 | Validasi env | selesai | `src/lib/env.ts` | Kredensial Google kosong memberi pesan yang menyebut nama variabelnya. `DATABASE_URL` yang hilang atau salah format sudah memberi galat jelas dari Prisma (diperiksa), jadi tidak divalidasi ulang |
 | Pencarian full-text | selesai | `src/app/search/page.tsx`, `searchDocuments` di `documents.ts`, `src/lib/search-query.ts`, migrasi `3_fulltext_search` | Postgres full-text (`tsvector` + GIN, stemmer Indonesia): kata berimbuhan cocok, urut menurut relevansi, kutip untuk frasa, filter jenis dan koleksi, kata cocok disorot. Maksimal 50 hasil teratas |
-| Pengetahuan Terkait | sebagian | `getRelatedDocuments` di `documents.ts` | Tampil jika data relasi ada, belum ada UI untuk mengelola relasi |
+| Pengetahuan Terkait | selesai | `src/components/document/RelatedDocumentsPicker.tsx`, `src/lib/related.ts`, `getRelatedDocuments`/`setRelatedDocuments` di `documents.ts` | Editor memilih dokumen terkait di form (cari judul, maksimal 20). Hubungannya dua arah dan satu pasangan satu baris. Pembaca hanya melihat dokumen terbit. Pilihan terkait belum ikut draf lokal otomatis |
 | PWA dan offline-baca | selesai | `src/app/sw.ts`, `src/app/manifest.ts` | Halaman yang pernah dibuka bisa dibaca offline |
 | Penjaga offline pada form | selesai | `src/lib/use-online-status.ts` | Tombol simpan nonaktif saat offline |
 | Mode terang / gelap | selesai | `src/components/theme/` | |
@@ -40,7 +40,7 @@ Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan
 
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil (sudah) · UI Pengetahuan
-Terkait · penyunting terakhir dan
+Terkait (sudah) · penyunting terakhir dan
 riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau).
 
 ### Fase 2 — Lampiran

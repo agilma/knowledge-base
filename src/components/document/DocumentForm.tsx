@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
+import { RelatedDocumentsPicker, type RelatedCandidate } from "@/components/document/RelatedDocumentsPicker";
 import { slugify } from "@/lib/slug";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { createDocumentAction, updateDocumentAction, ActionState } from "@/app/docs/actions";
@@ -37,6 +38,8 @@ interface LocalDraft {
 
 interface DocumentFormProps {
   collections: CollectionOption[];
+  relatedCandidates?: RelatedCandidate[];
+  initialRelatedIds?: string[];
   defaultCollectionId?: string;
   defaultTitle?: string;
   initialData?: {
@@ -54,6 +57,8 @@ interface DocumentFormProps {
 
 export function DocumentForm({
   collections,
+  relatedCandidates = [],
+  initialRelatedIds = [],
   defaultCollectionId,
   defaultTitle,
   initialData,
@@ -474,6 +479,11 @@ export function DocumentForm({
           <p className="text-xs text-destructive">{state.fieldErrors.content}</p>
         )}
       </div>
+
+      <RelatedDocumentsPicker
+        candidates={relatedCandidates}
+        initialIds={initialRelatedIds}
+      />
 
       <div className="space-y-2 max-w-xs">
         <Label htmlFor="status">Status Dokumen</Label>
