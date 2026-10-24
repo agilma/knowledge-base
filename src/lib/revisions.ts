@@ -54,3 +54,22 @@ export function formatSizeChange(change: number | null | undefined): string {
 export function nextVersion(latest: number | null | undefined): number {
   return (latest ?? 0) + 1;
 }
+
+const STATUS_CHANGE_LABELS: Record<string, string> = {
+  PUBLISHED: "Diterbitkan",
+  ARCHIVED: "Diarsipkan",
+  DRAFT: "Dikembalikan ke draf",
+};
+
+/**
+ * What a version did to the status, read from the version before it: a change
+ * to PUBLISHED reads "Diterbitkan", to ARCHIVED "Diarsipkan", to DRAFT
+ * "Dikembalikan ke draf". The first version, or one that kept the status, has none.
+ */
+export function statusChangeLabel(
+  previousStatus: string | null | undefined,
+  status: string
+): string | null {
+  if (!previousStatus || previousStatus === status) return null;
+  return STATUS_CHANGE_LABELS[status] ?? null;
+}

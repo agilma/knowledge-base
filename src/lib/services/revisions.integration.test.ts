@@ -94,17 +94,114 @@ test("a save that changes nothing adds no revision but still notes who saved", {
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, budi.id);
 });
 
-test("changing only the status is not a revision, but notes who did it", { skip: !enabled }, async () => {
+test("publishing, archiving and returning to draft each become a version", { skip: !enabled }, async () => {
   const [col, ana, budi] = [await collection(), await user("ana4"), await user("budi4")];
   const doc = await createDocument(input(col.id, 4), ana.id);
   created.documents.push(doc.id);
 
   await setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, budi.id);
+  await setDocumentStatus(doc.id, DocumentStatus.ARCHIVED, ana.id);
+  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, budi.id);
+
+  const list = await getRevisionList(doc.id); // newest first
+  assert.deepEqual(
+    list.map((r) => [r.version, r.status, r.statusLabel, r.editorName]),
+    [
+      [4, "DRAFT", "Dikembalikan ke draf", "budi4"],
+      [3, "ARCHIVED", "Diarsipkan", "ana4"],
+      [2, "PUBLISHED", "Diterbitkan", "budi4"],
+      [1, "DRAFT", null, "ana4"],
+    ]
+  );
+  // the text did not change, so the size did not either
+  assert.deepEqual(list.map((r) => r.sizeChange), [0, 0, 0, null]);
+  assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.status, DocumentStatus.DRAFT);
+});
+
+test("setting the status a document already has records nothing", { skip: !enabled }, async () => {
+  const [col, ana, budi] = [await collection(), await user("ana8"), await user("budi8")];
+  const doc = await createDocument(input(col.id, 8), ana.id);
+  created.documents.push(doc.id);
+
+  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, budi.id);
 
   assert.equal((await getRevisionList(doc.id)).length, 1);
-  const after = await db.document.findUnique({ where: { id: doc.id } });
-  assert.equal(after?.status, DocumentStatus.PUBLISHED);
-  assert.equal(after?.lastEditedById, budi.id);
+  // and it does not pretend somebody edited it
+  assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
+});
+
+test("a status change made with the text is one version, not two", { skip: !enabled }, async () => {
+  const [col, ana] = [await collection(), await user("ana9")];
+  const doc = await createDocument(input(col.id, 9, "## lama"), ana.id);
+  created.documents.push(doc.id);
+
+  await updateDocument(
+    doc.id,
+    { ...input(col.id, 9, "## baru"), status: DocumentStatus.PUBLISHED },
+    ana.id
+  );
+
+  const list = await getRevisionList(doc.id);
+  assert.deepEqual(list.map((r) => [r.version, r.status, r.statusLabel]), [
+    [2, "PUBLISHED", "Diterbitkan"],
+    [1, "DRAFT", null],
+  ]);
+});
+
+test("a save from the form that only changes the status is a version too", { skip: !enabled }, async () => {
+  const [col, ana] = [await collection(), await user("ana10")];
+  const doc = await createDocument(input(col.id, 10, "## sama"), ana.id);
+  created.documents.push(doc.id);
+
+  // the form sends the text back unchanged, with a different status
+  await updateDocument(doc.id, { ...input(col.id, 10, "## sama"), status: DocumentStatus.ARCHIVED }, ana.id);
+
+  assert.deepEqual((await getRevisionList(doc.id)).map((r) => [r.status, r.statusLabel]), [
+    ["ARCHIVED", "Diarsipkan"],
+    ["DRAFT", null],
+  ]);
+});
+
+test("a document with no history keeps its old status as version 1 on a status change", { skip: !enabled }, async () => {
+  const [col, ana, budi] = [await collection(), await user("ana11"), await user("budi11")];
+  const legacy = await db.document.create({
+    data: {
+      ...input(col.id, 11, "## teks"),
+      excerpt: null,
+      status: DocumentStatus.PUBLISHED,
+      authorId: ana.id,
+    },
+  });
+  created.documents.push(legacy.id);
+
+  await setDocumentStatus(legacy.id, DocumentStatus.ARCHIVED, budi.id);
+
+  const revisions = await db.documentRevision.findMany({
+    where: { documentId: legacy.id },
+    orderBy: { version: "asc" },
+  });
+  assert.deepEqual(revisions.map((r) => [r.version, r.status, r.editedById]), [
+    [1, DocumentStatus.PUBLISHED, ana.id],
+    [2, DocumentStatus.ARCHIVED, budi.id],
+  ]);
+});
+
+test("a status change and a text edit at the same moment leave history agreeing with the document", { skip: !enabled }, async () => {
+  const [col, ana, budi] = [await collection(), await user("ana12"), await user("budi12")];
+  for (let round = 0; round < 15; round++) {
+    const doc = await createDocument(input(col.id, 1200 + round, "## awal"), ana.id);
+    created.documents.push(doc.id);
+    await Promise.all([
+      setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, budi.id),
+      updateDocument(doc.id, { ...input(col.id, 1200 + round, "## edit"), status: DocumentStatus.DRAFT }, ana.id),
+    ]);
+    const [current, latest] = await Promise.all([
+      db.document.findUnique({ where: { id: doc.id } }),
+      db.documentRevision.findFirst({ where: { documentId: doc.id }, orderBy: { version: "desc" } }),
+    ]);
+    assert.equal(latest?.status, current?.status, `round ${round}: status ${current?.status} vs history ${latest?.status}`);
+    assert.equal(latest?.content, current?.content, `round ${round}: text differs from history`);
+  }
 });
 
 test("saves at the same moment get different version numbers", { skip: !enabled }, async () => {

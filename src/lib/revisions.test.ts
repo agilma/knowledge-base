@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { REVISION_LIMIT, formatSizeChange, hasMeaningfulChange, nextVersion, sizeChanges } from "./revisions";
+import { REVISION_LIMIT, formatSizeChange, hasMeaningfulChange, nextVersion, sizeChanges, statusChangeLabel } from "./revisions";
 
 const base = { title: "Judul", excerpt: null, content: "## A\n\n- satu\n- dua", type: "PANDUAN" };
 
@@ -47,4 +47,18 @@ test("the next version follows the latest, starting at 1", () => {
 test("the number of versions kept is the documented 100", () => {
   // docs/USER-GUIDE.md and the history page promise this number.
   assert.equal(REVISION_LIMIT, 100);
+});
+
+test("a status change reads as what was done to the document", () => {
+  assert.equal(statusChangeLabel("DRAFT", "PUBLISHED"), "Diterbitkan");
+  assert.equal(statusChangeLabel("PUBLISHED", "ARCHIVED"), "Diarsipkan");
+  assert.equal(statusChangeLabel("ARCHIVED", "PUBLISHED"), "Diterbitkan");
+  assert.equal(statusChangeLabel("PUBLISHED", "DRAFT"), "Dikembalikan ke draf");
+});
+
+test("no label for the first version, an unchanged status, or an unknown one", () => {
+  assert.equal(statusChangeLabel(null, "PUBLISHED"), null);
+  assert.equal(statusChangeLabel(undefined, "DRAFT"), null);
+  assert.equal(statusChangeLabel("PUBLISHED", "PUBLISHED"), null);
+  assert.equal(statusChangeLabel("DRAFT", "DELETED"), null);
 });

@@ -39,7 +39,7 @@ export default async function DocumentHistoryPage({
         </div>
         <p className="text-muted-foreground">
           Setiap simpan yang mengubah judul, ringkasan, jenis, atau isi dicatat sebagai satu
-          versi. Yang tersimpan paling banyak 100 versi terakhir. Dokumen yang dibuat sebelum
+          versi, begitu juga setiap perubahan status (terbit, arsip, kembali ke draf). Yang tersimpan paling banyak 100 versi terakhir. Dokumen yang dibuat sebelum
           riwayat ada baru mulai tercatat pada simpan pertama sesudahnya.
         </p>
       </header>
@@ -63,6 +63,11 @@ export default async function DocumentHistoryPage({
                     Versi {revision.version}
                     {index === 0 && (
                       <span className="ml-2 text-xs font-normal text-muted-foreground">terbaru</span>
+                    )}
+                    {revision.statusLabel && (
+                      <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                        {revision.statusLabel}
+                      </span>
                     )}
                   </p>
                   <p className="truncate text-sm text-muted-foreground">{revision.title}</p>
