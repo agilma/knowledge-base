@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { db } from "../db";
+import { documentReadableWhere } from "../collection-access";
 import {
   ENTITY_DOCUMENT,
   RECENT_LIMIT,
@@ -18,8 +19,8 @@ export async function recordView(
   documentId: string,
   role: Role | undefined
 ): Promise<boolean> {
-  const doc = await db.document.findUnique({
-    where: { id: documentId },
+  const doc = await db.document.findFirst({
+    where: { id: documentId, ...documentReadableWhere({ id: userId, role: role ?? Role.VIEWER }) },
     select: { status: true },
   });
   if (!doc || !isDocumentVisible(doc.status, role)) return false;
@@ -65,7 +66,7 @@ export async function getRecentDocuments(
   if (ids.length === 0) return [];
 
   const documents = await db.document.findMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, ...documentReadableWhere({ id: userId, role: role ?? Role.VIEWER }) },
     include: { collection: true },
   });
   return orderByIds(

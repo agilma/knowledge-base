@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { getCollections } from "@/lib/services/collections";
 import { getRecentlyUpdatedDocuments } from "@/lib/services/documents";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const user = await getCurrentUser();
+  const user = await requireUser();
+  const viewer = { id: user.id, role: user.role };
   const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
 
-  const collections = await getCollections();
-  const recentDocs = await getRecentlyUpdatedDocuments(5, { includeDrafts: canSeeDrafts });
+  const collections = await getCollections(viewer);
+  const recentDocs = await getRecentlyUpdatedDocuments(5, { includeDrafts: canSeeDrafts, viewer });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 pb-20 md:pb-10 space-y-12">

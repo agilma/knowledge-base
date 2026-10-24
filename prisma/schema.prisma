@@ -40,11 +40,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  documents       Document[]         @relation("DocumentAuthor")
-  editedDocuments Document[]         @relation("DocumentEditor")
-  revisions       DocumentRevision[]
+  accounts         Account[]
+  sessions         Session[]
+  documents        Document[]         @relation("DocumentAuthor")
+  editedDocuments  Document[]         @relation("DocumentEditor")
+  revisions        DocumentRevision[]
+  collectionAccess CollectionMember[]
 
   @@map("users")
 }
@@ -96,12 +97,29 @@ model Collection {
   description String?
   icon        String?
   status      CollectionStatus @default(ACTIVE)
+  // When true only admins and the users in `members` can read it.
+  restricted  Boolean          @default(false)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   documents Document[]
+  members   CollectionMember[]
 
   @@map("collections")
+}
+
+/// Who may read (and, for editors, write in) a restricted collection.
+model CollectionMember {
+  collectionId String
+  userId       String
+  createdAt    DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, userId])
+  @@index([userId])
+  @@map("collection_members")
 }
 
 model Document {

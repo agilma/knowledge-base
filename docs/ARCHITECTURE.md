@@ -108,3 +108,32 @@ dibangun di ProseMirror yang sama.
   dibuka dalam mode Markdown (lihat di atas).
 - **Kolaborasi real-time ditunda** (butuh server WebSocket yang hidup terus); lihat FEATURES "Dipertimbangkan".
 
+### 5. Koleksi terbatas: satu kebijakan, disaring di setiap jalur baca dan tulis
+Diputuskan 24 Okt 2026. Per koleksi (bukan per dokumen), dengan daftar pengguna per koleksi; admin selalu bisa, editor
+dan viewer ikut daftar. Model: `collections.restricted` (bawaan `false`, jadi data lama tetap terbuka) dan tabel
+`collection_members(collectionId, userId)`.
+
+- **Satu definisi** di `src/lib/collection-access.ts` (`canAccessCollection`, `collectionReadableWhere`,
+  `documentReadableWhere`, `collectionReadableSql`). Sebelumnya tidak ada fungsi visibilitas pusat dan satu-satunya
+  masukan identitas adalah peran, jadi tiap fungsi baca kini **wajib** menerima `viewer: { id, role }` (tipenya
+  mewajibkan; bukan opsional) supaya jalur baru tidak bisa lupa.
+- **Tidak berhak = tidak ditemukan**, bukan "akses ditolak": respons halaman untuk dokumen/koleksi terbatas identik byte
+  per byte dengan alamat yang tidak ada (diukur), jadi keberadaannya tidak bocor lewat status atau isi.
+- **Pencarian** menyaring di `WHERE` yang sama dengan `count(*) OVER ()`, bukan di JS sesudahnya, supaya `total` tidak
+  membocorkan jumlah. Favorit dan terakhir dibuka menyaring di query (bukan di JS), jadi entri lama yang aksesnya dicabut
+  disembunyikan, tidak dihapus: muncul lagi bila akses dikembalikan.
+- **Relasi terkait**: dokumen terbuka yang berelasi ke dokumen terbatas tidak menampilkannya ke yang tidak berhak.
+  Editor yang menyimpan daftar terkait tidak bisa menambah atau menghapus relasi ke dokumen yang tidak bisa ia baca
+  (relasi tersembunyi dipertahankan; kalau tidak, menyimpan form akan menghapusnya diam-diam).
+- **Tulis**: `createDocument`, `updateDocument` (termasuk memindahkan dokumen ke/dari koleksi terbatas),
+  `setDocumentStatus`, `deleteDocument` menolak aktor yang tidak berhak. Dijaga di service karena server action bisa
+  dipanggil lewat POST langsung.
+- **Cache offline**: service worker menyimpan halaman hanya berdasarkan URL. `cacheOwner` kini memuat kunci akses
+  (`accessKey`: hash id koleksi terbatas yang diikuti; admin dan yang tidak ikut koleksi mana pun memakai bentuk lama
+  sehingga cache mereka tidak dikosongkan oleh fitur ini). Batas yang jujur: pengosongan baru terjadi saat orang itu membuka
+  aplikasi online berikutnya; salinan yang sudah ada di perangkatnya tetap terbaca offline sampai saat itu, sama seperti
+  perubahan peran.
+- **Yang tetap bocor, kecil dan diterima**: pesan "slug dokumen sudah digunakan" bagi editor yang membuat dokumen dengan
+  slug milik dokumen terbatas; fungsi `getDocumentForRevalidate` (dulu `getDocumentById`) tidak menyaring karena hanya untuk
+  menyegarkan halaman setelah penulisan yang sudah diotorisasi.
+

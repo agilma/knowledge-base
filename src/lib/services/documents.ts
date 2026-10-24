@@ -13,22 +13,39 @@ import { documentSchema, DocumentInput } from "../validation/document";
 import { diffRelations, parseRelatedIds } from "../related";
 import { REVISION_LIMIT, hasMeaningfulChange, nextVersion } from "../revisions";
 import { idsToPrune } from "../user-documents";
+import { collectionReadableSql, collectionReadableWhere, documentReadableWhere, type Viewer } from "../collection-access";
 
+/**
+ * `viewer` is required on purpose: a read without one would silently skip the
+ * restricted-collection rule (src/lib/collection-access.ts).
+ */
 export interface ReadOptions {
   includeDrafts?: boolean;
+  viewer: Viewer;
+}
+
+type Db = Pick<Prisma.TransactionClient, "collection">;
+
+/** Writes go through the same rule: a user cannot add to, move into or edit what they cannot read. */
+async function assertCollectionAccess(client: Db, viewer: Viewer, collectionId: string) {
+  const count = await client.collection.count({
+    where: { id: collectionId, ...collectionReadableWhere(viewer) },
+  });
+  if (count === 0) throw new Error("Koleksi tidak ditemukan");
 }
 
 export async function getDocumentsByCollection(
   collectionId: string,
-  options?: ReadOptions
+  options: ReadOptions
 ) {
-  const whereStatus = options?.includeDrafts
+  const whereStatus = options.includeDrafts
     ? undefined
     : DocumentStatus.PUBLISHED;
 
   return db.document.findMany({
     where: {
       collectionId,
+      ...documentReadableWhere(options.viewer),
       ...(whereStatus ? { status: whereStatus } : {}),
     },
     orderBy: { updatedAt: "desc" },
@@ -37,10 +54,12 @@ export async function getDocumentsByCollection(
 
 export async function getDocumentBySlug(
   slug: string,
-  options?: ReadOptions
+  options: ReadOptions
 ) {
-  const document = await db.document.findUnique({
-    where: { slug },
+  // The page, its history, an old version and the edit form all read through
+  // here, so one filter covers them. Not readable looks the same as not found.
+  const document = await db.document.findFirst({
+    where: { slug, ...documentReadableWhere(options.viewer) },
     include: {
       collection: true,
       author: true,
@@ -50,14 +69,18 @@ export async function getDocumentBySlug(
 
   if (!document) return null;
 
-  if (!options?.includeDrafts && document.status !== DocumentStatus.PUBLISHED) {
+  if (!options.includeDrafts && document.status !== DocumentStatus.PUBLISHED) {
     return null;
   }
 
   return document;
 }
 
-export async function getDocumentById(id: string) {
+/**
+ * Unfiltered: for write actions that only need the document's collection and
+ * slug to refresh pages after the write has been authorised. Never read through it.
+ */
+export async function getDocumentForRevalidate(id: string) {
   return db.document.findUnique({
     where: { id },
     include: {
@@ -82,7 +105,7 @@ export async function getRelatedDocumentIds(documentId: string): Promise<string[
  */
 export async function getRelatedDocuments(
   documentId: string,
-  options?: ReadOptions
+  options: ReadOptions
 ) {
   const ids = await getRelatedDocumentIds(documentId);
   if (ids.length === 0) return [];
@@ -90,7 +113,8 @@ export async function getRelatedDocuments(
   return db.document.findMany({
     where: {
       id: { in: ids },
-      ...(options?.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
+      ...documentReadableWhere(options.viewer),
+      ...(options.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
     },
     include: { collection: true },
     orderBy: { title: "asc" },
@@ -98,9 +122,9 @@ export async function getRelatedDocuments(
 }
 
 /** What an editor may pick from when relating a document: everything but itself. */
-export async function getRelationCandidates(excludeId?: string) {
+export async function getRelationCandidates(viewer: Viewer, excludeId?: string) {
   return db.document.findMany({
-    where: excludeId ? { id: { not: excludeId } } : {},
+    where: { ...(excludeId ? { id: { not: excludeId } } : {}), ...documentReadableWhere(viewer) },
     select: {
       id: true,
       title: true,
@@ -118,7 +142,7 @@ export async function getRelationCandidates(excludeId?: string) {
  * and adding does not duplicate a pair that exists in the other direction.
  * Unknown ids are ignored rather than failing the whole save.
  */
-export async function setRelatedDocuments(documentId: string, relatedIds: string[]) {
+export async function setRelatedDocuments(documentId: string, relatedIds: string[], actor: Viewer) {
   const desired = parseRelatedIds(relatedIds, documentId);
 
   await db.$transaction(async (tx) => {
@@ -128,8 +152,15 @@ export async function setRelatedDocuments(documentId: string, relatedIds: string
     // change rarely, so serialising them costs nothing.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_relations'))`;
 
+    // Only documents the editor can read can be related or unrelated by them.
+    const own = await tx.document.findFirst({
+      where: { id: documentId, ...documentReadableWhere(actor) },
+      select: { id: true },
+    });
+    if (!own) throw new Error("Dokumen tidak ditemukan");
+
     const existing = await tx.document.findMany({
-      where: { id: { in: desired } },
+      where: { id: { in: desired }, ...documentReadableWhere(actor) },
       select: { id: true },
     });
     const valid = new Set(existing.map((doc) => doc.id));
@@ -138,9 +169,16 @@ export async function setRelatedDocuments(documentId: string, relatedIds: string
       where: { OR: [{ fromId: documentId }, { toId: documentId }] },
       select: { fromId: true, toId: true },
     });
-    const current = [
+    const allCurrent = [
       ...new Set(rows.map((row) => (row.fromId === documentId ? row.toId : row.fromId))),
     ];
+    // A relation to a document the editor cannot see is not in their form, so
+    // saving the form must not read its absence as "remove it".
+    const visible = await tx.document.findMany({
+      where: { id: { in: allCurrent }, ...documentReadableWhere(actor) },
+      select: { id: true },
+    });
+    const current = visible.map((doc) => doc.id);
 
     const { add, remove } = diffRelations(
       current,
@@ -188,7 +226,7 @@ interface SearchRow {
  * Visibility is decided here, in SQL, and nowhere else: without
  * `includeDrafts` only PUBLISHED documents can match.
  */
-export async function searchDocuments(query: string, options?: SearchOptions) {
+export async function searchDocuments(query: string, options: SearchOptions) {
   const tsQuery = toTsQuery(query);
   if (!tsQuery) return { results: [], total: 0 };
 
@@ -205,11 +243,13 @@ export async function searchDocuments(query: string, options?: SearchOptions) {
       SELECT d.id, d.title, d.excerpt, d.content, d."updatedAt",
              ts_rank(${vector}, q.query, 1) AS rank,
              count(*) OVER () AS total
-      FROM documents d, q
+      FROM documents d
+      JOIN collections c ON c.id = d."collectionId", q
       WHERE ${vector} @@ q.query
-        ${options?.includeDrafts ? Prisma.empty : Prisma.sql`AND d.status = 'PUBLISHED'`}
-        ${options?.collectionId ? Prisma.sql`AND d."collectionId" = ${options.collectionId}` : Prisma.empty}
-        ${options?.type ? Prisma.sql`AND d.type = ${options.type}::"DocumentType"` : Prisma.empty}
+        AND ${collectionReadableSql(options.viewer, "c")}
+        ${options.includeDrafts ? Prisma.empty : Prisma.sql`AND d.status = 'PUBLISHED'`}
+        ${options.collectionId ? Prisma.sql`AND d."collectionId" = ${options.collectionId}` : Prisma.empty}
+        ${options.type ? Prisma.sql`AND d.type = ${options.type}::"DocumentType"` : Prisma.empty}
       ORDER BY rank DESC, d."updatedAt" DESC
       LIMIT ${SEARCH_RESULT_LIMIT}
     )
@@ -224,7 +264,7 @@ export async function searchDocuments(query: string, options?: SearchOptions) {
   if (rows.length === 0) return { results: [], total: 0 };
 
   const documents = await db.document.findMany({
-    where: { id: { in: rows.map((row) => row.id) } },
+    where: { id: { in: rows.map((row) => row.id) }, ...documentReadableWhere(options.viewer) },
     include: { collection: true },
   });
   const byId = new Map(documents.map((doc) => [doc.id, doc]));
@@ -246,15 +286,16 @@ export async function searchDocuments(query: string, options?: SearchOptions) {
 }
 
 export async function getRecentlyUpdatedDocuments(
-  limit: number = 5,
-  options?: ReadOptions
+  limit: number,
+  options: ReadOptions
 ) {
-  const whereStatus = options?.includeDrafts
+  const whereStatus = options.includeDrafts
     ? undefined
     : DocumentStatus.PUBLISHED;
 
   return db.document.findMany({
     where: {
+      ...documentReadableWhere(options.viewer),
       ...(whereStatus ? { status: whereStatus } : {}),
     },
     include: {
@@ -275,7 +316,8 @@ export async function isDocumentSlugAvailable(slug: string, excludeId?: string) 
   return false;
 }
 
-export async function createDocument(data: DocumentInput, authorId?: string) {
+export async function createDocument(data: DocumentInput, actor: Viewer) {
+  const authorId = actor.id;
   const validated = documentSchema.parse(data);
   const isAvailable = await isDocumentSlugAvailable(validated.slug);
   if (!isAvailable) {
@@ -283,6 +325,7 @@ export async function createDocument(data: DocumentInput, authorId?: string) {
   }
 
   return db.$transaction(async (tx) => {
+    await assertCollectionAccess(tx, actor, validated.collectionId);
     const doc = await tx.document.create({
       data: {
         title: validated.title,
@@ -382,11 +425,12 @@ async function appendRevision(
   }
 }
 
-export async function updateDocument(id: string, data: DocumentInput, editorId?: string) {
+export async function updateDocument(id: string, data: DocumentInput, actor: Viewer) {
+  const editorId = actor.id;
   const validated = documentSchema.parse(data);
 
-  const existingDoc = await db.document.findUnique({
-    where: { id },
+  const existingDoc = await db.document.findFirst({
+    where: { id, ...documentReadableWhere(actor) },
   });
 
   if (!existingDoc) {
@@ -409,9 +453,13 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
     // Read the document again, now that the lock is held. The copy read before the
     // transaction can be stale: if another save committed in between, comparing
     // against it would call a revert "no change" and skip its revision.
-    const current = await tx.document.findUnique({ where: { id } });
+    const current = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) } });
     if (!current) {
       throw new Error("Dokumen tidak ditemukan");
+    }
+    // Moving a document into a collection needs access to that one too.
+    if (validated.collectionId !== current.collectionId) {
+      await assertCollectionAccess(tx, actor, validated.collectionId);
     }
 
     // A change of status is a change of its own: who published or archived a
@@ -456,7 +504,8 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
  * history. Setting the status a document already has changes nothing and
  * records nothing.
  */
-export async function setDocumentStatus(id: string, status: DocumentStatus, editorId?: string) {
+export async function setDocumentStatus(id: string, status: DocumentStatus, actor: Viewer) {
+  const editorId = actor.id;
   // Server actions can be called directly with any payload.
   if (typeof id !== "string" || !Object.values(DocumentStatus).includes(status)) {
     throw new Error("Status dokumen tidak valid");
@@ -464,7 +513,7 @@ export async function setDocumentStatus(id: string, status: DocumentStatus, edit
   return db.$transaction(async (tx) => {
     let latest = await lockRevisions(tx, id);
 
-    const current = await tx.document.findUnique({ where: { id } });
+    const current = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) } });
     if (!current) {
       throw new Error("Dokumen tidak ditemukan");
     }
@@ -483,7 +532,9 @@ export async function setDocumentStatus(id: string, status: DocumentStatus, edit
   });
 }
 
-export async function deleteDocument(id: string) {
+export async function deleteDocument(id: string, actor: Viewer) {
+  const readable = await db.document.count({ where: { id, ...documentReadableWhere(actor) } });
+  if (readable === 0) throw new Error("Dokumen tidak ditemukan");
   return db.document.delete({
     where: { id },
   });

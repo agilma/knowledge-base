@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { FolderOpen, Plus } from "lucide-react";
 import { Role } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { getCollectionsWithDocumentCount } from "@/lib/services/collections";
 import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionsIndexPage() {
-  const user = await getCurrentUser();
-  const collections = await getCollectionsWithDocumentCount();
+  const user = await requireUser();
+  const viewer = { id: user.id, role: user.role };
+  const collections = await getCollectionsWithDocumentCount({ viewer });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">

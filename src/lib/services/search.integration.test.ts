@@ -2,6 +2,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { DocumentStatus, DocumentType } from "@prisma/client";
 import { db } from "../db";
+import { ADMIN, READER } from "./test-viewers";
 import { searchDocuments } from "./documents";
 import { HIGHLIGHT_START, HIGHLIGHT_STOP, splitHighlights } from "../search-query";
 
@@ -64,11 +65,11 @@ test("viewers never see drafts or archives, and the total does not count them", 
   await makeDocument(2, { collectionId: col.id, status: DocumentStatus.DRAFT, content: `${word} draf` });
   await makeDocument(3, { collectionId: col.id, status: DocumentStatus.ARCHIVED, content: `${word} arsip` });
 
-  const viewer = await searchDocuments(word);
+  const viewer = await searchDocuments(word, { viewer: READER });
   assert.deepEqual(viewer.results.map((d) => d.id), [published.id]);
   assert.equal(viewer.total, 1);
 
-  const editor = await searchDocuments(word, { includeDrafts: true });
+  const editor = await searchDocuments(word, { includeDrafts: true, viewer: ADMIN });
   assert.equal(editor.results.length, 3);
   assert.equal(editor.total, 3);
 });
@@ -78,7 +79,7 @@ test("a title match ranks above a match only in the body", { skip: !enabled }, a
   const body = await makeDocument(4, { collectionId: col.id, title: "Tidak relevan", content: `${word} ${word}` });
   const title = await makeDocument(5, { collectionId: col.id, title: `Soal ${word}`, content: "isi" });
 
-  const { results } = await searchDocuments(word, { collectionId: col.id });
+  const { results } = await searchDocuments(word, { viewer: READER, collectionId: col.id });
   assert.deepEqual(results.map((d) => d.id), [title.id, body.id]);
 });
 
@@ -88,19 +89,19 @@ test("collection and type filters narrow the results", { skip: !enabled }, async
   const inA = await makeDocument(6, { collectionId: a.id, type: DocumentType.MASALAH, content: word });
   await makeDocument(7, { collectionId: b.id, type: DocumentType.REFERENSI, content: word });
 
-  const byCollection = await searchDocuments(word, { collectionId: a.id });
+  const byCollection = await searchDocuments(word, { viewer: READER, collectionId: a.id });
   assert.deepEqual(byCollection.results.map((d) => d.id), [inA.id]);
 
-  const byType = await searchDocuments(word, { type: DocumentType.REFERENSI, collectionId: b.id });
+  const byType = await searchDocuments(word, { viewer: READER, type: DocumentType.REFERENSI, collectionId: b.id });
   assert.equal(byType.results.length, 1);
-  assert.equal((await searchDocuments(word, { type: DocumentType.PANDUAN, collectionId: a.id })).total, 0);
+  assert.equal((await searchDocuments(word, { viewer: READER, type: DocumentType.PANDUAN, collectionId: a.id })).total, 0);
 });
 
 test("affixed forms match and are highlighted", { skip: !enabled }, async () => {
   const col = await makeCollection(5);
   await makeDocument(8, { collectionId: col.id, title: `Cara memotong ${word}`, content: "isi" });
 
-  const { results } = await searchDocuments(`dipotong ${word}`, { collectionId: col.id });
+  const { results } = await searchDocuments(`dipotong ${word}`, { viewer: READER, collectionId: col.id });
   assert.equal(results.length, 1);
   const marked = splitHighlights(results[0].titleHighlight).filter((s) => s.match).map((s) => s.text);
   assert.deepEqual(marked, ["memotong", word]);
@@ -108,7 +109,7 @@ test("affixed forms match and are highlighted", { skip: !enabled }, async () => 
 
 test("strange input never throws", { skip: !enabled }, async () => {
   for (const q of ["", '"', "!!!&|:*()<->", "'; DROP TABLE documents; --", "\\", `${word} "`, "a".repeat(5000)]) {
-    const { results } = await searchDocuments(q);
+    const { results } = await searchDocuments(q, { viewer: READER });
     assert.ok(Array.isArray(results), JSON.stringify(q));
   }
 });
@@ -121,7 +122,7 @@ test("highlight marker characters inside a document cannot fake a match", { skip
     content: `sebelum ${HIGHLIGHT_START}palsu${HIGHLIGHT_STOP} sesudah ${word}`,
   });
 
-  const { results } = await searchDocuments(word, { collectionId: col.id });
+  const { results } = await searchDocuments(word, { viewer: READER, collectionId: col.id });
   const marked = splitHighlights(results[0].snippet).filter((s) => s.match).map((s) => s.text);
   assert.ok(!marked.includes("palsu"), JSON.stringify(marked));
   assert.ok(marked.includes(word));

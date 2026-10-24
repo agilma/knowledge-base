@@ -9,6 +9,8 @@ import { SessionProvider } from "next-auth/react";
 import { getSession } from "@/lib/auth/session";
 import { CacheGuard } from "@/components/layout/CacheGuard";
 import { cacheOwner } from "@/lib/cache-owner";
+import { accessKey } from "@/lib/collection-access";
+import { getMemberCollectionIds } from "@/lib/services/collections";
 
 const fontSans = Inter({
   variable: "--font-sans",
@@ -54,6 +56,19 @@ export default async function RootLayout({
   // round trip (and two more queries) on every page load.
   const session = await getSession();
 
+  // Pages cached on a device belong to what their reader may see, so a change in
+  // the restricted collections someone belongs to must empty that cache too. If
+  // the lookup fails the layout still renders; the owner then simply lacks it.
+  let access = "open";
+  if (session?.user) {
+    try {
+      const viewer = { id: session.user.id, role: session.user.role };
+      access = accessKey(viewer, await getMemberCollectionIds(viewer.id));
+    } catch {
+      access = "open";
+    }
+  }
+
   return (
     <html lang="id" suppressHydrationWarning>
       <body
@@ -72,7 +87,7 @@ export default async function RootLayout({
             // run on each request, so the client does not need to re-poll.
             refetchOnWindowFocus={false}
           >
-            <CacheGuard owner={cacheOwner(session?.user)} />
+            <CacheGuard owner={cacheOwner(session?.user, access)} />
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
               <OfflineIndicator />

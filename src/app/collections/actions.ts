@@ -64,7 +64,7 @@ export async function updateCollectionAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
 
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
@@ -87,7 +87,7 @@ export async function updateCollectionAction(
   }
 
   try {
-    const oldCollection = await getCollectionById(id);
+    const oldCollection = await getCollectionById(id, { id: admin.id, role: admin.role });
     const updatedCollection = await updateCollection(id, parsed.data);
     revalidatePath("/collections");
     if (oldCollection?.slug) {
@@ -120,9 +120,9 @@ export async function setCollectionStatusAction(id: string, status: CollectionSt
 }
 
 export async function deleteCollectionAction(id: string) {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
   try {
-    const oldCol = await getCollectionById(id);
+    const oldCol = await getCollectionById(id, { id: admin.id, role: admin.role });
     await deleteCollection(id);
     revalidatePath("/collections");
     if (oldCol?.slug) {

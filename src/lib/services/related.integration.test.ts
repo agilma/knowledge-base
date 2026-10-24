@@ -2,6 +2,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { DocumentStatus, DocumentType } from "@prisma/client";
 import { db } from "../db";
+import { ADMIN, READER } from "./test-viewers";
 import {
   getRelatedDocumentIds,
   getRelatedDocuments,
@@ -51,17 +52,17 @@ after(async () => {
 
 test("a relation written from one side reads from both", { skip: !enabled }, async () => {
   const [a, b] = [await make(1), await make(2)];
-  await setRelatedDocuments(a.id, [b.id]);
+  await setRelatedDocuments(a.id, [b.id], ADMIN);
 
   assert.deepEqual(await getRelatedDocumentIds(a.id), [b.id]);
   assert.deepEqual(await getRelatedDocumentIds(b.id), [a.id]);
-  assert.deepEqual((await getRelatedDocuments(b.id)).map((d) => d.id), [a.id]);
+  assert.deepEqual((await getRelatedDocuments(b.id, { viewer: READER })).map((d) => d.id), [a.id]);
 });
 
 test("removing from the other side removes the pair, not just a direction", { skip: !enabled }, async () => {
   const [a, b] = [await make(3), await make(4)];
-  await setRelatedDocuments(a.id, [b.id]);
-  await setRelatedDocuments(b.id, []);
+  await setRelatedDocuments(a.id, [b.id], ADMIN);
+  await setRelatedDocuments(b.id, [], ADMIN);
 
   assert.deepEqual(await getRelatedDocumentIds(a.id), []);
   assert.equal(await db.documentRelation.count({ where: { OR: [{ fromId: a.id, toId: b.id }, { fromId: b.id, toId: a.id }] } }), 0);
@@ -69,8 +70,8 @@ test("removing from the other side removes the pair, not just a direction", { sk
 
 test("adding a pair that exists the other way does not duplicate it", { skip: !enabled }, async () => {
   const [a, b] = [await make(5), await make(6)];
-  await setRelatedDocuments(a.id, [b.id]);
-  await setRelatedDocuments(b.id, [a.id]);
+  await setRelatedDocuments(a.id, [b.id], ADMIN);
+  await setRelatedDocuments(b.id, [a.id], ADMIN);
 
   const rows = await db.documentRelation.count({
     where: { OR: [{ fromId: a.id, toId: b.id }, { fromId: b.id, toId: a.id }] },
@@ -82,7 +83,7 @@ test("two documents saved at the same moment, each pointing at the other, store 
   // A per-document lock lets these interleave; repeat so a race cannot hide.
   for (let round = 0; round < 15; round++) {
     const [a, b] = [await make(200 + round * 2), await make(201 + round * 2)];
-    await Promise.all([setRelatedDocuments(a.id, [b.id]), setRelatedDocuments(b.id, [a.id])]);
+    await Promise.all([setRelatedDocuments(a.id, [b.id], ADMIN), setRelatedDocuments(b.id, [a.id], ADMIN)]);
     const rows = await db.documentRelation.count({
       where: { OR: [{ fromId: a.id, toId: b.id }, { fromId: b.id, toId: a.id }] },
     });
@@ -92,32 +93,32 @@ test("two documents saved at the same moment, each pointing at the other, store 
 
 test("saving the same list twice at once leaves one row per pair", { skip: !enabled }, async () => {
   const [a, b, c] = [await make(7), await make(8), await make(9)];
-  await Promise.all([setRelatedDocuments(a.id, [b.id, c.id]), setRelatedDocuments(a.id, [b.id, c.id])]);
+  await Promise.all([setRelatedDocuments(a.id, [b.id, c.id], ADMIN), setRelatedDocuments(a.id, [b.id, c.id], ADMIN)]);
   const rows = await db.documentRelation.findMany({ where: { fromId: a.id } });
   assert.equal(rows.length, 2);
 });
 
 test("a document never relates to itself, and unknown ids are ignored", { skip: !enabled }, async () => {
   const [a, b] = [await make(10), await make(11)];
-  await setRelatedDocuments(a.id, [a.id, "does-not-exist", b.id]);
+  await setRelatedDocuments(a.id, [a.id, "does-not-exist", b.id], ADMIN);
   assert.deepEqual(await getRelatedDocumentIds(a.id), [b.id]);
 });
 
 test("a reader does not see a draft through a relation; an editor does", { skip: !enabled }, async () => {
   const published = await make(12);
   const draft = await make(13, DocumentStatus.DRAFT);
-  await setRelatedDocuments(published.id, [draft.id]);
+  await setRelatedDocuments(published.id, [draft.id], ADMIN);
 
-  assert.deepEqual(await getRelatedDocuments(published.id), []);
-  assert.deepEqual((await getRelatedDocuments(published.id, { includeDrafts: true })).map((d) => d.id), [draft.id]);
+  assert.deepEqual(await getRelatedDocuments(published.id, { viewer: READER }), []);
+  assert.deepEqual((await getRelatedDocuments(published.id, { includeDrafts: true, viewer: ADMIN })).map((d) => d.id), [draft.id]);
   // From the draft's side, the published document is visible to everyone.
-  assert.deepEqual((await getRelatedDocuments(draft.id)).map((d) => d.id), [published.id]);
+  assert.deepEqual((await getRelatedDocuments(draft.id, { viewer: READER })).map((d) => d.id), [published.id]);
 });
 
 test("the list is capped", { skip: !enabled }, async () => {
   const hub = await make(14);
   const others = [];
   for (let i = 0; i < MAX_RELATED + 3; i++) others.push((await make(100 + i)).id);
-  await setRelatedDocuments(hub.id, others);
+  await setRelatedDocuments(hub.id, others, ADMIN);
   assert.equal((await getRelatedDocumentIds(hub.id)).length, MAX_RELATED);
 });

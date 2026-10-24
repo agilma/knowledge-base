@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
+Terakhir diperbarui: 2026-10-24 (koleksi terbatas: penegakan selesai, UI admin belum)
 
 ---
 
@@ -79,6 +79,17 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       mengosongkan cache saat sesi habis. Keputusan produk. Celah kedua yang kecil:
       bila jaringan lebih lambat dari 3 detik saat orang baru login, halaman pertamanya
       bisa datang dari cache lama sehingga pembersihan baru terjadi pada pemuatan berikutnya.
+
+## Koleksi terbatas (lanjutan)
+
+- [ ] **Belum ada layar admin** untuk menandai koleksi terbatas dan memilih anggotanya (PR berikutnya: kotak
+      "Terbatas" dan pemilih pengguna di `src/app/collections/[slug]/edit/`, aksi ADMIN di
+      `src/app/collections/actions.ts` dengan `pg_advisory_xact_lock`). Sampai itu ada, atur lewat SQL:
+      `update collections set restricted = true where slug = '...'` dan isi `collection_members`.
+- [ ] **Pesan "slug dokumen sudah digunakan"** membocorkan keberadaan slug dokumen di koleksi terbatas kepada editor
+      di luar daftar (`isDocumentSlugAvailable` di `src/lib/services/documents.ts`). Kecil; dipertimbangkan bila
+      isi judul/slug sendiri sensitif.
+- [ ] **Cache offline setelah akses dicabut** baru dikosongkan saat orang itu membuka aplikasi online lagi.
 
 ## Perlu dicek sendiri
 

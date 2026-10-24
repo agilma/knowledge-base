@@ -10,9 +10,19 @@
 
 export const CACHE_OWNER_KEY = "kb:cache-owner";
 
-/** Stands for one person *and* what they may see: a promotion changes it too. */
-export function cacheOwner(user: { id: string; role: string } | null | undefined): string | null {
-  return user ? `${user.id}:${user.role}` : null;
+/**
+ * Stands for one person *and* what they may see: a promotion changes it too,
+ * and so does being added to or removed from a restricted collection (`access`,
+ * see `accessKey`). Someone in no restricted collection, and every admin, keep
+ * the plain `id:role` form, so adding the feature did not empty their caches.
+ */
+export function cacheOwner(
+  user: { id: string; role: string } | null | undefined,
+  access?: string
+): string | null {
+  if (!user) return null;
+  const base = `${user.id}:${user.role}`;
+  return access && access !== "open" && access !== "admin" ? `${base}:${access}` : base;
 }
 
 /**

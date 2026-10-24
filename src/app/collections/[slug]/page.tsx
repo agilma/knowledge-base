@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { getCollectionBySlug } from "@/lib/services/collections";
 import { getDocumentsByCollection } from "@/lib/services/documents";
 import { CollectionActions } from "@/components/collection/CollectionActions";
@@ -16,17 +16,18 @@ export default async function CollectionDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
+  const viewer = { id: user.id, role: user.role };
   const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
 
   const { slug } = await params;
-  const collection = await getCollectionBySlug(slug);
+  const collection = await getCollectionBySlug(slug, viewer);
 
   if (!collection) {
     notFound();
   }
 
-  const docs = await getDocumentsByCollection(collection.id, { includeDrafts: canSeeDrafts });
+  const docs = await getDocumentsByCollection(collection.id, { includeDrafts: canSeeDrafts, viewer });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
