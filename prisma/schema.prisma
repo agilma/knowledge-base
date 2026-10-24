@@ -40,9 +40,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  documents Document[]
+  accounts        Account[]
+  sessions        Session[]
+  documents       Document[]         @relation("DocumentAuthor")
+  editedDocuments Document[]         @relation("DocumentEditor")
+  revisions       DocumentRevision[]
 
   @@map("users")
 }
@@ -103,27 +105,53 @@ model Collection {
 }
 
 model Document {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  title        String
-  excerpt      String?
-  content      String
-  type         DocumentType   @default(PANDUAN)
-  status       DocumentStatus @default(DRAFT)
-  collectionId String
-  authorId     String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  excerpt        String?
+  content        String
+  type           DocumentType   @default(PANDUAN)
+  status         DocumentStatus @default(DRAFT)
+  collectionId   String
+  authorId       String?
+  // Who saved the document last. Null until the first save after this existed.
+  lastEditedById String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  collection  Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
-  author      User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  relatedFrom DocumentRelation[] @relation("RelatedFrom")
-  relatedTo   DocumentRelation[] @relation("RelatedTo")
+  collection   Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  author       User?              @relation("DocumentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  lastEditedBy User?              @relation("DocumentEditor", fields: [lastEditedById], references: [id], onDelete: SetNull)
+  relatedFrom  DocumentRelation[] @relation("RelatedFrom")
+  relatedTo    DocumentRelation[] @relation("RelatedTo")
+  revisions    DocumentRevision[]
 
   @@index([collectionId])
   @@index([status])
   @@index([type])
   @@map("documents")
+}
+
+/// One saved state of a document, newest version highest. Written on every
+/// save that changes the text; kept to the latest REVISION_LIMIT per document.
+model DocumentRevision {
+  id         String         @id @default(cuid())
+  documentId String
+  version    Int
+  title      String
+  excerpt    String?
+  content    String
+  type       DocumentType
+  status     DocumentStatus
+  editedById String?
+  createdAt  DateTime       @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  editedBy User?    @relation(fields: [editedById], references: [id], onDelete: SetNull)
+
+  @@unique([documentId, version])
+  @@index([editedById])
+  @@map("document_revisions")
 }
 
 model DocumentRelation {

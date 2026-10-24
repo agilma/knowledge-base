@@ -30,6 +30,7 @@ rencana per fase ada di bagian bawah.
 | Daftar isi dan tautan ke bagian | selesai | `src/lib/markdown.ts`, `src/components/document/TableOfContents.tsx`, `SectionHeading.tsx`, `src/app/docs/[slug]/page.tsx` | Bagian (`##`) dan sub-bagian (`###`); kolom samping di layar lebar, lipatan di atas teks di HP; ikon salin tautan di setiap judul bagian. Id sama dengan yang dibuat halaman, termasuk judul kembar, dan baris di dalam blok kode tidak dihitung |
 | Tanggal konsisten (zona Jakarta) | selesai | `src/lib/format.ts` | Server (UTC) dan browser menampilkan hari yang sama di dekat tengah malam |
 | Cache offline per pemilik | selesai | `src/lib/cache-owner.ts`, `src/components/layout/CacheGuard.tsx`, `src/lib/sw-routes.ts` | Cache halaman dikosongkan bila orang atau perannya di browser berganti, supaya draf yang dibuka editor tidak terlihat oleh pengguna berikutnya; `/search` tidak di-cache. Masih terbuka bagi orang yang belum login di perangkat itu (lihat `TODO.md`) |
+| Penyunting terakhir dan riwayat revisi | selesai | `prisma/migrations/4_document_revisions`, `src/lib/services/revisions.ts`, `src/lib/revisions.ts`, `src/app/docs/[slug]/history/` | Halaman dokumen menampilkan "diperbarui ... oleh ..."; editor/admin membuka Riwayat (daftar versi, selisih karakter) dan melihat isi tiap versi (hanya baca). Simpan yang tidak mengubah isi tidak mencatat versi; maksimal 100 versi per dokumen. Memulihkan versi belum ada |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
 
 ## Direncanakan
@@ -41,7 +42,7 @@ Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil (sudah) · UI Pengetahuan
 Terkait (sudah) · penyunting terakhir dan
-riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau).
+riwayat revisi (sudah; pemulihan versi belum) · penanda kesegaran (pemilik dan tanggal ditinjau).
 
 ### Fase 2 — Lampiran
 Object storage untuk gambar dan file, upload dari editor, dan cache gambar untuk

@@ -60,11 +60,6 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
       tidak sampai melemparkan galat.
 
-- [ ] **Tidak ada catatan penyunting terakhir.** `Document` punya `authorId`
-      tapi tidak `lastEditedById` atau riwayat versi. Begitu beberapa orang
-      menyunting, "ini terakhir diubah siapa, dan kenapa" jadi pertanyaan
-      rutin.
-
 - [ ] **4 query sesi tersisa per request** (2 di proxy, 2 di render). React
       `cache()` tidak bisa menyatukannya karena middleware adalah invokasi
       terpisah. Pindah ke JWT session strategy menghilangkannya sepenuhnya,

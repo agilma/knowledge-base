@@ -24,6 +24,18 @@ Tips pencarian:
 - Pencarian mencocokkan kata utuh atau awalan kata, bukan potongan di tengah kata.
 - Draf dan arsip hanya muncul di hasil pencarian Editor dan Admin.
 
+## Siapa yang terakhir mengubah, dan riwayat (EDITOR dan ADMIN)
+
+Di bawah judul dokumen tertulis kapan dan oleh siapa dokumen terakhir diubah. Editor dan admin juga
+melihat tautan **Riwayat**: daftar setiap versi dengan penyuntingnya, waktunya, dan selisih karakter.
+Pilih sebuah versi untuk membaca isinya saat itu. Riwayat hanya untuk dibaca; kalau ingin memakai isi
+versi lama, salin dari sana ke editor. Hal yang perlu diketahui:
+
+- Hanya simpan yang mengubah judul, ringkasan, jenis, atau isi yang menjadi versi baru. Menyimpan tanpa mengubah apa pun, atau hanya mengganti status (terbit atau arsip), tidak.
+- Maksimal 100 versi terakhir per dokumen yang disimpan.
+- Dokumen yang dibuat sebelum fitur ini baru punya riwayat sejak simpan pertama sesudahnya (isi sebelumnya jadi versi 1, penulisnya tertulis "tidak diketahui").
+- Pembaca biasa tidak melihat riwayat.
+
 ## Daftar isi dan tautan ke bagian
 
 Dokumen yang panjang punya daftar isi: di layar lebar ada di kolom kanan, di HP ada lipatan

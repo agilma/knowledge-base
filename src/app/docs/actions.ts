@@ -78,7 +78,7 @@ export async function updateDocumentAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  await requireRole([Role.EDITOR, Role.ADMIN]);
+  const user = await requireRole([Role.EDITOR, Role.ADMIN]);
 
   const rawData: DocumentInput = {
     title: formData.get("title") as string,
@@ -107,7 +107,7 @@ export async function updateDocumentAction(
 
   try {
     const oldDoc = await getDocumentById(id);
-    const updatedDoc = await updateDocument(id, parsed.data);
+    const updatedDoc = await updateDocument(id, parsed.data, user.id);
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id));
     }
@@ -136,10 +136,10 @@ export async function updateDocumentAction(
 }
 
 export async function setDocumentStatusAction(id: string, status: DocumentStatus) {
-  await requireRole([Role.EDITOR, Role.ADMIN]);
+  const user = await requireRole([Role.EDITOR, Role.ADMIN]);
 
   try {
-    const doc = await setDocumentStatus(id, status);
+    const doc = await setDocumentStatus(id, status, user.id);
     const docWithCol = await getDocumentById(doc.id);
     revalidatePath("/collections");
     if (docWithCol?.collection) {
