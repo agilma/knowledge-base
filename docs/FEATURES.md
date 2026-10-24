@@ -27,6 +27,7 @@ rencana per fase ada di bagian bawah.
 | Halaman galat, tidak ditemukan, dan memuat | selesai | `src/app/error.tsx`, `global-error.tsx`, `not-found.tsx`, `loading.tsx` | Pesan berbahasa Indonesia, membedakan offline dari galat server |
 | Favorit per pengguna | selesai | `src/lib/services/favorites.ts`, `src/components/document/FavoriteButton.tsx`, `src/app/favorites/page.tsx` | Tombol di halaman dokumen; draf dan arsip hanya muncul untuk editor/admin; nonaktif saat offline; halaman `/favorites` tidak di-cache service worker (data pribadi) |
 | Terakhir dibuka per pengguna | selesai | `src/lib/services/recent-views.ts`, `src/components/document/RecordView.tsx`, `src/app/recent/page.tsx` | Dicatat dari klien setelah halaman tampil (bukan saat prefetch); satu baris per dokumen (aman terhadap dua permintaan bersamaan), 50 terbaru disimpan dan ditampilkan; `/recent` tidak di-cache service worker |
+| Daftar isi dan tautan ke bagian | selesai | `src/lib/markdown.ts`, `src/components/document/TableOfContents.tsx`, `SectionHeading.tsx`, `src/app/docs/[slug]/page.tsx` | Bagian (`##`) dan sub-bagian (`###`); kolom samping di layar lebar, lipatan di atas teks di HP; ikon salin tautan di setiap judul bagian. Id sama dengan yang dibuat halaman, termasuk judul kembar, dan baris di dalam blok kode tidak dihitung |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
 
 ## Direncanakan
@@ -38,8 +39,7 @@ Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil · UI Pengetahuan
 Terkait · penyunting terakhir dan
-riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau) · daftar isi
-dan tautan ke bagian.
+riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau).
 
 ### Fase 2 — Lampiran
 Object storage untuk gambar dan file, upload dari editor, dan cache gambar untuk
