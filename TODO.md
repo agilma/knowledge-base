@@ -12,7 +12,9 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ## Bug
 
-- [ ] **React hydration error #418** di seluruh aplikasi — muncul di
+- [ ] **React hydration error #418** — *petunjuk dari review PR #32:* galat muncul di `/docs/new` bila ada
+      draf lokal tersimpan (banner draf dibaca dari `localStorage` saat render di `DocumentForm.tsx`), dan
+      terjadi juga di `main`. Tanpa draf, tidak muncul di halaman itu. Belum menjelaskan `/collections`. di seluruh aplikasi — muncul di
       `/collections` maupun `/docs/new`, jadi bukan dari editor. Sudah ada
       sebelum pekerjaan Oktober 2026 (diverifikasi dengan build di commit
       `049c9f8`). Tidak merusak fungsi, tapi React membuang HTML server dan
@@ -96,7 +98,10 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       dan `visualViewport` buatan (bilah alat tepat di atas keyboard simulasi). Yang belum terbukti: keyboard
       Android sungguhan (Gboard, IME, koreksi otomatis di dalam editor), mode gelap, dan dokumen panjang. Tautan
       masih memakai `window.prompt`; kalau terasa kasar di HP, ganti dengan isian kecil di bilah alat.
-      Belum ada toolbar melayang dekat teks terpilih dan belum ada gambar (menunggu object storage).
+      Belum ada toolbar melayang dekat teks terpilih dan belum ada gambar (menunggu object storage). Toolbar
+      belum bisa dinavigasi dengan panah (15 tombol semuanya masuk urutan Tab). Dokumen dengan gambar,
+      catatan kaki, atau HTML kini selalu dibuka sebagai markdown; kalau itu terlalu sering, tambahkan ekstensi
+      Image atau catatan kaki yang setia sebagai pekerjaan terpisah.
 
 - [ ] **Deploy production 23 Okt 2026 — sebagian sudah terverifikasi.**
       Build-nya **sukses**, dan header `x-vercel-id` menunjukkan `sin1::`,

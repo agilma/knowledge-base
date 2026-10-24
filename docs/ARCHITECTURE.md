@@ -88,11 +88,23 @@ mengganggu penulis non-teknis. Editor Outline sendiri berlisensi BSL sehingga ti
 dibangun di ProseMirror yang sama.
 
 - **Penyimpanan tidak berubah.** `Document.content` tetap markdown; tidak ada migrasi dan halaman baca
-  (`react-markdown`) tidak berubah. Dokumen lama dibuka lewat `@tiptap/markdown`; uji bolak-balik pada contoh
-  yang berisi judul, daftar bersarang, centang, kutipan, blok kode, tabel, dan tautan menghasilkan teks
-  yang sama kecuali tabel yang diberi spasi rata dan satu baris kosong tambahan setelah blok kode. Hasilnya stabil
-  (dibuka dan disimpan lagi tidak berubah lagi).
+  (`react-markdown`) tidak berubah.
+- **Editor menulis ulang seluruh dokumen pada tiap simpan, jadi yang tidak dikenalnya hilang.** Review independen
+  membuktikan bahwa gambar, catatan kaki, HTML mentah, pagar kode bersarang, karakter yang di-escape (`\#`, `1\.`)
+  dan daftar yang dipisah baris kosong rusak atau berubah arti pada edit pertama. Karena itu `RichTextEditor` memeriksa
+  setiap dokumen yang masuk (saat dibuka, memulihkan draf, ganti template): isi dibaca, ditulis ulang
+  seperti saat disimpan, lalu kedua versi dibandingkan sebagai pohon markdown (`isLosslessRoundTrip` di
+  `src/lib/editor-content.ts`, tanpa melihat tata letak: spasi tabel, `*` atau `-`, `_a_` atau `*a*`, daftar rapat atau
+  longgar tidak dihitung). Bila berbeda, editor memanggil `onUnsupported` dan `MarkdownEditor` membuka dokumen
+  dalam mode Markdown dengan pemberitahuan. Pemeriksaan ini umum, jadi sintaks baru yang tidak dikenal
+  ikut tertangkap tanpa daftar khusus. Fixture kasus aman dan berisiko ada di `src/lib/editor-roundtrip.test.ts` dan
+  dijalankan dengan `MarkdownManager` yang sama dengan editor.
+- **Yang tetap berubah tanpa kehilangan arti:** tabel diberi spasi rata, setext menjadi `#`, tautan referensi menjadi
+  inline, tautan otomatis ditulis eksplisit, dan satu baris kosong tambahan setelah blok kode. Diff revisi bisa
+  sedikit lebih ramai pada edit pertama sebuah dokumen lama.
 - **Paragraf kosong tidak disimpan.** Serializer menulis tiap Enter kosong sebagai `&nbsp;`; `dropEmptyParagraphs`
-  membuangnya di tingkat atas dokumen sebelum ditulis. Yang di dalam daftar, kutipan, dan tabel dibiarkan.
+  membuangnya di tingkat atas dokumen sebelum ditulis. Yang di dalam daftar, kutipan, dan tabel dibiarkan. Dua daftar
+  yang sengaja dipisah paragraf kosong tidak bisa ditulis ulang dengan setia, sehingga dokumen seperti itu
+  dibuka dalam mode Markdown (lihat di atas).
 - **Kolaborasi real-time ditunda** (butuh server WebSocket yang hidup terus); lihat FEATURES "Dipertimbangkan".
 

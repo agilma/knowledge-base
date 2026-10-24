@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
-import { TableKit } from "@tiptap/extension-table";
-import { TaskList, TaskItem } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
 import {
   Bold,
@@ -26,7 +23,8 @@ import {
 } from "lucide-react";
 
 import { PROSE_CLASSNAME } from "@/lib/prose";
-import { dropEmptyParagraphs } from "@/lib/editor-content";
+import { dropEmptyParagraphs, isLosslessRoundTrip } from "@/lib/editor-content";
+import { createContentExtensions } from "@/lib/editor-extensions";
 import { createSlashExtension, type SlashState } from "./slash-extension";
 import { createSlashStore } from "./slash-store";
 import { useKeyboardInset } from "./use-keyboard-inset";
@@ -36,7 +34,15 @@ export interface RichTextEditorProps {
   markdown: string;
   onChange: (markdown: string) => void;
   placeholder?: string;
+  /**
+   * The document uses markdown this editor would change or drop when saving it
+   * again. Called before anything is edited; the caller switches to markdown.
+   */
+  onUnsupported?: () => void;
 }
+
+const SLASH_MENU_ID = "kb-slash-menu";
+const slashOptionId = (i: number) => `kb-slash-option-${i}`;
 
 function ToolButton({
   label,
@@ -136,27 +142,35 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
-function SlashMenu({ state, selected }: { state: SlashState; selected: number }) {
+function SlashMenu({ state, selected, bottomReserved }: { state: SlashState; selected: number; bottomReserved: number }) {
   const rect = state.clientRect?.();
   if (!rect) return null;
-  const below = rect.bottom + 8;
+  const vv = window.visualViewport;
+  const viewTop = vv?.offsetTop ?? 0;
+  const viewBottom = (vv ? vv.offsetTop + vv.height : window.innerHeight) - bottomReserved;
+  const gap = 8;
+  const below = viewBottom - rect.bottom - gap;
+  const above = rect.top - viewTop - gap;
+  // open on the side with more room, so it never lands under the keyboard
+  const openAbove = below < 200 && above > below;
+  const maxHeight = Math.max(96, Math.min(256, openAbove ? above : below));
   const left = Math.max(8, Math.min(rect.left, window.innerWidth - 232));
+  const style = openAbove
+    ? { bottom: window.innerHeight - rect.top + gap, left, maxHeight }
+    : { top: rect.bottom + gap, left, maxHeight };
   return (
-    <div
-      role="listbox"
-      aria-label="Sisipkan blok"
-      className="kb-slash"
-      style={{ top: below, left }}
-    >
+    <div id={SLASH_MENU_ID} role="listbox" aria-label="Sisipkan blok" className="kb-slash" style={style}>
       {state.items.length === 0 ? (
         <div className="kb-slash-empty">Tidak ada yang cocok</div>
       ) : (
         state.items.map((item, i) => (
           <button
             key={item.title}
+            id={slashOptionId(i)}
             type="button"
             role="option"
             aria-selected={i === selected}
+            tabIndex={-1}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => state.command(item)}
             className="kb-slash-item"
@@ -170,21 +184,15 @@ function SlashMenu({ state, selected }: { state: SlashState; selected: number })
   );
 }
 
-export default function RichTextEditor({ markdown, onChange, placeholder }: RichTextEditorProps) {
+export default function RichTextEditor({ markdown, onChange, placeholder, onUnsupported }: RichTextEditorProps) {
   const [focused, setFocused] = useState(false);
   const keyboardInset = useKeyboardInset();
   // built once per mounted editor: both the extension and the menu use it
   const [store] = useState(createSlashStore);
   const { state: slash, selected } = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const [extensions] = useState(() => [
-    StarterKit.configure({
-      heading: { levels: [1, 2, 3, 4, 5, 6] },
-      link: { openOnClick: false, autolink: true },
-    }),
+    ...createContentExtensions(),
     Markdown,
-    TableKit,
-    TaskList,
-    TaskItem.configure({ nested: true }),
     Placeholder.configure({ placeholder: placeholder ?? "Tulis di sini. Ketik / untuk menyisipkan blok." }),
     createSlashExtension(store.handlers),
   ]);
@@ -213,15 +221,50 @@ export default function RichTextEditor({ markdown, onChange, placeholder }: Rich
       onChangeRef.current(next);
     },
     onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
+    onBlur: () => {
+      setFocused(false);
+      // the menu belongs to the caret; with no caret Escape could not close it
+      store.handlers.onUpdate(null);
+    },
   });
 
-  // The form replaces the content from outside when a draft is restored or
-  // the document type swaps the template.
+  // Saving writes the whole document back out, so a document the editor cannot
+  // reproduce must not be opened here: hand it to the markdown editor instead.
+  const onUnsupportedRef = useRef(onUnsupported);
   useEffect(() => {
-    if (!editor || markdown === lastEmitted.current) return;
-    lastEmitted.current = markdown;
-    editor.commands.setContent(markdown, { contentType: "markdown", emitUpdate: false });
+    onUnsupportedRef.current = onUnsupported;
+  });
+  // let assistive technology know the menu is open and which option is chosen
+  useEffect(() => {
+    const dom = editor?.view.dom;
+    if (!dom) return;
+    dom.setAttribute("aria-haspopup", "listbox");
+    dom.setAttribute("aria-expanded", String(!!slash));
+    if (slash) {
+      dom.setAttribute("aria-controls", SLASH_MENU_ID);
+      if (slash.items.length > 0) dom.setAttribute("aria-activedescendant", slashOptionId(selected));
+      else dom.removeAttribute("aria-activedescendant");
+    } else {
+      dom.removeAttribute("aria-controls");
+      dom.removeAttribute("aria-activedescendant");
+    }
+  }, [editor, slash, selected]);
+
+  // The form replaces the content from outside when a draft is restored or
+  // the document type swaps the template. Whatever comes in is checked once,
+  // before anyone edits it; ordinary typing comes back as `lastEmitted`.
+  const loaded = useRef(false);
+  useEffect(() => {
+    if (!editor) return;
+    const external = markdown !== lastEmitted.current;
+    if (!external && loaded.current) return;
+    loaded.current = true;
+    if (external) {
+      lastEmitted.current = markdown;
+      editor.commands.setContent(markdown, { contentType: "markdown", emitUpdate: false });
+    }
+    const written = editor.markdown?.serialize(dropEmptyParagraphs(editor.getJSON())) ?? "";
+    if (!isLosslessRoundTrip(markdown, written)) onUnsupportedRef.current?.();
   }, [editor, markdown]);
 
   if (!editor) {
@@ -239,7 +282,7 @@ export default function RichTextEditor({ markdown, onChange, placeholder }: Rich
         <Toolbar editor={editor} />
       </div>
       <EditorContent editor={editor} />
-      {slash && <SlashMenu state={slash} selected={selected} />}
+      {slash && <SlashMenu state={slash} selected={selected} bottomReserved={keyboardInset > 0 && focused ? 56 : 0} />}
     </div>
   );
 }

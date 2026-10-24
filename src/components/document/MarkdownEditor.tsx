@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,9 @@ export function MarkdownEditor({
     readEditorMode,
     () => "visual" as EditorMode
   );
-  const useRawMode = mode === "raw";
+  // set when the visual editor reports it would change this document on save
+  const [unsupported, setUnsupported] = useState(false);
+  const useRawMode = mode === "raw" || unsupported;
 
   const chooseMode = useCallback((raw: boolean) => {
     writeEditorMode(raw ? "raw" : "visual");
@@ -89,17 +91,25 @@ export function MarkdownEditor({
   if (useRawMode) {
     return (
       <div className={`space-y-2 ${className}`}>
+        {unsupported && (
+          <div className="p-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-md">
+            Dokumen ini memuat sintaks yang belum didukung editor visual (misalnya gambar, catatan kaki, atau HTML);
+            menyimpannya dari sana akan menghilangkannya. Dokumen diedit dalam mode Markdown.
+          </div>
+        )}
         <div className="flex items-center justify-between border-b pb-2">
           <span className="text-xs font-medium text-muted-foreground">Mode Markdown (Mentah)</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => chooseMode(false)}
-            className="text-xs h-7 px-2"
-          >
-            Beralih ke Editor Visual
-          </Button>
+          {!unsupported && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => chooseMode(false)}
+              className="text-xs h-7 px-2"
+            >
+              Beralih ke Editor Visual
+            </Button>
+          )}
         </div>
         <Textarea
           id={id}
@@ -128,7 +138,12 @@ export function MarkdownEditor({
         </Button>
       </div>
 
-      <DynamicRichTextEditor markdown={value} onChange={onChange} placeholder={placeholder} />
+      <DynamicRichTextEditor
+        markdown={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        onUnsupported={() => setUnsupported(true)}
+      />
     </div>
   );
 }
