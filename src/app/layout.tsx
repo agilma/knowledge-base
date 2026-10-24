@@ -7,6 +7,8 @@ import { OfflineIndicator } from "@/components/layout/OfflineIndicator";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import { getSession } from "@/lib/auth/session";
+import { CacheGuard } from "@/components/layout/CacheGuard";
+import { cacheOwner } from "@/lib/cache-owner";
 
 const fontSans = Inter({
   variable: "--font-sans",
@@ -70,6 +72,7 @@ export default async function RootLayout({
             // run on each request, so the client does not need to re-poll.
             refetchOnWindowFocus={false}
           >
+            <CacheGuard owner={cacheOwner(session?.user)} />
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
               <OfflineIndicator />

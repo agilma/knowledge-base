@@ -73,15 +73,15 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ## Offline
 
-- [ ] **`/search` di-cache service worker dan memuat draf untuk EDITOR.**
-      Pencarian EDITOR menyertakan draf dan arsip, dan halamannya masuk
-      `pages-rsc-cache` per URL. Jika perangkat lalu dipakai VIEWER tanpa lewat
-      tombol keluar (sesi kedaluwarsa, orang lain login) dan sedang offline,
-      `/search?q=...` dari cache menampilkan judul draf. Online tidak bocor
-      (NetworkFirst, proxy tetap menegakkan sesi). Bukan regresi pencarian
-      full-text: `/docs/<draf>` bocor dengan cara yang sama, dan `CLEAR_PAGE_CACHE`
-      hanya dipanggil dari `UserMenu`. Opsi: `/search` network-only (masuk
-      `isPersonalRoute` di `src/lib/sw-routes.ts`) dan samakan dengan `/docs/*`.
+- [ ] **Cache offline masih terbuka bagi orang yang belum login.** Cache dibersihkan saat
+      keluar dan saat orang atau peran di browser berganti (`CacheGuard`), tetapi bila
+      sesi kedaluwarsa tanpa menekan Keluar dan tidak ada yang login lagi, siapa pun yang
+      memakai perangkat itu bisa membuka halaman yang pernah dibaca saat offline, karena
+      `proxy.ts` tidak berjalan ketika service worker menjawab dari cache. Itu harga
+      "offline-baca"; menutupnya berarti mewajibkan login untuk membaca offline atau
+      mengosongkan cache saat sesi habis. Keputusan produk. Celah kedua yang kecil:
+      bila jaringan lebih lambat dari 3 detik saat orang baru login, halaman pertamanya
+      bisa datang dari cache lama sehingga pembersihan baru terjadi pada pemuatan berikutnya.
 
 ## Perlu dicek sendiri
 

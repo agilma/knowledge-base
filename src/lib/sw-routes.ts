@@ -23,14 +23,19 @@ export function isEditorRoute(pathname: string): boolean {
  * the service worker answers.
  */
 export function isPersonalRoute(pathname: string): boolean {
-  return pathname === "/favorites" || pathname === "/recent";
+  return (
+    pathname === "/favorites" ||
+    pathname === "/recent" ||
+    // Results depend on the reader's role (editors also get drafts) and on a
+    // query that is rarely repeated, so a cached copy is more risk than help.
+    pathname === "/search"
+  );
 }
 
 /** Readable pages that are cached for offline reading. */
 export function isTargetPageRoute(pathname: string): boolean {
   const isTarget =
     pathname === "/" ||
-    pathname.startsWith("/search") ||
     pathname.startsWith("/collections") ||
     pathname.startsWith("/docs");
 
