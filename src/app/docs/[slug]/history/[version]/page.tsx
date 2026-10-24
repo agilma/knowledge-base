@@ -10,6 +10,12 @@ import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_NAMES: Record<string, string> = {
+  DRAFT: "draf",
+  PUBLISHED: "terbit",
+  ARCHIVED: "diarsipkan",
+};
+
 export default async function RevisionPage({
   params,
 }: {
@@ -42,7 +48,8 @@ export default async function RevisionPage({
         <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <span>
           Ini versi {revision.version}, disimpan {formatDate(revision.createdAt)} oleh{" "}
-          {revision.editedBy?.name ?? "penulis yang tidak diketahui"}. Dokumen yang sekarang
+          {revision.editedBy?.name ?? "penulis yang tidak diketahui"}, saat statusnya{" "}
+          {STATUS_NAMES[revision.status] ?? revision.status}. Dokumen yang sekarang
           berlaku ada di{" "}
           <Link href={`/docs/${doc.slug}`} className="underline underline-offset-2">
             halaman dokumen

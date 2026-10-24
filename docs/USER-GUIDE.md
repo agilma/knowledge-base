@@ -31,7 +31,7 @@ melihat tautan **Riwayat**: daftar setiap versi dengan penyuntingnya, waktunya, 
 Pilih sebuah versi untuk membaca isinya saat itu. Riwayat hanya untuk dibaca; kalau ingin memakai isi
 versi lama, salin dari sana ke editor. Hal yang perlu diketahui:
 
-- Hanya simpan yang mengubah judul, ringkasan, jenis, atau isi yang menjadi versi baru. Menyimpan tanpa mengubah apa pun, atau hanya mengganti status (terbit atau arsip), tidak: perubahan status tidak muncul di riwayat, hanya memperbarui "diperbarui oleh".
+- Simpan yang mengubah judul, ringkasan, jenis, atau isi menjadi versi baru. Mengganti status (terbitkan, arsipkan, kembalikan ke draf) juga menjadi versi, dengan label seperti "Diterbitkan" atau "Diarsipkan" di daftar, jadi Anda bisa melihat siapa yang mengarsipkan dokumen dan kapan. Menyimpan tanpa mengubah apa pun, atau menetapkan status yang sudah berlaku, tidak membuat versi.
 - Maksimal 100 versi terakhir per dokumen yang disimpan.
 - Dokumen yang dibuat sebelum fitur ini baru punya riwayat sejak simpan pertama sesudahnya (isi sebelumnya jadi versi 1; penulisnya adalah penulis awal dokumen bila tercatat, kalau tidak tertulis "tidak diketahui").
 - Pembaca biasa tidak melihat riwayat.

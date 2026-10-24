@@ -43,12 +43,6 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ## Skala
 
-- [ ] **Riwayat bukan jejak audit lengkap.** Perubahan status (terbit, arsip, kembali ke draf)
-      tidak membuat revisi; hanya `lastEditedById` yang berubah, dan nilai sebelumnya hilang.
-      Pertanyaan "siapa yang mengarsipkan ini, kapan" tidak terjawab. **Disetujui pemilik
-      24 Okt 2026 untuk dikerjakan**; catatan rancangan ada di `docs/FEATURES.md` (bagian
-      "Disetujui, belum dikerjakan").
-
 - [ ] **Favorit pada dokumen yang di-unpublish tertinggal.** Baris `Favorite` tetap ada
       bila dokumen kembali ke draf, karena tombol hapus hanya ada di halaman
       dokumen yang sudah tidak terlihat bagi VIEWER; baris muncul lagi saat dokumen

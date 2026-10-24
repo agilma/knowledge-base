@@ -1,4 +1,4 @@
-import { DocumentStatus, DocumentType, Prisma } from "@prisma/client";
+import { DocumentStatus, DocumentType, Prisma, type Document } from "@prisma/client";
 import { db } from "../db";
 import {
   HIGHLIGHT_MARKERS,
@@ -312,6 +312,76 @@ export async function createDocument(data: DocumentInput, authorId?: string) {
   });
 }
 
+type Tx = Prisma.TransactionClient;
+
+/**
+ * Serialises everything that writes a document's revisions. Version numbers come
+ * from "latest + 1", so two saves at the same moment must not read the same latest.
+ * The lock ends when the transaction does.
+ */
+async function lockRevisions(tx: Tx, documentId: string): Promise<number | undefined> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${documentId}`}))`;
+  const latest = await tx.documentRevision.findFirst({
+    where: { documentId },
+    orderBy: { version: "desc" },
+    select: { version: true },
+  });
+  return latest?.version;
+}
+
+/**
+ * Documents written before revisions existed have none. Keep what was there
+ * before the first recorded change as version 1, or that change would erase it
+ * from the history.
+ */
+async function snapshotBaseline(tx: Tx, before: Document): Promise<number> {
+  await tx.documentRevision.create({
+    data: {
+      documentId: before.id,
+      version: 1,
+      title: before.title,
+      excerpt: before.excerpt,
+      content: before.content,
+      type: before.type,
+      status: before.status,
+      editedById: before.lastEditedById ?? before.authorId,
+      createdAt: before.updatedAt,
+    },
+  });
+  return 1;
+}
+
+/** Writes the next version from the saved document and trims the oldest beyond the cap. */
+async function appendRevision(
+  tx: Tx,
+  saved: Document,
+  editorId: string | undefined,
+  latest: number | undefined
+) {
+  await tx.documentRevision.create({
+    data: {
+      documentId: saved.id,
+      version: nextVersion(latest),
+      title: saved.title,
+      excerpt: saved.excerpt,
+      content: saved.content,
+      type: saved.type,
+      status: saved.status,
+      editedById: editorId ?? null,
+    },
+  });
+
+  const all = await tx.documentRevision.findMany({
+    where: { documentId: saved.id },
+    orderBy: { version: "desc" },
+    select: { id: true },
+  });
+  const stale = idsToPrune(all, REVISION_LIMIT);
+  if (stale.length > 0) {
+    await tx.documentRevision.deleteMany({ where: { id: { in: stale } } });
+  }
+}
+
 export async function updateDocument(id: string, data: DocumentInput, editorId?: string) {
   const validated = documentSchema.parse(data);
 
@@ -334,9 +404,7 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
   }
 
   return db.$transaction(async (tx) => {
-    // Version numbers come from "latest + 1", so two saves of one document at the
-    // same moment must not both read the same latest. The lock ends on commit.
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${id}`}))`;
+    let latest = await lockRevisions(tx, id);
 
     // Read the document again, now that the lock is held. The copy read before the
     // transaction can be stale: if another save committed in between, comparing
@@ -346,38 +414,19 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
       throw new Error("Dokumen tidak ditemukan");
     }
 
-    const meaningful = hasMeaningfulChange(current, {
-      title: validated.title,
-      excerpt: validated.excerpt || null,
-      content: validated.content,
-      type: validated.type,
-    });
-
-    let latest = (
-      await tx.documentRevision.findFirst({
-        where: { documentId: id },
-        orderBy: { version: "desc" },
-        select: { version: true },
-      })
-    )?.version;
-
-    // Documents written before revisions existed have none. Keep what was there
-    // before this save as version 1, or the first edit would erase it from history.
-    if (meaningful && latest === undefined) {
-      await tx.documentRevision.create({
-        data: {
-          documentId: id,
-          version: nextVersion(latest),
-          title: current.title,
-          excerpt: current.excerpt,
-          content: current.content,
-          type: current.type,
-          status: current.status,
-          editedById: current.lastEditedById ?? current.authorId,
-          createdAt: current.updatedAt,
-        },
+    // A change of status is a change of its own: who published or archived a
+    // document is something the history has to answer, even if the text is the same.
+    const record =
+      current.status !== validated.status ||
+      hasMeaningfulChange(current, {
+        title: validated.title,
+        excerpt: validated.excerpt || null,
+        content: validated.content,
+        type: validated.type,
       });
-      latest = 1;
+
+    if (record && latest === undefined) {
+      latest = await snapshotBaseline(tx, current);
     }
 
     const updated = await tx.document.update({
@@ -394,39 +443,43 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
       },
     });
 
-    if (meaningful) {
-      await tx.documentRevision.create({
-        data: {
-          documentId: id,
-          version: nextVersion(latest),
-          title: updated.title,
-          excerpt: updated.excerpt,
-          content: updated.content,
-          type: updated.type,
-          status: updated.status,
-          editedById: editorId ?? null,
-        },
-      });
-
-      const all = await tx.documentRevision.findMany({
-        where: { documentId: id },
-        orderBy: { version: "desc" },
-        select: { id: true },
-      });
-      const stale = idsToPrune(all, REVISION_LIMIT);
-      if (stale.length > 0) {
-        await tx.documentRevision.deleteMany({ where: { id: { in: stale } } });
-      }
+    if (record) {
+      await appendRevision(tx, updated, editorId, latest);
     }
 
     return updated;
   });
 }
 
+/**
+ * Publishes, archives or returns a document to draft, and records it in the
+ * history. Setting the status a document already has changes nothing and
+ * records nothing.
+ */
 export async function setDocumentStatus(id: string, status: DocumentStatus, editorId?: string) {
-  return db.document.update({
-    where: { id },
-    data: { status, ...(editorId ? { lastEditedById: editorId } : {}) },
+  // Server actions can be called directly with any payload.
+  if (typeof id !== "string" || !Object.values(DocumentStatus).includes(status)) {
+    throw new Error("Status dokumen tidak valid");
+  }
+  return db.$transaction(async (tx) => {
+    let latest = await lockRevisions(tx, id);
+
+    const current = await tx.document.findUnique({ where: { id } });
+    if (!current) {
+      throw new Error("Dokumen tidak ditemukan");
+    }
+    if (current.status === status) return current;
+
+    if (latest === undefined) {
+      latest = await snapshotBaseline(tx, current);
+    }
+
+    const updated = await tx.document.update({
+      where: { id },
+      data: { status, ...(editorId ? { lastEditedById: editorId } : {}) },
+    });
+    await appendRevision(tx, updated, editorId, latest);
+    return updated;
   });
 }
 
