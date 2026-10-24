@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderOpen, Plus } from "lucide-react";
+import { FolderOpen, Lock, Plus } from "lucide-react";
 import { Role } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getCollectionsWithDocumentCount } from "@/lib/services/collections";
@@ -45,7 +45,10 @@ export default async function CollectionsIndexPage() {
                 <div className="p-2 bg-muted rounded-md text-muted-foreground group-hover:text-primary transition-colors">
                   <FolderOpen className="w-6 h-6" />
                 </div>
-                <h2 className="text-xl font-medium">{collection.name}</h2>
+                <h2 className="text-xl font-medium">
+                  {collection.restricted && <Lock className="mr-1.5 inline size-4 text-muted-foreground" aria-label="Koleksi terbatas" />}
+                  {collection.name}
+                </h2>
               </div>
               <p className="text-muted-foreground mb-6 flex-1">
                 {collection.description}

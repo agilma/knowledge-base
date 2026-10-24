@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Search, Star, Clock, FolderOpen, PenLine } from "lucide-react";
+import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
 import { Mark } from "@/components/brand/Mark";
@@ -83,6 +83,7 @@ export async function Sidebar() {
             >
               <FolderOpen className="w-4 h-4 text-muted-foreground" />
               {col.name}
+              {col.restricted && <Lock className="ml-auto size-3 text-muted-foreground" aria-label="Koleksi terbatas" />}
             </Link>
           ))}
         </div>

@@ -145,3 +145,9 @@ dan viewer ikut daftar. Model: `collections.restricted` (bawaan `false`, jadi da
   `getRevisionList` dan `getRevision`. Satu-satunya pengecualian yang disengaja adalah `getDocumentForRevalidate`
   (menyegarkan halaman setelah penulisan yang sudah diotorisasi). Aksi server menolak `id` yang bukan string dan tidak lagi
   meneruskan teks galat Prisma mentah ke klien (`src/lib/errors.ts`).
+- **Layar admin** (`CollectionForm`, `CollectionMembersPicker`, `setCollectionMembers`): hanya ADMIN, baik di UI maupun di service
+  (aksi bisa dipanggil lewat POST langsung). Daftar anggota diganti utuh dalam satu transaksi dengan `pg_advisory_xact_lock`
+  per koleksi, dan menyentuh `updatedAt` koleksi supaya kunci cache offline berubah. Form menyertakan penanda
+  `restrictedTouched` dan `membersTouched`: form yang tidak membawanya (dikirim manual, atau dari tab yang dibuka sebelum
+  fitur ada) tidak boleh dibaca sebagai "buka koleksi" atau "kosongkan anggota". Anggota disimpan saat koleksi dibuka kembali.
+

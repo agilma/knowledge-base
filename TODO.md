@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-24 (koleksi terbatas: penegakan selesai, UI admin belum)
+Terakhir diperbarui: 2026-10-24 (koleksi terbatas selesai: penegakan dan layar admin)
 
 ---
 
@@ -82,10 +82,11 @@ Terakhir diperbarui: 2026-10-24 (koleksi terbatas: penegakan selesai, UI admin b
 
 ## Koleksi terbatas (lanjutan)
 
-- [ ] **Belum ada layar admin** untuk menandai koleksi terbatas dan memilih anggotanya (PR berikutnya: kotak
-      "Terbatas" dan pemilih pengguna di `src/app/collections/[slug]/edit/`, aksi ADMIN di
-      `src/app/collections/actions.ts` dengan `pg_advisory_xact_lock`). Sampai itu ada, atur lewat SQL:
-      `update collections set restricted = true where slug = '...'` dan isi `collection_members`.
+- [ ] **Dari review layar admin koleksi terbatas (tanpa blokir):** (1) daftar pemilih anggota memuat maksimal 500 pengguna
+      (`listAssignableUsers`); pengguna ke-501 tidak bisa dicari (pemilih memberi tahu bila daftar terpotong); (2) setiap
+      simpan koleksi terbatas, juga tanpa perubahan akses, menyentuh `updatedAt` dan mengosongkan cache offline semua
+      non-admin (berlebih tetapi aman); (3) lapisan aksi (`restrictedTouched`/`membersTouched`, pesan galat) hanya diuji
+      lewat browser, belum ada tes otomatis; (4) pembersihan cache oleh service worker sungguhan belum diuji di perangkat kedua.
 - [x] **Pesan "slug dokumen sudah digunakan"** membocorkan bahwa sebuah slug dipakai kepada editor di luar koleksi
       terbatas: diputuskan pemilik (24 Okt 2026) untuk diterima; slug adalah ruang nama global. Dicatat di
       `docs/ARCHITECTURE.md` keputusan 5. Dihapus dari daftar bila entri ini dibersihkan.
