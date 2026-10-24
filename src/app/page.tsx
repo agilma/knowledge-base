@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Lock, Search } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getCollections } from "@/lib/services/collections";
@@ -60,7 +60,7 @@ export default async function Home() {
               href={`/collections/${collection.slug}`}
               className="p-5 rounded-xl border border-border/50 hover:border-border bg-card hover:bg-accent/50 transition-colors group"
             >
-              <h3 className="font-medium text-lg mb-1 group-hover:text-accent-foreground">{collection.name}</h3>
+              <h3 className="font-medium text-lg mb-1 group-hover:text-accent-foreground">{collection.restricted && <Lock className="mr-1.5 inline size-3.5 text-muted-foreground" aria-label="Koleksi terbatas" />}{collection.name}</h3>
               {collection.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2">{collection.description}</p>
               )}

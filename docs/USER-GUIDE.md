@@ -59,6 +59,22 @@ ke rekan: "buka bagian Verifikasi".
 Tulisan Anda disimpan otomatis di perangkat sebagai draf lokal. Kalau halaman
 tertutup sebelum tersimpan, akan ada tawaran **Pulihkan** saat dibuka lagi.
 
+## Membatasi koleksi (ADMIN)
+
+Sebagian pengetahuan, misalnya gaji atau keuangan, tidak perlu terbaca semua orang. Admin bisa membatasi satu koleksi:
+
+1. Buka koleksinya, pilih **Edit** (atau buat **Koleksi Baru**).
+2. Centang **Batasi akses**, lalu cari nama atau email orang yang boleh masuk dan pilih. Hanya orang yang pernah masuk ke aplikasi yang muncul di daftar.
+3. Simpan. Mulai saat itu, hanya admin dan orang yang dipilih yang bisa melihat koleksi itu, semua dokumen di dalamnya, hasil pencarian, favorit, dan daftar terkait. Bagi yang lain koleksinya seolah tidak ada (bukan "akses ditolak").
+
+Hal yang perlu diketahui:
+
+- Admin selalu bisa membaca. Editor yang dipilih bisa membaca **dan menulis** di koleksi itu; editor yang tidak dipilih tidak bisa menulis atau memindahkan dokumen ke sana. Viewer yang dipilih hanya membaca.
+- Mencabut akses langsung berlaku di server. Salinan yang sudah tersimpan di perangkat seseorang (untuk dibaca tanpa internet) dikosongkan **saat ia membuka aplikasi dengan internet berikutnya**; sampai saat itu salinan lama di perangkatnya masih bisa terbaca.
+- Mematikan **Batasi akses** membuka koleksi untuk semua orang, tetapi daftar anggotanya disimpan, jadi menyalakannya lagi tidak perlu memilih ulang.
+- Editor anggota bisa memindahkan dokumen dari koleksi terbatas ke koleksi terbuka; riwayatnya ikut terbaca semua orang. Pindahkan hanya bila memang dimaksudkan.
+- Slug dokumen dipakai bersama semua koleksi: editor di luar koleksi bisa tahu bahwa suatu slug sudah dipakai, tetapi tidak judul atau isinya.
+
 ## Memakai tanpa internet
 
 Pasang aplikasi ke layar utama (menu browser, lalu **Tambahkan ke layar utama**).

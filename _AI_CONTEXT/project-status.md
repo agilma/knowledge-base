@@ -16,7 +16,6 @@ Katalog fitur yang selalu diperbarui: [`docs/FEATURES.md`](../docs/FEATURES.md).
 
 ## Belum ada
 
-- Layar admin untuk koleksi terbatas (kebijakan akses dan penegakannya sudah ada di `main` setelah PR koleksi terbatas; lihat `docs/FEATURES.md`).
 - Pemulihan versi dari riwayat revisi (riwayat bisa dibaca).
 - Lampiran (object storage).
 - `error.tsx`, `not-found.tsx`, `loading.tsx`.
@@ -35,4 +34,4 @@ Pada branch `feat/own-identity` sebelum merge (2026-10-23): `npx tsc --noEmit` b
 - 2026-10-18/19 — UI terhubung ke Prisma, login Google, CRUD, editor MDX, PWA offline-baca, draf lokal
 - 2026-10 — perbaikan performa dan offline, backlog `TODO.md`
 - 2026-10-23 — identitas aplikasi (PR #19), backlog terverifikasi (PR #20), folder `docs/`
-- 2026-10-24 — pencarian full-text, riwayat revisi dan status, editor Tiptap, koleksi terbatas (penegakan; UI admin menyusul)
+- 2026-10-24 — pencarian full-text, riwayat revisi dan status, editor Tiptap, koleksi terbatas (penegakan dan layar admin)

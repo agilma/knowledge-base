@@ -11,6 +11,7 @@ import {
   setCollectionStatus,
   deleteCollection,
   getCollectionById,
+  setCollectionMembers,
 } from "@/lib/services/collections";
 import { collectionSchema, CollectionInput } from "@/lib/validation/collection";
 
@@ -19,11 +20,16 @@ export type ActionState = {
   fieldErrors?: Record<string, string>;
 };
 
+/** Ids chosen in the member picker; anything that is not a string is dropped. */
+function memberIds(formData: FormData): string[] {
+  return formData.getAll("memberIds").filter((id): id is string => typeof id === "string");
+}
+
 export async function createCollectionAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
 
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
@@ -31,6 +37,7 @@ export async function createCollectionAction(
     description: (formData.get("description") as string) || undefined,
     icon: (formData.get("icon") as string) || undefined,
     status: (formData.get("status") as CollectionStatus) || CollectionStatus.ACTIVE,
+    restricted: formData.get("restricted") === "on",
   };
 
   const parsed = collectionSchema.safeParse(rawData);
@@ -47,6 +54,9 @@ export async function createCollectionAction(
 
   try {
     const newCollection = await createCollection(parsed.data);
+    if (formData.get("membersTouched") === "1") {
+      await setCollectionMembers(newCollection.id, memberIds(formData), { id: admin.id, role: admin.role });
+    }
     revalidatePath("/collections");
     revalidatePath(`/collections/${newCollection.slug}`);
     revalidatePath("/search");
@@ -68,12 +78,24 @@ export async function updateCollectionAction(
   const admin = await requireRole(Role.ADMIN);
   if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
+  const viewer = { id: admin.id, role: admin.role };
+  const oldCollection = await getCollectionById(id, viewer);
+  if (!oldCollection) return { error: "Koleksi tidak ditemukan" };
+
+  // A form that does not carry the field (posted by hand, or from a tab opened before it
+  // existed) must not read as "unrestrict this": only a form that says it has it decides.
+  const restricted =
+    formData.get("restrictedTouched") === "1"
+      ? formData.get("restricted") === "on"
+      : oldCollection.restricted;
+
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
     slug: formData.get("slug") as string,
     description: (formData.get("description") as string) || undefined,
     icon: (formData.get("icon") as string) || undefined,
     status: (formData.get("status") as CollectionStatus) || CollectionStatus.ACTIVE,
+    restricted,
   };
 
   const parsed = collectionSchema.safeParse(rawData);
@@ -89,12 +111,12 @@ export async function updateCollectionAction(
   }
 
   try {
-    const oldCollection = await getCollectionById(id, { id: admin.id, role: admin.role });
     const updatedCollection = await updateCollection(id, parsed.data);
-    revalidatePath("/collections");
-    if (oldCollection?.slug) {
-      revalidatePath(`/collections/${oldCollection.slug}`);
+    if (formData.get("membersTouched") === "1") {
+      await setCollectionMembers(id, memberIds(formData), viewer);
     }
+    revalidatePath("/collections");
+    revalidatePath(`/collections/${oldCollection.slug}`);
     revalidatePath(`/collections/${updatedCollection.slug}`);
     revalidatePath("/search");
     revalidatePath("/");

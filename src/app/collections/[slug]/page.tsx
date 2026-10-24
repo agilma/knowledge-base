@@ -6,7 +6,7 @@ import { getCollectionBySlug } from "@/lib/services/collections";
 import { getDocumentsByCollection } from "@/lib/services/documents";
 import { CollectionActions } from "@/components/collection/CollectionActions";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FolderOpen, ArrowLeft } from "lucide-react";
+import { FileText, FolderOpen, Lock, ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +56,11 @@ export default async function CollectionDetailPage({
           <span className="text-sm font-semibold tracking-wider uppercase">Koleksi</span>
         </div>
         <h1 className="text-4xl font-semibold tracking-tight">{collection.name}</h1>
+        {collection.restricted && (
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Lock className="size-3.5" /> Koleksi terbatas: hanya admin dan anggota yang bisa melihatnya.
+          </p>
+        )}
         {collection.description && (
           <p className="text-xl text-muted-foreground leading-relaxed">
             {collection.description}

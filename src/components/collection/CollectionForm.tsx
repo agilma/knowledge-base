@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { slugify } from "@/lib/slug";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
 import { createCollectionAction, updateCollectionAction, ActionState } from "@/app/collections/actions";
 
 interface CollectionFormProps {
@@ -18,16 +19,21 @@ interface CollectionFormProps {
     slug: string;
     description?: string | null;
     status: CollectionStatus;
+    restricted?: boolean;
   };
+  /** Everyone who can be made a member; given only to admins, who are the only ones here. */
+  users?: AssignableUser[];
+  initialMemberIds?: string[];
 }
 
-export function CollectionForm({ initialData }: CollectionFormProps) {
+export function CollectionForm({ initialData, users = [], initialMemberIds = [] }: CollectionFormProps) {
   const isEditing = !!initialData;
   const isOnline = useOnlineStatus();
   const [name, setName] = useState(initialData?.name ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
   const [clientError, setClientError] = useState<string | null>(null);
+  const [restricted, setRestricted] = useState(initialData?.restricted ?? false);
 
   const action = isEditing
     ? updateCollectionAction.bind(null, initialData.id)
@@ -159,6 +165,30 @@ export function CollectionForm({ initialData }: CollectionFormProps) {
         {state?.fieldErrors?.status && (
           <p className="text-xs text-destructive">{state.fieldErrors.status}</p>
         )}
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        {/* Tells the server this form carries the setting; without it a form posted by hand
+            would read as "not restricted" and open the collection. */}
+        <input type="hidden" name="restrictedTouched" value="1" />
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="restricted"
+            checked={restricted}
+            onChange={(e) => setRestricted(e.target.checked)}
+            className="mt-1 size-4"
+          />
+          <span>
+            <span className="font-medium">Batasi akses</span>
+            <span className="block text-xs text-muted-foreground">
+              Hanya admin dan orang yang dipilih yang bisa melihat koleksi ini dan semua dokumennya (termasuk lewat
+              pencarian). Untuk yang lain koleksinya seolah tidak ada. Salinan yang sudah tersimpan di perangkat
+              seseorang dikosongkan saat ia membuka aplikasi online berikutnya.
+            </span>
+          </span>
+        </label>
+        {restricted && <CollectionMembersPicker users={users} initialIds={initialMemberIds} />}
       </div>
 
       {!isOnline && (
