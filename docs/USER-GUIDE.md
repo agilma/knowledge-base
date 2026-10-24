@@ -38,7 +38,12 @@ butuh internet; tombol simpan nonaktif saat offline.
 Akun Anda berperan Viewer: hanya bisa membaca. Minta administrator menaikkan
 peran Anda menjadi Editor untuk menulis dan mengubah dokumen.
 
+## Favorit dan terakhir dibuka
+
+- Di halaman dokumen, pilih **Tambah favorit** untuk menyimpannya. Semua favorit Anda ada di menu **Favorit**.
+- Dokumen yang Anda baca otomatis tercatat di **Terakhir Dibuka** (maksimal 50, yang terbaru di atas).
+- Keduanya khusus untuk akun Anda dan butuh internet; saat offline tombol favorit nonaktif.
+
 ## Yang belum tersedia
 
-Favorit dan riwayat terakhir dilihat belum aktif. Lihat
-[FEATURES.md](./FEATURES.md) untuk status terbaru.
+Lihat [FEATURES.md](./FEATURES.md) untuk fitur yang masih direncanakan.

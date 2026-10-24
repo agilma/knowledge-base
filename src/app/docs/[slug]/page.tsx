@@ -3,10 +3,13 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
-import { Star, ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
+import { ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { DocumentActions } from "@/components/document/DocumentActions";
+import { FavoriteButton } from "@/components/document/FavoriteButton";
+import { RecordView } from "@/components/document/RecordView";
+import { isFavorite } from "@/lib/services/favorites";
 import { extractHeadings } from "@/lib/markdown";
 import { formatDate } from "@/lib/format";
 
@@ -34,6 +37,7 @@ export default async function DocumentPage({
 
   const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts });
   const headings = extractHeadings(doc.content);
+  const favorite = user ? await isFavorite(user.id, doc.id) : false;
 
   return (
     <div className="flex w-full">
@@ -99,10 +103,9 @@ export default async function DocumentPage({
             <Badge variant="outline" className="font-normal rounded-full px-3">
               {formatDocumentType(doc.type)}
             </Badge>
-            <button className="flex items-center gap-1 hover:text-yellow-500 transition-colors ml-auto">
-              <Star className="w-4 h-4" />
-              <span>Favorit</span>
-            </button>
+            {user && (
+              <FavoriteButton documentId={doc.id} initialFavorite={favorite} />
+            )}
           </div>
           {doc.excerpt && (
             <p className="text-xl text-muted-foreground leading-relaxed mt-4">
@@ -110,6 +113,8 @@ export default async function DocumentPage({
             </p>
           )}
         </header>
+
+        {user && <RecordView documentId={doc.id} />}
 
         {/* Document Content Sections */}
         <MarkdownContent content={doc.content} />
