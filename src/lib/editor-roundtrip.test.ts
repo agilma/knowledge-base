@@ -1,0 +1,62 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { MarkdownManager } from "@tiptap/markdown";
+import { createContentExtensions } from "./editor-extensions";
+import { dropEmptyParagraphs, isLosslessRoundTrip, type JsonNode } from "./editor-content";
+
+const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
+
+/** What the editor would save after the document is opened and edited. */
+function save(markdown: string): string {
+  return manager.serialize(dropEmptyParagraphs(manager.parse(markdown) as JsonNode) as never);
+}
+
+const SAFE: Record<string, string> = {
+  headings: "## Konteks\n\n### Sub judul\n\nIsi.\n",
+  marks: "Teks **tebal**, *miring*, ~~coret~~, `kode` dan [tautan](https://example.com \"judul\").\n",
+  "nested lists": "1. Satu\n2. Dua\n   - anak a\n   - anak b\n3. Tiga\n\n- [ ] belum\n- [x] sudah\n",
+  "loose list": "- a\n\n- b\n\n- c\n",
+  quote: "> Kutipan penting\n",
+  code: "```bash\necho \"halo\"\n```\n",
+  table: "| A | B |\n| --- | --- |\n| a1 | b1 |\n| a\\|2 | `x\\|y` |\n",
+  rule: "Atas\n\n---\n\nBawah\n",
+  "special characters": "* _ < > & © “ ” – — … 😀 日本語\n",
+  "extra blank lines": "Satu\n\n\n\nDua\n",
+  "spacer paragraph": "Satu\n\n&nbsp;\n\nDua\n",
+  setext: "Judul\n=====\n\nIsi\n",
+};
+
+const LOSSY: Record<string, string> = {
+  image: "x ![gambar](https://x.com/a.png \"t\") y\n",
+  footnote: "Kalimat[^1].\n\n[^1]: Isi catatan.\n",
+  "inline html": "Teks <span style=\"color:red\">merah</span>\n",
+  "block html": "<div class=\"x\">\n  blok **html**\n</div>\n",
+  details: "<details><summary>Klik</summary>\n\nisi\n\n</details>\n",
+  comment: "Satu\n\n<!-- catatan -->\n\nDua\n",
+  "fence inside fence": "````md\n```js\nconst a = 1;\n```\n````\n",
+  "escaped heading": "\\# bukan judul\n",
+  "spacer between lists": "- a\n- b\n\n&nbsp;\n\n- c\n",
+  "spacer between numbered lists": "1. satu\n\n&nbsp;\n\n1. mulai lagi\n",
+  "escaped list": "1\\. bukan daftar\n",
+};
+
+for (const [name, md] of Object.entries(SAFE)) {
+  test(`stays the same for a reader: ${name}`, () => {
+    const once = save(md);
+    assert.ok(isLosslessRoundTrip(md, once), `changed:\n${md}\n--->\n${once}`);
+    // opening and saving again changes nothing more
+    assert.equal(save(once), once);
+  });
+}
+
+for (const [name, md] of Object.entries(LOSSY)) {
+  test(`is caught as lossy: ${name}`, () => {
+    assert.ok(!isLosslessRoundTrip(md, save(md)), `should differ:\n${md}\n--->\n${save(md)}`);
+  });
+}
+
+test("layout differences alone are not loss", () => {
+  assert.ok(isLosslessRoundTrip("| A | B |\n| - | - |\n| 1 | 2 |\n", "| A   | B   |\n| --- | --- |\n| 1   | 2   |\n"));
+  assert.ok(isLosslessRoundTrip("* a\n* b\n", "- a\n- b\n"));
+  assert.ok(isLosslessRoundTrip("_a_ __b__\n", "*a* **b**\n"));
+});

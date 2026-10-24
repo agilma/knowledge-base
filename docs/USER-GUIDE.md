@@ -52,7 +52,7 @@ ke rekan: "buka bagian Verifikasi".
 ## Menulis (EDITOR dan ADMIN)
 
 1. Buka koleksi, pilih **Dokumen Baru**, lalu pilih jenisnya. Kerangka bagian akan terisi.
-2. Tulis isinya. Tombol **Mode Markdown** dipakai untuk menempel dari Obsidian.
+2. Tulis isinya. Yang Anda lihat adalah hasil akhirnya. Mengetik `## ` di awal baris menjadi judul, `- ` menjadi daftar, `**tebal**` menjadi tebal. Ketik `/` di baris kosong untuk menyisipkan judul, daftar, daftar centang, kutipan, blok kode, tabel, atau garis pemisah. Di HP, bilah alat tampil tepat di atas keyboard. Tombol **Mode Markdown** dipakai untuk menempel dari Obsidian. Baris kosong tambahan dari Enter berulang tidak ikut tersimpan; jarak antarparagraf diatur otomatis. Dokumen yang berisi gambar, catatan kaki, atau HTML mentah dibuka dalam Mode Markdown dengan pemberitahuan; itu disengaja, karena editor visual akan menghilangkan bagian tersebut bila disimpan.
 3. Di bagian **Pengetahuan Terkait**, ketik judul dokumen lain lalu pilih untuk menautkannya (maksimal 20). Hubungannya dua arah: dokumen yang Anda pilih juga akan menampilkan dokumen ini, dan menghapusnya dari salah satu sisi menghapus keduanya. Pembaca biasa hanya melihat yang sudah terbit.
 4. Simpan sebagai **Draf** dulu. Ubah ke **Terbit** saat siap dibaca orang lain.
 
