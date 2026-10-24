@@ -10,6 +10,9 @@ import { CACHE_OWNER_KEY, shouldClearCache } from "@/lib/cache-owner";
 export function CacheGuard({ owner }: { owner: string | null }) {
   useEffect(() => {
     if (!owner) return;
+    // Offline, the page itself may have come from the cache we would delete,
+    // and nothing can refill it. Wait until a page loads online.
+    if (!navigator.onLine) return;
 
     let recorded: string | null;
     try {
