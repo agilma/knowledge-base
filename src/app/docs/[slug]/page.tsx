@@ -3,10 +3,14 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
-import { Star, ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
+import { ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { DocumentActions } from "@/components/document/DocumentActions";
+import { TableOfContents } from "@/components/document/TableOfContents";
+import { FavoriteButton } from "@/components/document/FavoriteButton";
+import { RecordView } from "@/components/document/RecordView";
+import { isFavorite } from "@/lib/services/favorites";
 import { extractHeadings } from "@/lib/markdown";
 import { formatDate } from "@/lib/format";
 
@@ -34,6 +38,7 @@ export default async function DocumentPage({
 
   const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts });
   const headings = extractHeadings(doc.content);
+  const favorite = user ? await isFavorite(user.id, doc.id) : false;
 
   return (
     <div className="flex w-full">
@@ -99,10 +104,9 @@ export default async function DocumentPage({
             <Badge variant="outline" className="font-normal rounded-full px-3">
               {formatDocumentType(doc.type)}
             </Badge>
-            <button className="flex items-center gap-1 hover:text-yellow-500 transition-colors ml-auto">
-              <Star className="w-4 h-4" />
-              <span>Favorit</span>
-            </button>
+            {user && (
+              <FavoriteButton documentId={doc.id} initialFavorite={favorite} />
+            )}
           </div>
           {doc.excerpt && (
             <p className="text-xl text-muted-foreground leading-relaxed mt-4">
@@ -110,6 +114,21 @@ export default async function DocumentPage({
             </p>
           )}
         </header>
+
+        {user && <RecordView documentId={doc.id} />}
+
+        {/* The side column only exists on wide screens; on a phone the same
+            links fold away above the text. */}
+        {headings.length > 0 && (
+          <details className="xl:hidden rounded-lg border border-border/60 px-4 py-3">
+            <summary className="cursor-pointer select-none text-sm font-medium text-muted-foreground">
+              Di halaman ini ({headings.length} bagian)
+            </summary>
+            <div className="mt-3">
+              <TableOfContents headings={headings} />
+            </div>
+          </details>
+        )}
 
         {/* Document Content Sections */}
         <MarkdownContent content={doc.content} />
@@ -143,17 +162,7 @@ export default async function DocumentPage({
             <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">
               Di halaman ini
             </h4>
-            <nav className="space-y-2">
-              {headings.map((heading) => (
-                <a
-                  key={heading.id}
-                  href={`#${heading.id}`}
-                  className="block text-sm text-muted-foreground hover:text-foreground transition-colors border-l-2 border-transparent hover:border-foreground pl-3 py-1"
-                >
-                  {heading.title}
-                </a>
-              ))}
-            </nav>
+            <TableOfContents headings={headings} />
           </div>
         </aside>
       )}

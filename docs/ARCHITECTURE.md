@@ -31,9 +31,11 @@ Didefinisikan di `prisma/schema.prisma`.
 - **Collection** berisi banyak **Document**. Menghapus koleksi yang masih berisi dokumen ditolak (`onDelete: Restrict`).
 - **Document**: `type` (PANDUAN, MASALAH, REFERENSI), `status` (DRAFT, PUBLISHED, ARCHIVED), `content` berupa markdown, `authorId` opsional.
 - **DocumentRelation**: relasi antar dokumen untuk "Pengetahuan Terkait".
-- **Favorite**, **RecentView**: per pengguna. Tabelnya ada, belum dipakai.
+- **Favorite**, **RecentView**: daftar per pengguna (`entityType` = `DOCUMENT`). Keduanya tanpa foreign key, jadi baris bisa menunjuk dokumen yang sudah dihapus atau tidak boleh dilihat pembaca; saat dibaca baris seperti itu disaring. `RecentView` tidak punya unique key: satu dokumen satu baris dijaga dengan menghapus lalu menulis di dalam transaksi yang diserialkan per pengguna (`pg_advisory_xact_lock`), dipangkas ke 50 terbaru.
 
 Hanya dokumen `PUBLISHED` terlihat oleh VIEWER. Draf dan arsip hanya untuk EDITOR dan ADMIN.
+
+Service worker men-cache halaman baca per URL, tanpa membedakan pengguna. Karena itu halaman yang berisi data pribadi (`/favorites`, `/recent`) **tidak** di-cache (`src/lib/sw-routes.ts`, `isPersonalRoute`). Halaman baru yang menampilkan data satu pengguna harus ikut ke sana.
 
 Tabel `documents` punya index GIN pencarian berbasis ekspresi (`documents_search_idx`, lihat keputusan 3). Prisma tidak bisa menggambarkannya di `schema.prisma`; migrasi adalah sumber kebenarannya, dan `prisma migrate diff` tidak melaporkannya sebagai drift.
 

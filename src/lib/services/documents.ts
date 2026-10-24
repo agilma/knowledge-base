@@ -1,6 +1,7 @@
 import { DocumentStatus, DocumentType, Prisma } from "@prisma/client";
 import { db } from "../db";
 import {
+  HIGHLIGHT_MARKERS,
   HIGHLIGHT_START,
   HIGHLIGHT_STOP,
   SEARCH_CONFIG,
@@ -113,8 +114,10 @@ export async function searchDocuments(query: string, options?: SearchOptions) {
   if (!tsQuery) return { results: [], total: 0 };
 
   const vector = Prisma.raw(SEARCH_VECTOR_SQL);
+  // translate() drops the marker characters from the text first, so content
+  // that happens to contain them cannot masquerade as a match.
   const headline = (column: Prisma.Sql, extra: string) =>
-    Prisma.sql`ts_headline(${SEARCH_CONFIG}::regconfig, ${column}, q.query,
+    Prisma.sql`ts_headline(${SEARCH_CONFIG}::regconfig, translate(${column}, ${HIGHLIGHT_MARKERS}, ''), q.query,
       ${`StartSel=${HIGHLIGHT_START}, StopSel=${HIGHLIGHT_STOP}, ${extra}`})`;
 
   const rows = await db.$queryRaw<SearchRow[]>`

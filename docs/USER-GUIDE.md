@@ -24,6 +24,13 @@ Tips pencarian:
 - Pencarian mencocokkan kata utuh atau awalan kata, bukan potongan di tengah kata.
 - Draf dan arsip hanya muncul di hasil pencarian Editor dan Admin.
 
+## Daftar isi dan tautan ke bagian
+
+Dokumen yang panjang punya daftar isi: di layar lebar ada di kolom kanan, di HP ada lipatan
+**Di halaman ini** di atas teks. Arahkan kursor ke judul bagian (di HP, ikon tautan tampak samar di
+sebelahnya) dan ketuk ikon tautan untuk menyalin alamat langsung ke bagian itu, misalnya untuk dikirim
+ke rekan: "buka bagian Verifikasi".
+
 ## Jenis dokumen
 
 - **Panduan**: langkah mengerjakan sesuatu.
@@ -50,7 +57,12 @@ butuh internet; tombol simpan nonaktif saat offline.
 Akun Anda berperan Viewer: hanya bisa membaca. Minta administrator menaikkan
 peran Anda menjadi Editor untuk menulis dan mengubah dokumen.
 
+## Favorit dan terakhir dibuka
+
+- Di halaman dokumen, pilih **Tambah favorit** untuk menyimpannya. Semua favorit Anda ada di menu **Favorit**.
+- Dokumen yang Anda baca otomatis tercatat di **Terakhir Dibuka** (maksimal 50, yang terbaru di atas).
+- Keduanya khusus untuk akun Anda. Halaman Favorit dan Terakhir Dibuka butuh internet dan tidak tersimpan untuk dibaca offline, supaya daftar Anda tidak terlihat oleh orang lain yang memakai browser yang sama. Saat offline tombol favorit juga nonaktif.
+
 ## Yang belum tersedia
 
-Favorit dan riwayat terakhir dilihat belum aktif. Lihat
-[FEATURES.md](./FEATURES.md) untuk status terbaru.
+Lihat [FEATURES.md](./FEATURES.md) untuk fitur yang masih direncanakan.

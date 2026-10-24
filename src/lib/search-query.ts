@@ -31,10 +31,13 @@ export const SEARCH_VECTOR_SQL =
   `setweight(to_tsvector('${SEARCH_CONFIG}', coalesce(excerpt, '')), 'B') || ` +
   `setweight(to_tsvector('${SEARCH_CONFIG}', left(content, 200000)), 'C'))`;
 
-/** Markers wrapped around matches by `ts_headline`. Private-use characters, so
- * they cannot collide with anything a person writes. */
-export const HIGHLIGHT_START = "";
-export const HIGHLIGHT_STOP = "";
+/** Markers wrapped around matches by `ts_headline`. Private-use characters that
+ * people do not normally write; the service strips them from the text before
+ * `ts_headline` runs (`HIGHLIGHT_MARKERS`), so a document that does contain
+ * them cannot fake a highlight. */
+export const HIGHLIGHT_START = "\uE000";
+export const HIGHLIGHT_STOP = "\uE001";
+export const HIGHLIGHT_MARKERS = HIGHLIGHT_START + HIGHLIGHT_STOP;
 
 const MAX_QUERY_LENGTH = 200;
 const MAX_GROUPS = 8;

@@ -7,9 +7,16 @@
 -- CONCURRENTLY builds the index without blocking writes to "documents". It
 -- cannot run inside a transaction, so this file MUST contain exactly one
 -- statement; Prisma runs a single statement outside an explicit transaction.
--- IF NOT EXISTS makes a re-run harmless. If a previous run was interrupted it
--- can leave an INVALID index behind; drop it (DROP INDEX "documents_search_idx")
--- and deploy again.
+-- IF NOT EXISTS makes a re-run harmless.
+--
+-- RECOVERY if this migration fails or is interrupted (for example the server
+-- lacks the 'indonesian' configuration, or the build is killed mid-index):
+-- Prisma records it as failed and every later `prisma migrate deploy` stops
+-- with P3009, which fails ALL builds (the build script runs it first) until:
+--   1. DROP INDEX IF EXISTS "documents_search_idx";   -- an interrupted build can leave an INVALID index
+--   2. npx prisma migrate resolve --rolled-back 3_fulltext_search
+--   3. deploy again (after fixing the cause, if there was one).
+-- Dropping the index alone is NOT enough.
 --
 -- The expression must match SEARCH_VECTOR_SQL in src/lib/search-query.ts, or
 -- queries silently stop using the index (a test checks this).

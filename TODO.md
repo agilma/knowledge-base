@@ -23,12 +23,10 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       error di konsol pada `/`, `/collections`, `/docs/new`, `/docs/[slug]`,
       `/search`. Kemungkinan hanya muncul di Vercel (zona waktu server UTC vs
       klien, PWA terpasang, atau service worker lama). Ambil teks lengkap error
-      dari konsol production atau build dev. Kandidat: `formatDate` di
-      `src/lib/format.ts` tanpa `timeZone`.
-
-- [ ] **`shadcn` ada di `dependencies`, bukan `devDependencies`** (1.9 MB).
-      Itu CLI, tidak pernah di-import kode. Memindahkannya memangkas install
-      production di Vercel tanpa efek ke runtime.
+      dari konsol production atau build dev. Kandidat yang sudah ditutup tanpa
+      bukti: `formatDate` kini memakai zona Asia/Jakarta (server UTC dan klien
+      bisa beda hari di dekat tengah malam). Bila #418 tetap muncul di production
+      setelah itu, penyebabnya di tempat lain.
 
 ## Jaring pengaman
 
@@ -44,6 +42,16 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       checks → `check`. Hanya pemilik repo yang bisa mengubahnya.
 
 ## Skala
+
+- [ ] **Favorit pada dokumen yang di-unpublish tertinggal.** Baris `Favorite` tetap ada
+      bila dokumen kembali ke draf, karena tombol hapus hanya ada di halaman
+      dokumen yang sudah tidak terlihat bagi VIEWER; baris muncul lagi saat dokumen
+      dipublikasikan ulang. Tidak merusak, hanya tidak bisa dibersihkan oleh
+      pemiliknya. Daftar `/favorites` juga belum dibatasi jumlahnya.
+
+- [ ] **Halaman dokumen yang ter-cache memuat status favorit lama.** Setelah favorit
+      diubah, salinan `/docs/<slug>` di service worker menampilkan status sebelumnya
+      sampai ada fetch jaringan berikutnya (terlihat saat offline). Kecil.
 
 - [ ] **Database mati terlihat seperti logout.** Saat database tidak terjangkau,
       pencarian sesi gagal dan `auth()` memperlakukan pengguna sebagai belum
@@ -62,6 +70,18 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       terpisah. Pindah ke JWT session strategy menghilangkannya sepenuhnya,
       dengan konsekuensi: perubahan role baru berlaku setelah login ulang.
       Keputusan produk, bukan teknis.
+
+## Offline
+
+- [ ] **`/search` di-cache service worker dan memuat draf untuk EDITOR.**
+      Pencarian EDITOR menyertakan draf dan arsip, dan halamannya masuk
+      `pages-rsc-cache` per URL. Jika perangkat lalu dipakai VIEWER tanpa lewat
+      tombol keluar (sesi kedaluwarsa, orang lain login) dan sedang offline,
+      `/search?q=...` dari cache menampilkan judul draf. Online tidak bocor
+      (NetworkFirst, proxy tetap menegakkan sesi). Bukan regresi pencarian
+      full-text: `/docs/<draf>` bocor dengan cara yang sama, dan `CLEAR_PAGE_CACHE`
+      hanya dipanggil dari `UserMenu`. Opsi: `/search` network-only (masuk
+      `isPersonalRoute` di `src/lib/sw-routes.ts`) dan samakan dengan `/docs/*`.
 
 ## Perlu dicek sendiri
 
