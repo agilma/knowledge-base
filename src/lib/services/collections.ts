@@ -2,7 +2,7 @@ import { CollectionStatus, DocumentStatus, Role } from "@prisma/client";
 import { db } from "../db";
 import { collectionSchema, CollectionInput } from "../validation/collection";
 import { cache } from "react";
-import { collectionReadableWhere, type Viewer } from "../collection-access";
+import { collectionReadableWhere, MAX_COLLECTION_MEMBERS, type Viewer } from "../collection-access";
 
 // Rendered by the sidebar on every page, so dedupe it within a request. The key
 // is the user and role as plain values: `cache` compares arguments by identity,
@@ -140,8 +140,6 @@ export async function deleteCollection(id: string) {
     where: { id },
   });
 }
-
-export const MAX_COLLECTION_MEMBERS = 200;
 
 function assertAdmin(actor: Viewer) {
   if (actor.role !== Role.ADMIN) throw new Error("Hanya admin yang boleh mengatur anggota koleksi");

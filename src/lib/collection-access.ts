@@ -14,6 +14,9 @@ export interface Viewer {
   role: Role;
 }
 
+/** The most people one restricted collection can list; the picker and the server both hold to it. */
+export const MAX_COLLECTION_MEMBERS = 200;
+
 export function canAccessCollection(
   collection: { restricted: boolean },
   isMember: boolean,

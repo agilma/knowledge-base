@@ -188,7 +188,10 @@ export function CollectionForm({ initialData, users = [], initialMemberIds = [] 
             </span>
           </span>
         </label>
-        {restricted && <CollectionMembersPicker users={users} initialIds={initialMemberIds} />}
+        {/* kept mounted (only hidden) so choices not yet saved survive unticking the box */}
+        <div hidden={!restricted}>
+          <CollectionMembersPicker users={users} initialIds={initialMemberIds} />
+        </div>
       </div>
 
       {!isOnline && (

@@ -82,6 +82,11 @@ Terakhir diperbarui: 2026-10-24 (koleksi terbatas selesai: penegakan dan layar a
 
 ## Koleksi terbatas (lanjutan)
 
+- [ ] **Dari review layar admin koleksi terbatas (tanpa blokir):** (1) daftar pemilih anggota memuat maksimal 500 pengguna
+      (`listAssignableUsers`); pengguna ke-501 tidak bisa dicari (pemilih memberi tahu bila daftar terpotong); (2) setiap
+      simpan koleksi terbatas, juga tanpa perubahan akses, menyentuh `updatedAt` dan mengosongkan cache offline semua
+      non-admin (berlebih tetapi aman); (3) lapisan aksi (`restrictedTouched`/`membersTouched`, pesan galat) hanya diuji
+      lewat browser, belum ada tes otomatis; (4) pembersihan cache oleh service worker sungguhan belum diuji di perangkat kedua.
 - [x] **Pesan "slug dokumen sudah digunakan"** membocorkan bahwa sebuah slug dipakai kepada editor di luar koleksi
       terbatas: diputuskan pemilik (24 Okt 2026) untuk diterima; slug adalah ruang nama global. Dicatat di
       `docs/ARCHITECTURE.md` keputusan 5. Dihapus dari daftar bila entri ini dibersihkan.

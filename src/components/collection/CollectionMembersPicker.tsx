@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MAX_COLLECTION_MEMBERS } from "@/lib/collection-access";
 
 export interface AssignableUser {
   id: string;
@@ -42,8 +43,10 @@ export function CollectionMembersPicker({
       .slice(0, SUGGESTION_LIMIT);
   }, [users, needle, selected]);
 
+  const full = selected.length >= MAX_COLLECTION_MEMBERS;
+
   const add = (id: string) => {
-    if (selected.includes(id)) return;
+    if (full || selected.includes(id)) return;
     setSelected([...selected, id]);
     setQuery("");
   };
@@ -53,8 +56,9 @@ export function CollectionMembersPicker({
     <div className="space-y-2">
       <Label htmlFor="member-search">Anggota yang boleh membaca</Label>
       <p className="text-xs text-muted-foreground">
-        Admin selalu bisa. Editor dan viewer hanya bisa membaca (editor juga menulis) di koleksi ini bila dipilih di sini.
-        Hanya orang yang pernah masuk ke aplikasi yang bisa dipilih.
+        Admin selalu bisa. Viewer yang dipilih bisa membaca; editor yang dipilih bisa membaca dan menulis. Yang tidak
+        dipilih tidak melihat koleksi ini sama sekali. Hanya orang yang pernah masuk ke aplikasi yang bisa dipilih
+        (maksimal {MAX_COLLECTION_MEMBERS} anggota{users.length >= 500 ? "; daftar ini menampilkan 500 pengguna pertama" : ""}).
       </p>
 
       <input type="hidden" name="membersTouched" value="1" />
@@ -104,11 +108,12 @@ export function CollectionMembersPicker({
             if (suggestions[0]) add(suggestions[0].id);
           }
         }}
-        placeholder="Cari nama atau email untuk ditambahkan..."
+        placeholder={full ? "Batas anggota tercapai" : "Cari nama atau email untuk ditambahkan..."}
+        disabled={full}
         autoComplete="off"
       />
 
-      {needle && (
+      {needle && !full && (
         <ul className="rounded-lg border border-border bg-card">
           {suggestions.length === 0 ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">Tidak ada pengguna yang cocok.</li>

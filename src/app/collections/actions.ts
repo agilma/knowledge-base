@@ -14,6 +14,7 @@ import {
   setCollectionMembers,
 } from "@/lib/services/collections";
 import { collectionSchema, CollectionInput } from "@/lib/validation/collection";
+import { MAX_COLLECTION_MEMBERS } from "@/lib/collection-access";
 
 export type ActionState = {
   error?: string;
@@ -25,11 +26,25 @@ function memberIds(formData: FormData): string[] {
   return formData.getAll("memberIds").filter((id): id is string => typeof id === "string");
 }
 
+/**
+ * Said before anything is written: the collection and its members are saved in
+ * two steps, so a list the second step would refuse must not leave the first done.
+ */
+function tooManyMembers(formData: FormData): string | null {
+  if (formData.get("membersTouched") !== "1") return null;
+  return new Set(memberIds(formData)).size > MAX_COLLECTION_MEMBERS
+    ? `Anggota koleksi maksimal ${MAX_COLLECTION_MEMBERS} orang`
+    : null;
+}
+
 export async function createCollectionAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
   const admin = await requireRole(Role.ADMIN);
+
+  const tooMany = tooManyMembers(formData);
+  if (tooMany) return { error: tooMany };
 
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
@@ -77,6 +92,9 @@ export async function updateCollectionAction(
 ): Promise<ActionState> {
   const admin = await requireRole(Role.ADMIN);
   if (typeof id !== "string") return { error: "Permintaan tidak valid" };
+
+  const tooMany = tooManyMembers(formData);
+  if (tooMany) return { error: tooMany };
 
   const viewer = { id: admin.id, role: admin.role };
   const oldCollection = await getCollectionById(id, viewer);
