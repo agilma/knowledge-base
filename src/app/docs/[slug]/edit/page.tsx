@@ -16,19 +16,20 @@ export default async function EditDocumentPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireRole([Role.EDITOR, Role.ADMIN]);
+  const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  const viewer = { id: user.id, role: user.role };
 
   const { slug } = await params;
-  const document = await getDocumentBySlug(slug, { includeDrafts: true });
+  const document = await getDocumentBySlug(slug, { includeDrafts: true, viewer });
 
   if (!document) {
     notFound();
   }
 
   const [collections, relatedCandidates, initialRelatedIds] = await Promise.all([
-    getCollections(),
-    getRelationCandidates(document.id),
-    getRelatedDocumentIds(document.id),
+    getCollections(viewer),
+    getRelationCandidates(viewer, document.id),
+    getRelatedDocumentIds(document.id, viewer),
   ]);
 
   return (

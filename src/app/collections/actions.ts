@@ -2,6 +2,7 @@
 
 import { Role, CollectionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { userMessage } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import {
@@ -55,7 +56,7 @@ export async function createCollectionAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal membuat koleksi" };
+    return { error: userMessage(err, "Gagal membuat koleksi") };
   }
 }
 
@@ -64,7 +65,8 @@ export async function updateCollectionAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
@@ -87,7 +89,7 @@ export async function updateCollectionAction(
   }
 
   try {
-    const oldCollection = await getCollectionById(id);
+    const oldCollection = await getCollectionById(id, { id: admin.id, role: admin.role });
     const updatedCollection = await updateCollection(id, parsed.data);
     revalidatePath("/collections");
     if (oldCollection?.slug) {
@@ -101,12 +103,13 @@ export async function updateCollectionAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal memperbarui koleksi" };
+    return { error: userMessage(err, "Gagal memperbarui koleksi") };
   }
 }
 
 export async function setCollectionStatusAction(id: string, status: CollectionStatus) {
   await requireRole(Role.ADMIN);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
   try {
     const col = await setCollectionStatus(id, status);
     revalidatePath("/collections");
@@ -115,14 +118,15 @@ export async function setCollectionStatusAction(id: string, status: CollectionSt
     revalidatePath("/");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Gagal mengubah status koleksi" };
+    return { error: userMessage(err, "Gagal mengubah status koleksi") };
   }
 }
 
 export async function deleteCollectionAction(id: string) {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
   try {
-    const oldCol = await getCollectionById(id);
+    const oldCol = await getCollectionById(id, { id: admin.id, role: admin.role });
     await deleteCollection(id);
     revalidatePath("/collections");
     if (oldCol?.slug) {
@@ -135,6 +139,6 @@ export async function deleteCollectionAction(id: string) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal menghapus koleksi" };
+    return { error: userMessage(err, "Gagal menghapus koleksi") };
   }
 }

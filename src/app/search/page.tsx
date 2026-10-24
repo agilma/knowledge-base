@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Search as SearchIcon, FileText, ChevronRight, Plus } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { searchDocuments } from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,8 @@ export default async function SearchPage({
     type?: string | string[];
   }>;
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
+  const viewer = { id: user.id, role: user.role };
   const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
 
   const params = await searchParams;
@@ -38,7 +39,7 @@ export default async function SearchPage({
   const selectedCollectionSlug = firstParam(params.collection);
   const selectedType = parseDocumentType(firstParam(params.type));
 
-  const collections = await getCollections();
+  const collections = await getCollections(viewer);
   const selectedCollection = collections.find(
     (col) => col.slug === selectedCollectionSlug
   );
@@ -52,6 +53,7 @@ export default async function SearchPage({
         collectionId: selectedCollection?.id,
         type: selectedType,
         includeDrafts: canSeeDrafts,
+        viewer,
       })
     : { results: [], total: 0 };
 

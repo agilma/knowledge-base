@@ -2,6 +2,7 @@
 
 import { Role, DocumentStatus, DocumentType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { userMessage } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import {
@@ -9,7 +10,7 @@ import {
   updateDocument,
   setDocumentStatus,
   deleteDocument,
-  getDocumentById,
+  getDocumentForRevalidate,
   setRelatedDocuments,
 } from "@/lib/services/documents";
 import { parseRelatedIds } from "@/lib/related";
@@ -52,11 +53,15 @@ export async function createDocumentAction(
   }
 
   try {
-    const newDoc = await createDocument(parsed.data, user.id);
+    const newDoc = await createDocument(parsed.data, { id: user.id, role: user.role });
     if (formData.get("relatedTouched") === "1") {
-      await setRelatedDocuments(newDoc.id, parseRelatedIds(formData.getAll("relatedIds"), newDoc.id));
+      await setRelatedDocuments(
+        newDoc.id,
+        parseRelatedIds(formData.getAll("relatedIds"), newDoc.id),
+        { id: user.id, role: user.role }
+      );
     }
-    const createdWithCol = await getDocumentById(newDoc.id);
+    const createdWithCol = await getDocumentForRevalidate(newDoc.id);
     revalidatePath("/collections");
     if (createdWithCol?.collection) {
       revalidatePath(`/collections/${createdWithCol.collection.slug}`);
@@ -69,7 +74,7 @@ export async function createDocumentAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal membuat dokumen" };
+    return { error: userMessage(err, "Gagal membuat dokumen") };
   }
 }
 
@@ -79,6 +84,7 @@ export async function updateDocumentAction(
   formData: FormData
 ): Promise<ActionState> {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   const rawData: DocumentInput = {
     title: formData.get("title") as string,
@@ -106,12 +112,15 @@ export async function updateDocumentAction(
   }
 
   try {
-    const oldDoc = await getDocumentById(id);
-    const updatedDoc = await updateDocument(id, parsed.data, user.id);
+    const oldDoc = await getDocumentForRevalidate(id);
+    const updatedDoc = await updateDocument(id, parsed.data, { id: user.id, role: user.role });
     if (formData.get("relatedTouched") === "1") {
-      await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id));
+      await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id), {
+        id: user.id,
+        role: user.role,
+      });
     }
-    const newDocWithCol = await getDocumentById(updatedDoc.id);
+    const newDocWithCol = await getDocumentForRevalidate(updatedDoc.id);
 
     revalidatePath("/collections");
     if (oldDoc?.collection) {
@@ -131,16 +140,17 @@ export async function updateDocumentAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal memperbarui dokumen" };
+    return { error: userMessage(err, "Gagal memperbarui dokumen") };
   }
 }
 
 export async function setDocumentStatusAction(id: string, status: DocumentStatus) {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   try {
-    const doc = await setDocumentStatus(id, status, user.id);
-    const docWithCol = await getDocumentById(doc.id);
+    const doc = await setDocumentStatus(id, status, { id: user.id, role: user.role });
+    const docWithCol = await getDocumentForRevalidate(doc.id);
     revalidatePath("/collections");
     if (docWithCol?.collection) {
       revalidatePath(`/collections/${docWithCol.collection.slug}`);
@@ -150,16 +160,17 @@ export async function setDocumentStatusAction(id: string, status: DocumentStatus
     revalidatePath("/");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Gagal mengubah status dokumen" };
+    return { error: userMessage(err, "Gagal mengubah status dokumen") };
   }
 }
 
 export async function deleteDocumentAction(id: string) {
-  await requireRole(Role.ADMIN);
+  const user = await requireRole(Role.ADMIN);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   try {
-    const doc = await getDocumentById(id);
-    await deleteDocument(id);
+    const doc = await getDocumentForRevalidate(id);
+    await deleteDocument(id, { id: user.id, role: user.role });
     revalidatePath("/collections");
     if (doc?.collection) {
       revalidatePath(`/collections/${doc.collection.slug}`);
@@ -178,6 +189,6 @@ export async function deleteDocumentAction(id: string) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal menghapus dokumen" };
+    return { error: userMessage(err, "Gagal menghapus dokumen") };
   }
 }

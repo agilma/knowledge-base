@@ -1,10 +1,14 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { DocumentStatus, DocumentType } from "@prisma/client";
+import { DocumentStatus, DocumentType, Role } from "@prisma/client";
 import { db } from "../db";
 import { createDocument, setDocumentStatus, updateDocument } from "./documents";
 import { getRevisionList } from "./revisions";
+import { ADMIN } from "./test-viewers";
 import { REVISION_LIMIT } from "../revisions";
+
+/** The editor a test acts as. */
+const actor = (user: { id: string }) => ({ id: user.id, role: Role.EDITOR });
 
 /**
  * Against a real database: the rules that matter (a snapshot of what existed
@@ -54,10 +58,10 @@ after(async () => {
 
 test("a new document starts at version 1 and records who made it", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana")];
-  const doc = await createDocument(input(col.id, 1), ana.id);
+  const doc = await createDocument(input(col.id, 1), actor(ana));
   created.documents.push(doc.id);
 
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.deepEqual(list.map((r) => [r.version, r.editorName, r.sizeChange]), [[1, "ana", null]]);
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
 });
@@ -70,7 +74,7 @@ test("the first save of a document with no history keeps what was there as versi
   });
   created.documents.push(legacy.id);
 
-  await updateDocument(legacy.id, input(col.id, 2, "## Baru\n\nteks baru"), budi.id);
+  await updateDocument(legacy.id, input(col.id, 2, "## Baru\n\nteks baru"), actor(budi));
 
   const revisions = await db.documentRevision.findMany({
     where: { documentId: legacy.id },
@@ -84,26 +88,26 @@ test("the first save of a document with no history keeps what was there as versi
 
 test("a save that changes nothing adds no revision but still notes who saved", { skip: !enabled }, async () => {
   const [col, ana, budi] = [await collection(), await user("ana3"), await user("budi3")];
-  const doc = await createDocument(input(col.id, 3, "## A\n\n- satu\n- dua"), ana.id);
+  const doc = await createDocument(input(col.id, 3, "## A\n\n- satu\n- dua"), actor(ana));
   created.documents.push(doc.id);
 
   // the visual editor rewrites bullets on load; that is not an edit
-  await updateDocument(doc.id, input(col.id, 3, "## A\n\n* satu\n* dua\n"), budi.id);
+  await updateDocument(doc.id, input(col.id, 3, "## A\n\n* satu\n* dua\n"), actor(budi));
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, budi.id);
 });
 
 test("publishing, archiving and returning to draft each become a version", { skip: !enabled }, async () => {
   const [col, ana, budi] = [await collection(), await user("ana4"), await user("budi4")];
-  const doc = await createDocument(input(col.id, 4), ana.id);
+  const doc = await createDocument(input(col.id, 4), actor(ana));
   created.documents.push(doc.id);
 
-  await setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, budi.id);
-  await setDocumentStatus(doc.id, DocumentStatus.ARCHIVED, ana.id);
-  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, budi.id);
+  await setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, actor(budi));
+  await setDocumentStatus(doc.id, DocumentStatus.ARCHIVED, actor(ana));
+  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, actor(budi));
 
-  const list = await getRevisionList(doc.id); // newest first
+  const list = await getRevisionList(doc.id, ADMIN); // newest first
   assert.deepEqual(
     list.map((r) => [r.version, r.status, r.statusLabel, r.editorName]),
     [
@@ -120,40 +124,40 @@ test("publishing, archiving and returning to draft each become a version", { ski
 
 test("setting the status a document already has records nothing", { skip: !enabled }, async () => {
   const [col, ana, budi] = [await collection(), await user("ana8"), await user("budi8")];
-  const doc = await createDocument(input(col.id, 8), ana.id);
+  const doc = await createDocument(input(col.id, 8), actor(ana));
   created.documents.push(doc.id);
 
-  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, budi.id);
+  await setDocumentStatus(doc.id, DocumentStatus.DRAFT, actor(budi));
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
   // and it does not pretend somebody edited it
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
 });
 
 test("an invalid status is rejected and records nothing", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana21")];
-  const doc = await createDocument(input(col.id, 21), ana.id);
+  const doc = await createDocument(input(col.id, 21), actor(ana));
   created.documents.push(doc.id);
 
   for (const bad of [undefined, null, "BOGUS"]) {
-    await assert.rejects(setDocumentStatus(doc.id, bad as unknown as DocumentStatus, ana.id), /tidak valid/);
+    await assert.rejects(setDocumentStatus(doc.id, bad as unknown as DocumentStatus, actor(ana)), /tidak valid/);
   }
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
 });
 
 test("a status change made with the text is one version, not two", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana9")];
-  const doc = await createDocument(input(col.id, 9, "## lama"), ana.id);
+  const doc = await createDocument(input(col.id, 9, "## lama"), actor(ana));
   created.documents.push(doc.id);
 
   await updateDocument(
     doc.id,
     { ...input(col.id, 9, "## baru"), status: DocumentStatus.PUBLISHED },
-    ana.id
+    actor(ana)
   );
 
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.deepEqual(list.map((r) => [r.version, r.status, r.statusLabel]), [
     [2, "PUBLISHED", "Diterbitkan"],
     [1, "DRAFT", null],
@@ -162,13 +166,13 @@ test("a status change made with the text is one version, not two", { skip: !enab
 
 test("a save from the form that only changes the status is a version too", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana10")];
-  const doc = await createDocument(input(col.id, 10, "## sama"), ana.id);
+  const doc = await createDocument(input(col.id, 10, "## sama"), actor(ana));
   created.documents.push(doc.id);
 
   // the form sends the text back unchanged, with a different status
-  await updateDocument(doc.id, { ...input(col.id, 10, "## sama"), status: DocumentStatus.ARCHIVED }, ana.id);
+  await updateDocument(doc.id, { ...input(col.id, 10, "## sama"), status: DocumentStatus.ARCHIVED }, actor(ana));
 
-  assert.deepEqual((await getRevisionList(doc.id)).map((r) => [r.status, r.statusLabel]), [
+  assert.deepEqual((await getRevisionList(doc.id, ADMIN)).map((r) => [r.status, r.statusLabel]), [
     ["ARCHIVED", "Diarsipkan"],
     ["DRAFT", null],
   ]);
@@ -186,7 +190,7 @@ test("a document with no history keeps its old status as version 1 on a status c
   });
   created.documents.push(legacy.id);
 
-  await setDocumentStatus(legacy.id, DocumentStatus.ARCHIVED, budi.id);
+  await setDocumentStatus(legacy.id, DocumentStatus.ARCHIVED, actor(budi));
 
   const revisions = await db.documentRevision.findMany({
     where: { documentId: legacy.id },
@@ -201,11 +205,11 @@ test("a document with no history keeps its old status as version 1 on a status c
 test("a status change and a text edit at the same moment leave history agreeing with the document", { skip: !enabled }, async () => {
   const [col, ana, budi] = [await collection(), await user("ana12"), await user("budi12")];
   for (let round = 0; round < 15; round++) {
-    const doc = await createDocument(input(col.id, 1200 + round, "## awal"), ana.id);
+    const doc = await createDocument(input(col.id, 1200 + round, "## awal"), actor(ana));
     created.documents.push(doc.id);
     await Promise.all([
-      setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, budi.id),
-      updateDocument(doc.id, { ...input(col.id, 1200 + round, "## edit"), status: DocumentStatus.DRAFT }, ana.id),
+      setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, actor(budi)),
+      updateDocument(doc.id, { ...input(col.id, 1200 + round, "## edit"), status: DocumentStatus.DRAFT }, actor(ana)),
     ]);
     const [current, latest] = await Promise.all([
       db.document.findUnique({ where: { id: doc.id } }),
@@ -218,15 +222,15 @@ test("a status change and a text edit at the same moment leave history agreeing 
 
 test("saves at the same moment get different version numbers", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana5")];
-  const doc = await createDocument(input(col.id, 5), ana.id);
+  const doc = await createDocument(input(col.id, 5), actor(ana));
   created.documents.push(doc.id);
 
   for (let round = 0; round < 8; round++) {
     await Promise.all(
-      [1, 2, 3].map((k) => updateDocument(doc.id, input(col.id, 5, `## Putaran ${round}-${k}`), ana.id))
+      [1, 2, 3].map((k) => updateDocument(doc.id, input(col.id, 5, `## Putaran ${round}-${k}`), actor(ana)))
     );
   }
-  const versions = (await getRevisionList(doc.id)).map((r) => r.version);
+  const versions = (await getRevisionList(doc.id, ADMIN)).map((r) => r.version);
   assert.equal(new Set(versions).size, versions.length, "a version number was used twice");
   assert.equal(versions[0], Math.max(...versions));
 });
@@ -236,11 +240,11 @@ test("a save that read an older copy cannot silently revert a newer one", { skip
   // A edits while B, who opened the original, saves it unchanged at the same moment.
   // Whichever commits last, the current text must be the latest version in history.
   for (let round = 0; round < 20; round++) {
-    const doc = await createDocument(input(col.id, 700 + round, "## orig"), ana.id);
+    const doc = await createDocument(input(col.id, 700 + round, "## orig"), actor(ana));
     created.documents.push(doc.id);
     await Promise.all([
-      updateDocument(doc.id, input(col.id, 700 + round, "## A edit"), ana.id),
-      updateDocument(doc.id, input(col.id, 700 + round, "## orig"), budi.id),
+      updateDocument(doc.id, input(col.id, 700 + round, "## A edit"), actor(ana)),
+      updateDocument(doc.id, input(col.id, 700 + round, "## orig"), actor(budi)),
     ]);
     const [current, latest] = await Promise.all([
       db.document.findUnique({ where: { id: doc.id } }),
@@ -256,14 +260,14 @@ test("a save that read an older copy cannot silently revert a newer one", { skip
 
 test("only the latest versions are kept", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana6")];
-  const doc = await createDocument(input(col.id, 6, "## v1"), ana.id);
+  const doc = await createDocument(input(col.id, 6, "## v1"), actor(ana));
   created.documents.push(doc.id);
 
   const total = REVISION_LIMIT + 6;
   for (let n = 2; n <= total; n++) {
-    await updateDocument(doc.id, input(col.id, 6, `## v${n}`), ana.id);
+    await updateDocument(doc.id, input(col.id, 6, `## v${n}`), actor(ana));
   }
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.equal(list.length, REVISION_LIMIT);
   assert.equal(list[0].version, total, "the newest version must be kept");
   assert.equal(list[list.length - 1].version, total - REVISION_LIMIT + 1, "the oldest kept version");

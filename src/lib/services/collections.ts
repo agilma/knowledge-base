@@ -1,35 +1,62 @@
-import { CollectionStatus, DocumentStatus } from "@prisma/client";
+import { CollectionStatus, DocumentStatus, Role } from "@prisma/client";
 import { db } from "../db";
 import { collectionSchema, CollectionInput } from "../validation/collection";
 import { cache } from "react";
+import { collectionReadableWhere, type Viewer } from "../collection-access";
 
-// Rendered by the sidebar on every page, so dedupe it within a request.
-export const getCollections = cache(async () => {
+// Rendered by the sidebar on every page, so dedupe it within a request. The key
+// is the user and role as plain values: `cache` compares arguments by identity,
+// and a fresh `viewer` object each time would never hit.
+const listCollections = cache(async (userId: string, role: Role) => {
   return db.collection.findMany({
+    where: collectionReadableWhere({ id: userId, role }),
     orderBy: { name: "asc" },
   });
 });
 
-export async function getCollectionBySlug(slug: string) {
-  return db.collection.findUnique({
-    where: { slug },
+/** The collections the viewer may read; a restricted one they are not in does not appear. */
+export function getCollections(viewer: Viewer) {
+  return listCollections(viewer.id, viewer.role);
+}
+
+/** Id and last change of every restricted collection: what the offline cache key is made from. */
+export async function getRestrictedCollections() {
+  return db.collection.findMany({
+    where: { restricted: true },
+    select: { id: true, updatedAt: true },
   });
 }
 
-export async function getCollectionById(id: string) {
-  return db.collection.findUnique({
-    where: { id },
+/** Ids of the restricted collections this user was added to. */
+export async function getMemberCollectionIds(userId: string): Promise<string[]> {
+  const rows = await db.collectionMember.findMany({
+    where: { userId },
+    select: { collectionId: true },
+  });
+  return rows.map((row) => row.collectionId);
+}
+
+export async function getCollectionBySlug(slug: string, viewer: Viewer) {
+  return db.collection.findFirst({
+    where: { slug, ...collectionReadableWhere(viewer) },
   });
 }
 
-export async function getCollectionsWithDocumentCount(options?: { includeDrafts?: boolean }) {
+export async function getCollectionById(id: string, viewer: Viewer) {
+  return db.collection.findFirst({
+    where: { id, ...collectionReadableWhere(viewer) },
+  });
+}
+
+export async function getCollectionsWithDocumentCount(options: { includeDrafts?: boolean; viewer: Viewer }) {
   const collections = await db.collection.findMany({
+    where: collectionReadableWhere(options.viewer),
     orderBy: { name: "asc" },
     include: {
       _count: {
         select: {
           documents: {
-            where: options?.includeDrafts
+            where: options.includeDrafts
               ? undefined
               : { status: DocumentStatus.PUBLISHED },
           },

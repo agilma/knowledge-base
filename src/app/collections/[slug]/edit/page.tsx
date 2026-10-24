@@ -11,10 +11,10 @@ export default async function EditCollectionPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireRole(Role.ADMIN);
+  const admin = await requireRole(Role.ADMIN);
 
   const { slug } = await params;
-  const collection = await getCollectionBySlug(slug);
+  const collection = await getCollectionBySlug(slug, { id: admin.id, role: admin.role });
 
   if (!collection) {
     notFound();

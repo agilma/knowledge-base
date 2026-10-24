@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
+Terakhir diperbarui: 2026-10-24 (koleksi terbatas: penegakan selesai, UI admin belum)
 
 ---
 
@@ -79,6 +79,24 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       mengosongkan cache saat sesi habis. Keputusan produk. Celah kedua yang kecil:
       bila jaringan lebih lambat dari 3 detik saat orang baru login, halaman pertamanya
       bisa datang dari cache lama sehingga pembersihan baru terjadi pada pemuatan berikutnya.
+
+## Koleksi terbatas (lanjutan)
+
+- [ ] **Belum ada layar admin** untuk menandai koleksi terbatas dan memilih anggotanya (PR berikutnya: kotak
+      "Terbatas" dan pemilih pengguna di `src/app/collections/[slug]/edit/`, aksi ADMIN di
+      `src/app/collections/actions.ts` dengan `pg_advisory_xact_lock`). Sampai itu ada, atur lewat SQL:
+      `update collections set restricted = true where slug = '...'` dan isi `collection_members`.
+- [x] **Pesan "slug dokumen sudah digunakan"** membocorkan bahwa sebuah slug dipakai kepada editor di luar koleksi
+      terbatas: diputuskan pemilik (24 Okt 2026) untuk diterima; slug adalah ruang nama global. Dicatat di
+      `docs/ARCHITECTURE.md` keputusan 5. Dihapus dari daftar bila entri ini dibersihkan.
+- [ ] **Dari review independen koleksi terbatas (tanpa blokir, diterima atau ditunda):** (1) halaman edit dokumen
+      mengirim `author.email` dan `emailVerified` ke klien editor, juga untuk dokumen terbuka (sudah ada sebelum fitur
+      ini; kirim hanya nama), di `src/app/docs/[slug]/edit/page.tsx`; (2) anggota koleksi terbatas boleh memindahkan
+      dokumen ke koleksi terbuka, dan seluruh riwayatnya ikut terbaca semua orang (sesuai "anggota boleh menulis";
+      pertimbangkan membatasinya ke admin); (3) bagi non-anggota, ada segmen ketiga di pemilik cache yang
+      menandakan adanya koleksi terbatas (hash, tidak bisa dibalik ke id); (4) `setRelatedDocuments` belum punya tes
+      balapan; (5) kinerja dua kueri tambahan di layout belum diukur pada data besar.
+- [ ] **Cache offline setelah akses dicabut** baru dikosongkan saat orang itu membuka aplikasi online lagi.
 
 ## Perlu dicek sendiri
 

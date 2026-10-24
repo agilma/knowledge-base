@@ -11,11 +11,12 @@ export default async function NewDocumentPage({
 }: {
   searchParams: Promise<{ collection?: string; title?: string }>;
 }) {
-  await requireRole([Role.EDITOR, Role.ADMIN]);
+  const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  const viewer = { id: user.id, role: user.role };
 
   const { collection: collectionSlug, title: defaultTitle } = await searchParams;
-  const collections = await getCollections();
-  const relatedCandidates = await getRelationCandidates();
+  const collections = await getCollections(viewer);
+  const relatedCandidates = await getRelationCandidates(viewer);
 
   let defaultCollectionId: string | undefined;
   if (collectionSlug) {

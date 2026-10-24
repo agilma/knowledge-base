@@ -8,18 +8,18 @@ import { Role } from "@prisma/client";
 import { buttonVariants } from "@/components/ui/button";
 
 export async function Sidebar() {
+  // Without a known user no collection is listed: what is shown is decided per
+  // person now, so the sidebar fails closed.
   let collections: Awaited<ReturnType<typeof getCollections>> = [];
-  try {
-    collections = await getCollections();
-  } catch {
-    collections = [];
-  }
-
   let canWrite = false;
   try {
     const user = await getCurrentUser();
-    canWrite = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
+    if (user) {
+      collections = await getCollections({ id: user.id, role: user.role });
+      canWrite = user.role === Role.EDITOR || user.role === Role.ADMIN;
+    }
   } catch {
+    collections = [];
     canWrite = false;
   }
 

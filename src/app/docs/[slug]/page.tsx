@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
 import { ChevronRight, FolderOpen, Calendar, AlertCircle, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,17 +26,18 @@ export default async function DocumentPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
+  const viewer = { id: user.id, role: user.role };
   const canSeeDrafts = user?.role === Role.EDITOR || user?.role === Role.ADMIN;
 
   const { slug } = await params;
-  const doc = await getDocumentBySlug(slug, { includeDrafts: canSeeDrafts });
+  const doc = await getDocumentBySlug(slug, { includeDrafts: canSeeDrafts, viewer });
 
   if (!doc) {
     notFound();
   }
 
-  const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts });
+  const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts, viewer });
   const headings = extractHeadings(doc.content);
   const favorite = user ? await isFavorite(user.id, doc.id) : false;
 

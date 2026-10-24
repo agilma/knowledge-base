@@ -8,6 +8,15 @@ test("the owner combines person and role", () => {
   assert.equal(cacheOwner(undefined), null);
 });
 
+test("membership of restricted collections is part of the owner", () => {
+  const user = { id: "u1", role: "VIEWER" };
+  assert.equal(cacheOwner(user, "open"), "u1:VIEWER");
+  assert.equal(cacheOwner({ id: "u1", role: "ADMIN" }, "admin"), "u1:ADMIN");
+  assert.equal(cacheOwner(user, "k3j"), "u1:VIEWER:k3j");
+  assert.equal(shouldClearCache("u1:VIEWER:k3j", cacheOwner(user, "open")), true);
+  assert.equal(shouldClearCache("u1:VIEWER", cacheOwner(user, "k3j")), true);
+});
+
 test("the same person with the same role keeps the cache", () => {
   assert.equal(shouldClearCache("u1:EDITOR", "u1:EDITOR"), false);
 });

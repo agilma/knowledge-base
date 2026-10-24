@@ -15,13 +15,14 @@ export default async function DocumentHistoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireRole([Role.EDITOR, Role.ADMIN]);
+  const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  const viewer = { id: user.id, role: user.role };
 
   const { slug } = await params;
-  const doc = await getDocumentBySlug(slug, { includeDrafts: true });
+  const doc = await getDocumentBySlug(slug, { includeDrafts: true, viewer });
   if (!doc) notFound();
 
-  const revisions = await getRevisionList(doc.id);
+  const revisions = await getRevisionList(doc.id, viewer);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
