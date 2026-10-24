@@ -79,7 +79,7 @@ Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil (sudah) · UI Pengetahuan
 Terkait (sudah) · penyunting terakhir dan
-riwayat revisi (sudah; pemulihan versi belum) · penanda kesegaran (pemilik dan tanggal ditinjau).
+riwayat revisi (sudah; pemulihan versi belum). Penanda kesegaran dibatalkan (lihat "Diputuskan tidak dikerjakan").
 
 ### Fase 2 — Lampiran
 Object storage untuk gambar dan file, upload dari editor, dan cache gambar untuk
@@ -87,3 +87,14 @@ baca offline.
 
 ### Fase 3 — Jika terbukti perlu
 Redis (rate limit, antrean), ekspor cermin Obsidian, antrean sinkron tulis-offline.
+
+## Diputuskan tidak dikerjakan
+
+### Penanda kesegaran dokumen ("perlu ditinjau")
+Diputuskan pemilik 24 Okt 2026: **tidak dibangun.** Alasannya: dokumen prosedur diperbarui bersamaan
+dengan perubahan di POS, jadi dokumen yang usang tanpa disadari tidak diperkirakan terjadi, dan
+penanda tinjau hanya menambah pekerjaan. Rancangan yang sempat dibahas, bila suatu hari dibutuhkan lagi:
+`reviewedAt` dan `reviewedById` di `documents` (migrasi aditif), pemilik = pembuat dokumen (`authorId`,
+tanpa kolom baru), ambang 90 hari terhitung dari yang terbaru antara tanggal tinjau dan tanggal
+diperbarui, hanya dokumen terbit yang ditandai, EDITOR/ADMIN bisa menandai "sudah ditinjau"
+tanpa mengubah tanggal "Diperbarui", plus halaman "Perlu Ditinjau" khusus editor.
