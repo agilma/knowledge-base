@@ -4,6 +4,7 @@ import { DocumentStatus, DocumentType, Role } from "@prisma/client";
 import { db } from "../db";
 import { createDocument, setDocumentStatus, updateDocument } from "./documents";
 import { getRevisionList } from "./revisions";
+import { ADMIN } from "./test-viewers";
 import { REVISION_LIMIT } from "../revisions";
 
 /** The editor a test acts as. */
@@ -60,7 +61,7 @@ test("a new document starts at version 1 and records who made it", { skip: !enab
   const doc = await createDocument(input(col.id, 1), actor(ana));
   created.documents.push(doc.id);
 
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.deepEqual(list.map((r) => [r.version, r.editorName, r.sizeChange]), [[1, "ana", null]]);
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
 });
@@ -93,7 +94,7 @@ test("a save that changes nothing adds no revision but still notes who saved", {
   // the visual editor rewrites bullets on load; that is not an edit
   await updateDocument(doc.id, input(col.id, 3, "## A\n\n* satu\n* dua\n"), actor(budi));
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, budi.id);
 });
 
@@ -106,7 +107,7 @@ test("publishing, archiving and returning to draft each become a version", { ski
   await setDocumentStatus(doc.id, DocumentStatus.ARCHIVED, actor(ana));
   await setDocumentStatus(doc.id, DocumentStatus.DRAFT, actor(budi));
 
-  const list = await getRevisionList(doc.id); // newest first
+  const list = await getRevisionList(doc.id, ADMIN); // newest first
   assert.deepEqual(
     list.map((r) => [r.version, r.status, r.statusLabel, r.editorName]),
     [
@@ -128,7 +129,7 @@ test("setting the status a document already has records nothing", { skip: !enabl
 
   await setDocumentStatus(doc.id, DocumentStatus.DRAFT, actor(budi));
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
   // and it does not pretend somebody edited it
   assert.equal((await db.document.findUnique({ where: { id: doc.id } }))?.lastEditedById, ana.id);
 });
@@ -142,7 +143,7 @@ test("an invalid status is rejected and records nothing", { skip: !enabled }, as
     await assert.rejects(setDocumentStatus(doc.id, bad as unknown as DocumentStatus, actor(ana)), /tidak valid/);
   }
 
-  assert.equal((await getRevisionList(doc.id)).length, 1);
+  assert.equal((await getRevisionList(doc.id, ADMIN)).length, 1);
 });
 
 test("a status change made with the text is one version, not two", { skip: !enabled }, async () => {
@@ -156,7 +157,7 @@ test("a status change made with the text is one version, not two", { skip: !enab
     actor(ana)
   );
 
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.deepEqual(list.map((r) => [r.version, r.status, r.statusLabel]), [
     [2, "PUBLISHED", "Diterbitkan"],
     [1, "DRAFT", null],
@@ -171,7 +172,7 @@ test("a save from the form that only changes the status is a version too", { ski
   // the form sends the text back unchanged, with a different status
   await updateDocument(doc.id, { ...input(col.id, 10, "## sama"), status: DocumentStatus.ARCHIVED }, actor(ana));
 
-  assert.deepEqual((await getRevisionList(doc.id)).map((r) => [r.status, r.statusLabel]), [
+  assert.deepEqual((await getRevisionList(doc.id, ADMIN)).map((r) => [r.status, r.statusLabel]), [
     ["ARCHIVED", "Diarsipkan"],
     ["DRAFT", null],
   ]);
@@ -229,7 +230,7 @@ test("saves at the same moment get different version numbers", { skip: !enabled 
       [1, 2, 3].map((k) => updateDocument(doc.id, input(col.id, 5, `## Putaran ${round}-${k}`), actor(ana)))
     );
   }
-  const versions = (await getRevisionList(doc.id)).map((r) => r.version);
+  const versions = (await getRevisionList(doc.id, ADMIN)).map((r) => r.version);
   assert.equal(new Set(versions).size, versions.length, "a version number was used twice");
   assert.equal(versions[0], Math.max(...versions));
 });
@@ -266,7 +267,7 @@ test("only the latest versions are kept", { skip: !enabled }, async () => {
   for (let n = 2; n <= total; n++) {
     await updateDocument(doc.id, input(col.id, 6, `## v${n}`), actor(ana));
   }
-  const list = await getRevisionList(doc.id);
+  const list = await getRevisionList(doc.id, ADMIN);
   assert.equal(list.length, REVISION_LIMIT);
   assert.equal(list[0].version, total, "the newest version must be kept");
   assert.equal(list[list.length - 1].version, total - REVISION_LIMIT + 1, "the oldest kept version");

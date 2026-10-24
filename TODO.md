@@ -86,9 +86,9 @@ Terakhir diperbarui: 2026-10-24 (koleksi terbatas: penegakan selesai, UI admin b
       "Terbatas" dan pemilih pengguna di `src/app/collections/[slug]/edit/`, aksi ADMIN di
       `src/app/collections/actions.ts` dengan `pg_advisory_xact_lock`). Sampai itu ada, atur lewat SQL:
       `update collections set restricted = true where slug = '...'` dan isi `collection_members`.
-- [ ] **Pesan "slug dokumen sudah digunakan"** membocorkan keberadaan slug dokumen di koleksi terbatas kepada editor
-      di luar daftar (`isDocumentSlugAvailable` di `src/lib/services/documents.ts`). Kecil; dipertimbangkan bila
-      isi judul/slug sendiri sensitif.
+- [x] **Pesan "slug dokumen sudah digunakan"** membocorkan bahwa sebuah slug dipakai kepada editor di luar koleksi
+      terbatas: diputuskan pemilik (24 Okt 2026) untuk diterima; slug adalah ruang nama global. Dicatat di
+      `docs/ARCHITECTURE.md` keputusan 5. Dihapus dari daftar bila entri ini dibersihkan.
 - [ ] **Cache offline setelah akses dicabut** baru dikosongkan saat orang itu membuka aplikasi online lagi.
 
 ## Perlu dicek sendiri

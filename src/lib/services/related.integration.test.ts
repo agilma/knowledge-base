@@ -54,8 +54,8 @@ test("a relation written from one side reads from both", { skip: !enabled }, asy
   const [a, b] = [await make(1), await make(2)];
   await setRelatedDocuments(a.id, [b.id], ADMIN);
 
-  assert.deepEqual(await getRelatedDocumentIds(a.id), [b.id]);
-  assert.deepEqual(await getRelatedDocumentIds(b.id), [a.id]);
+  assert.deepEqual(await getRelatedDocumentIds(a.id, ADMIN), [b.id]);
+  assert.deepEqual(await getRelatedDocumentIds(b.id, ADMIN), [a.id]);
   assert.deepEqual((await getRelatedDocuments(b.id, { viewer: READER })).map((d) => d.id), [a.id]);
 });
 
@@ -64,7 +64,7 @@ test("removing from the other side removes the pair, not just a direction", { sk
   await setRelatedDocuments(a.id, [b.id], ADMIN);
   await setRelatedDocuments(b.id, [], ADMIN);
 
-  assert.deepEqual(await getRelatedDocumentIds(a.id), []);
+  assert.deepEqual(await getRelatedDocumentIds(a.id, ADMIN), []);
   assert.equal(await db.documentRelation.count({ where: { OR: [{ fromId: a.id, toId: b.id }, { fromId: b.id, toId: a.id }] } }), 0);
 });
 
@@ -101,7 +101,7 @@ test("saving the same list twice at once leaves one row per pair", { skip: !enab
 test("a document never relates to itself, and unknown ids are ignored", { skip: !enabled }, async () => {
   const [a, b] = [await make(10), await make(11)];
   await setRelatedDocuments(a.id, [a.id, "does-not-exist", b.id], ADMIN);
-  assert.deepEqual(await getRelatedDocumentIds(a.id), [b.id]);
+  assert.deepEqual(await getRelatedDocumentIds(a.id, ADMIN), [b.id]);
 });
 
 test("a reader does not see a draft through a relation; an editor does", { skip: !enabled }, async () => {
@@ -120,5 +120,5 @@ test("the list is capped", { skip: !enabled }, async () => {
   const others = [];
   for (let i = 0; i < MAX_RELATED + 3; i++) others.push((await make(100 + i)).id);
   await setRelatedDocuments(hub.id, others, ADMIN);
-  assert.equal((await getRelatedDocumentIds(hub.id)).length, MAX_RELATED);
+  assert.equal((await getRelatedDocumentIds(hub.id, ADMIN)).length, MAX_RELATED);
 });

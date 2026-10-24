@@ -2,6 +2,7 @@
 
 import { Role, DocumentStatus, DocumentType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { userMessage } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import {
@@ -73,7 +74,7 @@ export async function createDocumentAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal membuat dokumen" };
+    return { error: userMessage(err, "Gagal membuat dokumen") };
   }
 }
 
@@ -83,6 +84,7 @@ export async function updateDocumentAction(
   formData: FormData
 ): Promise<ActionState> {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   const rawData: DocumentInput = {
     title: formData.get("title") as string,
@@ -138,12 +140,13 @@ export async function updateDocumentAction(
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal memperbarui dokumen" };
+    return { error: userMessage(err, "Gagal memperbarui dokumen") };
   }
 }
 
 export async function setDocumentStatusAction(id: string, status: DocumentStatus) {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   try {
     const doc = await setDocumentStatus(id, status, { id: user.id, role: user.role });
@@ -157,12 +160,13 @@ export async function setDocumentStatusAction(id: string, status: DocumentStatus
     revalidatePath("/");
     return { success: true };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Gagal mengubah status dokumen" };
+    return { error: userMessage(err, "Gagal mengubah status dokumen") };
   }
 }
 
 export async function deleteDocumentAction(id: string) {
   const user = await requireRole(Role.ADMIN);
+  if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
   try {
     const doc = await getDocumentForRevalidate(id);
@@ -185,6 +189,6 @@ export async function deleteDocumentAction(id: string) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") {
       throw err;
     }
-    return { error: err instanceof Error ? err.message : "Gagal menghapus dokumen" };
+    return { error: userMessage(err, "Gagal menghapus dokumen") };
   }
 }

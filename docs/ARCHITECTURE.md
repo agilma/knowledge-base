@@ -128,12 +128,20 @@ dan viewer ikut daftar. Model: `collections.restricted` (bawaan `false`, jadi da
 - **Tulis**: `createDocument`, `updateDocument` (termasuk memindahkan dokumen ke/dari koleksi terbatas),
   `setDocumentStatus`, `deleteDocument` menolak aktor yang tidak berhak. Dijaga di service karena server action bisa
   dipanggil lewat POST langsung.
-- **Cache offline**: service worker menyimpan halaman hanya berdasarkan URL. `cacheOwner` kini memuat kunci akses
-  (`accessKey`: hash id koleksi terbatas yang diikuti; admin dan yang tidak ikut koleksi mana pun memakai bentuk lama
-  sehingga cache mereka tidak dikosongkan oleh fitur ini). Batas yang jujur: pengosongan baru terjadi saat orang itu membuka
-  aplikasi online berikutnya; salinan yang sudah ada di perangkatnya tetap terbaca offline sampai saat itu, sama seperti
-  perubahan peran.
-- **Yang tetap bocor, kecil dan diterima**: pesan "slug dokumen sudah digunakan" bagi editor yang membuat dokumen dengan
-  slug milik dokumen terbatas; fungsi `getDocumentForRevalidate` (dulu `getDocumentById`) tidak menyaring karena hanya untuk
-  menyegarkan halaman setelah penulisan yang sudah diotorisasi.
-
+- **Cache offline**: service worker menyimpan halaman hanya berdasarkan URL. `cacheOwner` memuat kunci akses
+  (`accessKey`): sidik jari **semua** koleksi terbatas (id dan `updatedAt`) ditambah keanggotaan orang itu. Karena itu
+  membalik `restricted` pada sebuah koleksi, menambah koleksi terbatas, mengubah anggota, atau memindahkan dokumen ke/dari
+  koleksi terbatas (menyentuh `updatedAt` kedua koleksi) mengubah kunci bagi semua orang non-admin, termasuk yang bukan
+  anggota, sehingga cache mereka dikosongkan. Admin dan semua orang selama belum ada koleksi terbatas memakai bentuk lama
+  `id:role`, jadi cache mereka tidak dikosongkan oleh fitur ini. Review independen menemukan versi pertama hanya
+  mengikuti keanggotaan dan melewatkan kasus utamanya (koleksi yang tadinya terbuka dibuat terbatas); itu diperbaiki
+  dan dites. Batas yang jujur: pengosongan baru terjadi saat orang itu membuka aplikasi **online** berikutnya; salinan
+  yang sudah ada di perangkatnya tetap terbaca offline sampai saat itu.
+- **Slug adalah ruang nama global (keputusan pemilik, 24 Okt 2026)**: pesan "slug dokumen sudah digunakan" tetap, jadi
+  editor di luar koleksi terbatas bisa tahu bahwa sebuah slug sudah dipakai. Yang terbuka hanya itu, bukan judul atau isi.
+  Memeriksa akses ke koleksi tujuan dilakukan **sebelum** pemeriksaan slug, sehingga permintaan ke koleksi yang tidak boleh
+  dibaca dijawab sama apa pun slug-nya. Mengganti ini berarti mengubah bentuk URL dokumen.
+- **Fungsi baca mana pun menerima `viewer`**, termasuk `getRelatedDocumentIds` (id masuk ke halaman form edit),
+  `getRevisionList` dan `getRevision`. Satu-satunya pengecualian yang disengaja adalah `getDocumentForRevalidate`
+  (menyegarkan halaman setelah penulisan yang sudah diotorisasi). Aksi server menolak `id` yang bukan string dan tidak lagi
+  meneruskan teks galat Prisma mentah ke klien (`src/lib/errors.ts`).

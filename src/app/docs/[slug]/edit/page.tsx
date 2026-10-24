@@ -29,7 +29,7 @@ export default async function EditDocumentPage({
   const [collections, relatedCandidates, initialRelatedIds] = await Promise.all([
     getCollections(viewer),
     getRelationCandidates(viewer, document.id),
-    getRelatedDocumentIds(document.id),
+    getRelatedDocumentIds(document.id, viewer),
   ]);
 
   return (

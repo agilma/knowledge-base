@@ -91,12 +91,20 @@ export async function getDocumentForRevalidate(id: string) {
 }
 
 /** Ids on the other end of every relation of a document, whichever way it was written. */
-export async function getRelatedDocumentIds(documentId: string): Promise<string[]> {
+export async function getRelatedDocumentIds(documentId: string, viewer: Viewer): Promise<string[]> {
   const rows = await db.documentRelation.findMany({
     where: { OR: [{ fromId: documentId }, { toId: documentId }] },
     select: { fromId: true, toId: true },
   });
-  return [...new Set(rows.map((row) => (row.fromId === documentId ? row.toId : row.fromId)))];
+  const ids = [...new Set(rows.map((row) => (row.fromId === documentId ? row.toId : row.fromId)))];
+  if (ids.length === 0) return ids;
+  // These ids end up in the page the editor receives, so the ones they cannot read stay out of it.
+  const readable = await db.document.findMany({
+    where: { id: { in: ids }, ...documentReadableWhere(viewer) },
+    select: { id: true },
+  });
+  const allowed = new Set(readable.map((doc) => doc.id));
+  return ids.filter((id) => allowed.has(id));
 }
 
 /**
@@ -107,7 +115,7 @@ export async function getRelatedDocuments(
   documentId: string,
   options: ReadOptions
 ) {
-  const ids = await getRelatedDocumentIds(documentId);
+  const ids = await getRelatedDocumentIds(documentId, options.viewer);
   if (ids.length === 0) return [];
 
   return db.document.findMany({
@@ -319,6 +327,9 @@ export async function isDocumentSlugAvailable(slug: string, excludeId?: string) 
 export async function createDocument(data: DocumentInput, actor: Viewer) {
   const authorId = actor.id;
   const validated = documentSchema.parse(data);
+  // Before the slug check, so asking for a collection one cannot read is answered the
+  // same whatever the slug is.
+  await assertCollectionAccess(db, actor, validated.collectionId);
   const isAvailable = await isDocumentSlugAvailable(validated.slug);
   if (!isAvailable) {
     throw new Error("Slug dokumen sudah digunakan");
@@ -436,6 +447,9 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
   if (!existingDoc) {
     throw new Error("Dokumen tidak ditemukan");
   }
+  if (validated.collectionId !== existingDoc.collectionId) {
+    await assertCollectionAccess(db, actor, validated.collectionId);
+  }
 
   // Jika dokumen pernah / sedang PUBLISHED atau ARCHIVED (bukan DRAFT murni), slug tidak boleh diubah
   if (existingDoc.status !== DocumentStatus.DRAFT && existingDoc.slug !== validated.slug) {
@@ -475,6 +489,15 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
 
     if (record && latest === undefined) {
       latest = await snapshotBaseline(tx, current);
+    }
+
+    // A document moving between collections changes what each of them holds, and the
+    // offline cache key is built from the restricted ones' last change: touch both.
+    if (validated.collectionId !== current.collectionId) {
+      await tx.collection.updateMany({
+        where: { id: { in: [current.collectionId, validated.collectionId] } },
+        data: { updatedAt: new Date() },
+      });
     }
 
     const updated = await tx.document.update({

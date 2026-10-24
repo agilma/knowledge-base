@@ -9,6 +9,7 @@ import {
   getDocumentBySlug,
   getDocumentsByCollection,
   getRecentlyUpdatedDocuments,
+  getRelatedDocumentIds,
   getRelatedDocuments,
   getRelationCandidates,
   searchDocuments,
@@ -17,6 +18,7 @@ import {
   updateDocument,
 } from "./documents";
 import {
+  getCollectionById,
   getCollectionBySlug,
   getCollections,
   getCollectionsWithDocumentCount,
@@ -24,6 +26,7 @@ import {
 } from "./collections";
 import { getFavoriteDocuments, setFavorite } from "./favorites";
 import { getRecentDocuments, recordView } from "./recent-views";
+import { getRevision, getRevisionList } from "./revisions";
 
 /**
  * Restricted collections, against a real database. Every way of reading or
@@ -267,4 +270,57 @@ test("an editor's related list cannot add or drop what they cannot see", T, asyn
 
   // and an editor cannot relate a document they cannot read at all
   await assert.rejects(setRelatedDocuments(secret.id, [openDoc.id], editorOut), /Dokumen tidak ditemukan/);
+});
+
+test("the ids of related documents that go into the edit form are only the readable ones", T, async () => {
+  // whatever the document is related to now (earlier tests change it), all of it is in the
+  // restricted collection, so someone outside it gets none and a member gets all
+  const rows = await db.documentRelation.findMany({
+    where: { OR: [{ fromId: openDoc.id }, { toId: openDoc.id }] },
+    select: { fromId: true, toId: true },
+  });
+  const linked = rows.map((r) => (r.fromId === openDoc.id ? r.toId : r.fromId)).sort();
+  assert.ok(linked.length > 0);
+  assert.deepEqual(await getRelatedDocumentIds(openDoc.id, editorOut), []);
+  assert.deepEqual((await getRelatedDocumentIds(openDoc.id, editorIn)).sort(), linked);
+  assert.deepEqual((await getRelatedDocumentIds(openDoc.id, admin)).sort(), linked);
+});
+
+test("the history of a document is empty for someone who cannot read its collection", T, async () => {
+  const made = await createDocument(input(closed.id, "hist"), editorIn);
+  ids.documents.push(made.id);
+
+  assert.deepEqual(await getRevisionList(made.id, editorOut), []);
+  assert.equal(await getRevision(made.id, 1, editorOut), null);
+  assert.equal((await getRevisionList(made.id, editorIn)).length, 1);
+  assert.ok(await getRevision(made.id, 1, editorIn));
+  assert.equal((await getRevisionList(made.id, admin)).length, 1);
+});
+
+test("a collection is found by id only by those who may read it", T, async () => {
+  assert.equal(await getCollectionById(closed.id, viewerOut), null);
+  assert.equal((await getCollectionById(closed.id, viewerIn))?.id, closed.id);
+  assert.equal((await getCollectionById(closed.id, admin))?.id, closed.id);
+});
+
+test("moving a document in or out of a collection marks both collections as changed", T, async () => {
+  const made = await createDocument(input(closed.id, "move"), editorIn);
+  ids.documents.push(made.id);
+  const before = await db.collection.findMany({ where: { id: { in: [open.id, closed.id] } } });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+
+  await updateDocument(made.id, { ...input(open.id, "move"), slug: made.slug }, editorIn);
+
+  const after = await db.collection.findMany({ where: { id: { in: [open.id, closed.id] } } });
+  for (const col of after) {
+    const was = before.find((b) => b.id === col.id)!;
+    assert.ok(col.updatedAt > was.updatedAt, `${col.slug} not touched`);
+  }
+});
+
+test("asking for a collection one cannot read gets the same answer whatever the slug", T, async () => {
+  // an existing slug and a free one are answered alike when the collection is off limits
+  await assert.rejects(createDocument(input(closed.id, "secret"), editorOut), /Koleksi tidak ditemukan/);
+  await assert.rejects(createDocument({ ...input(closed.id, "secret"), slug: secret.slug }, editorOut), /Koleksi tidak ditemukan/);
+  await assert.rejects(createDocument(input(closed.id, `bebas-${tag}`), editorOut), /Koleksi tidak ditemukan/);
 });

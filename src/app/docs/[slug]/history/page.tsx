@@ -22,7 +22,7 @@ export default async function DocumentHistoryPage({
   const doc = await getDocumentBySlug(slug, { includeDrafts: true, viewer });
   if (!doc) notFound();
 
-  const revisions = await getRevisionList(doc.id);
+  const revisions = await getRevisionList(doc.id, viewer);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">

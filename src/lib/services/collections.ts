@@ -19,6 +19,14 @@ export function getCollections(viewer: Viewer) {
   return listCollections(viewer.id, viewer.role);
 }
 
+/** Id and last change of every restricted collection: what the offline cache key is made from. */
+export async function getRestrictedCollections() {
+  return db.collection.findMany({
+    where: { restricted: true },
+    select: { id: true, updatedAt: true },
+  });
+}
+
 /** Ids of the restricted collections this user was added to. */
 export async function getMemberCollectionIds(userId: string): Promise<string[]> {
   const rows = await db.collectionMember.findMany({

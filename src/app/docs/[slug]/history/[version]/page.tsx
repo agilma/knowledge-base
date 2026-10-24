@@ -28,7 +28,7 @@ export default async function RevisionPage({
   const doc = await getDocumentBySlug(slug, { includeDrafts: true, viewer });
   if (!doc) notFound();
 
-  const revision = await getRevision(doc.id, Number(version));
+  const revision = await getRevision(doc.id, Number(version), viewer);
   if (!revision) notFound();
 
   return (

@@ -10,7 +10,7 @@ import { getSession } from "@/lib/auth/session";
 import { CacheGuard } from "@/components/layout/CacheGuard";
 import { cacheOwner } from "@/lib/cache-owner";
 import { accessKey } from "@/lib/collection-access";
-import { getMemberCollectionIds } from "@/lib/services/collections";
+import { getMemberCollectionIds, getRestrictedCollections } from "@/lib/services/collections";
 
 const fontSans = Inter({
   variable: "--font-sans",
@@ -63,7 +63,7 @@ export default async function RootLayout({
   if (session?.user) {
     try {
       const viewer = { id: session.user.id, role: session.user.role };
-      access = accessKey(viewer, await getMemberCollectionIds(viewer.id));
+      access = accessKey(viewer, await getRestrictedCollections(), await getMemberCollectionIds(viewer.id));
     } catch {
       access = "open";
     }

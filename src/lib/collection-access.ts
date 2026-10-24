@@ -49,17 +49,30 @@ export function collectionReadableSql(viewer: Viewer, alias: string): Prisma.Sql
 }
 
 /**
- * A short fingerprint of what a user may read beyond the open collections.
- * It goes into the offline cache owner, so that being added to or removed
- * from a restricted collection empties the pages cached on that device.
+ * A short fingerprint of what a user may read beyond the open collections, for
+ * the offline cache owner (src/lib/cache-owner.ts).
+ *
+ * It covers **every** restricted collection (id and last change), not only the
+ * ones the user belongs to: a collection turning restricted must empty the cache
+ * of the people who are not in it, which is exactly the case this exists for.
+ * It changes when a collection is restricted or opened, when one changes
+ * (members, documents moved in or out touch `updatedAt`), and when this user is
+ * added or removed. With no restricted collection, and for admins, it stays the
+ * plain value so nothing is emptied for features nobody uses.
  */
-export function accessKey(viewer: Viewer, memberOf: string[]): string {
-  if (viewer.role === Role.ADMIN) return "admin";
-  const ids = [...new Set(memberOf)].sort();
-  if (ids.length === 0) return "open";
-  // FNV-1a: not security, just a compact value that changes when the list does
+export function accessKey(
+  viewer: Viewer,
+  restricted: { id: string; updatedAt: Date | number }[],
+  memberOf: string[]
+): string {
+  if (viewer.role === Role.ADMIN || restricted.length === 0) return viewer.role === Role.ADMIN ? "admin" : "open";
+  const parts = restricted
+    .map((c) => `${c.id}@${+c.updatedAt}`)
+    .sort()
+    .concat("|", [...new Set(memberOf)].sort());
+  // FNV-1a: not security, just a compact value that changes when the input does
   let hash = 0x811c9dc5;
-  for (const ch of ids.join(",")) {
+  for (const ch of parts.join(",")) {
     hash ^= ch.charCodeAt(0);
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
