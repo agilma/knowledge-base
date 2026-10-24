@@ -39,3 +39,9 @@ test("the access key follows the restricted collections, for members and for out
   assert.equal(accessKey(viewer, [c1], ["c1", "c1"]), accessKey(viewer, [c1], ["c1"]));
   assert.equal(accessKey({ id: "x", role: Role.ADMIN }, [c1], ["c1"]), "admin");
 });
+
+test("two restricted collections that swap places change the key, not only their times", () => {
+  const viewer = { id: "u", role: Role.VIEWER };
+  const t = new Date("2026-10-24T10:00:00Z");
+  assert.notEqual(accessKey(viewer, [{ id: "a", updatedAt: t }], []), accessKey(viewer, [{ id: "b", updatedAt: t }], []));
+});

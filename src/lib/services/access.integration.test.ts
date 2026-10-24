@@ -23,6 +23,7 @@ import {
   getCollections,
   getCollectionsWithDocumentCount,
   getMemberCollectionIds,
+  getRestrictedCollections,
 } from "./collections";
 import { getFavoriteDocuments, setFavorite } from "./favorites";
 import { getRecentDocuments, recordView } from "./recent-views";
@@ -323,4 +324,10 @@ test("asking for a collection one cannot read gets the same answer whatever the 
   await assert.rejects(createDocument(input(closed.id, "secret"), editorOut), /Koleksi tidak ditemukan/);
   await assert.rejects(createDocument({ ...input(closed.id, "secret"), slug: secret.slug }, editorOut), /Koleksi tidak ditemukan/);
   await assert.rejects(createDocument(input(closed.id, `bebas-${tag}`), editorOut), /Koleksi tidak ditemukan/);
+});
+
+test("the restricted collections that feed the cache key are the restricted ones only", T, async () => {
+  const listed = (await getRestrictedCollections()).map((c) => c.id);
+  assert.ok(listed.includes(closed.id));
+  assert.ok(!listed.includes(open.id));
 });
