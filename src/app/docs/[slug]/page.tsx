@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
-import { ChevronRight, FolderOpen, Calendar, AlertCircle } from "lucide-react";
+import { ChevronRight, FolderOpen, Calendar, AlertCircle, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { DocumentActions } from "@/components/document/DocumentActions";
@@ -94,8 +94,20 @@ export default async function DocumentPage({
           <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              <span>Diperbarui {formatDate(doc.updatedAt)}</span>
+              <span>
+                Diperbarui {formatDate(doc.updatedAt)}
+                {doc.lastEditedBy?.name && ` oleh ${doc.lastEditedBy.name}`}
+              </span>
             </div>
+            {canSeeDrafts && (
+              <Link
+                href={`/docs/${doc.slug}/history`}
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <History className="w-4 h-4" />
+                Riwayat
+              </Link>
+            )}
             {doc.collection && (
               <Badge variant="secondary" className="font-normal rounded-full px-3">
                 {doc.collection.name}

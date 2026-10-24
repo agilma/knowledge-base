@@ -6,12 +6,16 @@
  * private content; one left out is simply unreadable offline.
  */
 
-/** Pages that open an editor. They must always reach the network. */
+/**
+ * Pages that open an editor, or show what only editors may see (a document's
+ * revision history). They must always reach the network.
+ */
 export function isEditorRoute(pathname: string): boolean {
   return (
     pathname === "/docs/new" ||
     pathname === "/collections/new" ||
     /^\/docs\/[^/]+\/edit$/.test(pathname) ||
+    /^\/docs\/[^/]+\/history(\/.*)?$/.test(pathname) ||
     /^\/collections\/[^/]+\/edit$/.test(pathname)
   );
 }

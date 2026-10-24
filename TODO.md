@@ -43,6 +43,12 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ## Skala
 
+- [ ] **Riwayat bukan jejak audit lengkap.** Perubahan status (terbit, arsip, kembali ke draf)
+      tidak membuat revisi; hanya `lastEditedById` yang berubah, dan nilai sebelumnya hilang.
+      Pertanyaan "siapa yang mengarsipkan ini, kapan" tidak terjawab. **Disetujui pemilik
+      24 Okt 2026 untuk dikerjakan**; catatan rancangan ada di `docs/FEATURES.md` (bagian
+      "Disetujui, belum dikerjakan").
+
 - [ ] **Favorit pada dokumen yang di-unpublish tertinggal.** Baris `Favorite` tetap ada
       bila dokumen kembali ke draf, karena tombol hapus hanya ada di halaman
       dokumen yang sudah tidak terlihat bagi VIEWER; baris muncul lagi saat dokumen
@@ -59,11 +65,6 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       menguji lokal dengan database dimatikan. `src/app/global-error.tsx` ada
       untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
       tidak sampai melemparkan galat.
-
-- [ ] **Tidak ada catatan penyunting terakhir.** `Document` punya `authorId`
-      tapi tidak `lastEditedById` atau riwayat versi. Begitu beberapa orang
-      menyunting, "ini terakhir diubah siapa, dan kenapa" jadi pertanyaan
-      rutin.
 
 - [ ] **4 query sesi tersisa per request** (2 di proxy, 2 di render). React
       `cache()` tidak bisa menyatukannya karena middleware adalah invokasi

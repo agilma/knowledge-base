@@ -9,14 +9,14 @@ test("readable pages are cached for offline reading", () => {
 });
 
 test("editors are never cached, whatever the slug", () => {
-  for (const path of ["/docs/new", "/collections/new", "/docs/abc/edit", "/collections/abc/edit"]) {
+  for (const path of ["/docs/new", "/collections/new", "/docs/abc/edit", "/collections/abc/edit", "/docs/abc/history", "/docs/abc/history/3"]) {
     assert.equal(isEditorRoute(path), true, path);
     assert.equal(isTargetPageRoute(path), false, path);
   }
 });
 
 test("a slug that merely contains 'edit' or 'new' is still a readable page", () => {
-  for (const path of ["/docs/edit", "/docs/new-hire-guide", "/docs/abc/edit/notes", "/collections/newsletter"]) {
+  for (const path of ["/docs/edit", "/docs/new-hire-guide", "/docs/abc/edit/notes", "/collections/newsletter", "/docs/history", "/docs/historyk"]) {
     assert.equal(isEditorRoute(path), false, path);
     assert.equal(isTargetPageRoute(path), true, path);
   }

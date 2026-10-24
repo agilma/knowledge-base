@@ -30,7 +30,45 @@ rencana per fase ada di bagian bawah.
 | Daftar isi dan tautan ke bagian | selesai | `src/lib/markdown.ts`, `src/components/document/TableOfContents.tsx`, `SectionHeading.tsx`, `src/app/docs/[slug]/page.tsx` | Bagian (`##`) dan sub-bagian (`###`); kolom samping di layar lebar, lipatan di atas teks di HP; ikon salin tautan di setiap judul bagian. Id sama dengan yang dibuat halaman, termasuk judul kembar, dan baris di dalam blok kode tidak dihitung |
 | Tanggal konsisten (zona Jakarta) | selesai | `src/lib/format.ts` | Server (UTC) dan browser menampilkan hari yang sama di dekat tengah malam |
 | Cache offline per pemilik | selesai | `src/lib/cache-owner.ts`, `src/components/layout/CacheGuard.tsx`, `src/lib/sw-routes.ts` | Cache halaman dikosongkan bila orang atau perannya di browser berganti, supaya draf yang dibuka editor tidak terlihat oleh pengguna berikutnya; `/search` tidak di-cache. Masih terbuka bagi orang yang belum login di perangkat itu (lihat `TODO.md`) |
+| Penyunting terakhir dan riwayat revisi | selesai | `prisma/migrations/4_document_revisions`, `src/lib/services/revisions.ts`, `src/lib/revisions.ts`, `src/app/docs/[slug]/history/` | Halaman dokumen menampilkan "diperbarui ... oleh ..."; editor/admin membuka Riwayat (daftar versi, selisih karakter) dan melihat isi tiap versi (hanya baca). Simpan yang tidak mengubah isi tidak mencatat versi; maksimal 100 versi per dokumen. Perubahan status (terbit/arsip) tidak tercatat di riwayat, hanya di "diperbarui oleh". Memulihkan versi belum ada |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
+
+## Disetujui, belum dikerjakan
+
+### Perubahan status masuk riwayat
+Disetujui pemilik 24 Okt 2026; belum ada kode. Sekarang terbit, arsip, dan kembali ke draf hanya
+memperbarui "diperbarui oleh" dan tidak muncul di riwayat, sehingga "siapa yang mengarsipkan ini,
+kapan" tidak terjawab (lihat `TODO.md`). Catatan rancangan:
+
+- Setiap perubahan status mencatat satu revisi (isi disalin, `status` berisi status barunya), baik
+  dari tombol terbit/arsip maupun dari kolom status di form.
+- Daftar riwayat menurunkan labelnya dari perbandingan dengan versi sebelumnya, misalnya
+  "Diterbitkan", "Diarsipkan", "Dikembalikan ke draf", jadi kemungkinan **tidak butuh migrasi**:
+  kolom `status` sudah ada di `DocumentRevision`.
+- Harga yang perlu diputuskan saat mengerjakan: setiap perubahan status menyalin isi (sampai 200 ribu
+  karakter) dan ikut dihitung dalam batas 100 versi, jadi dokumen yang sering berganti status
+  mendorong versi teks lama keluar lebih cepat. Alternatifnya tabel peristiwa terpisah yang tidak
+  menyalin isi dan tidak ikut batas itu.
+- Perlu test database: status berubah dua kali berturut-turut, perubahan status bersamaan dengan
+  perubahan teks (satu revisi, bukan dua), dan simpan bersamaan.
+
+## Dipertimbangkan (belum diputuskan dipakai atau tidak)
+
+### Ekspor dokumen ke `.md` di GitHub
+Status: **ide**, 24 Okt 2026; pemilik belum memutuskan akan dipakai. Belum ada kode. Catatan rancangan
+supaya tidak dibahas dari nol:
+
+- Tujuannya belum dipilih: **cadangan di luar database** atau **bisa dibaca di Obsidian**. Cadangan
+  cukup dengan ekspor sederhana; untuk Obsidian struktur (folder per koleksi, tautan antar dokumen) perlu dirancang.
+- Satu arah, database ke Git. Kalau berkas diedit di GitHub, database tidak ikut berubah, jadi repo harus
+  tertulis sebagai hasil ekspor.
+- Repo privat terpisah dari repo kode (isinya prosedur internal).
+- Semua dokumen bukan draf, bukan hanya yang diarsipkan, dengan status di frontmatter (judul, slug, jenis,
+  koleksi, status, tanggal, penyunting) agar bisa diimpor kembali dan dokumen yang dibuka dari arsip tidak jadi kasus khusus.
+- Urutan yang dianjurkan: (1) tombol **Ekspor** khusus admin yang mengunduh zip `.md`, tanpa infrastruktur
+  dan tanpa token; (2) baru kemudian sinkronisasi terjadwal ke repo privat, yang butuh token GitHub dan
+  tempat menyimpan rahasia, dan sebaiknya berjalan sebagai pekerjaan terpisah, bukan dari tombol Arsipkan
+  (GitHub bisa gagal atau lambat saat tombol ditekan).
 
 ## Direncanakan
 
@@ -41,7 +79,7 @@ Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan
 ### Fase 1 — Mudah dipakai
 Pencarian full-text Postgres dengan filter dan sorotan hasil (sudah) · UI Pengetahuan
 Terkait (sudah) · penyunting terakhir dan
-riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau).
+riwayat revisi (sudah; pemulihan versi belum). Penanda kesegaran dibatalkan (lihat "Diputuskan tidak dikerjakan").
 
 ### Fase 2 — Lampiran
 Object storage untuk gambar dan file, upload dari editor, dan cache gambar untuk
@@ -49,3 +87,14 @@ baca offline.
 
 ### Fase 3 — Jika terbukti perlu
 Redis (rate limit, antrean), ekspor cermin Obsidian, antrean sinkron tulis-offline.
+
+## Diputuskan tidak dikerjakan
+
+### Penanda kesegaran dokumen ("perlu ditinjau")
+Diputuskan pemilik 24 Okt 2026: **tidak dibangun.** Alasannya: dokumen prosedur diperbarui bersamaan
+dengan perubahan di POS, jadi dokumen yang usang tanpa disadari tidak diperkirakan terjadi, dan
+penanda tinjau hanya menambah pekerjaan. Rancangan yang sempat dibahas, bila suatu hari dibutuhkan lagi:
+`reviewedAt` dan `reviewedById` di `documents` (migrasi aditif), pemilik = pembuat dokumen (`authorId`,
+tanpa kolom baru), ambang 90 hari terhitung dari yang terbaru antara tanggal tinjau dan tanggal
+diperbarui, hanya dokumen terbit yang ditandai, EDITOR/ADMIN bisa menandai "sudah ditinjau"
+tanpa mengubah tanggal "Diperbarui", plus halaman "Perlu Ditinjau" khusus editor.
