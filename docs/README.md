@@ -25,3 +25,10 @@ Ikuti juga:
 - Perubahan yang terlihat oleh pengguna dicatat di `USER-GUIDE.md`.
 - Jangan menulis klaim yang belum diverifikasi sebagai "selesai". Pakai status
   *direncanakan* atau *berjalan sebagian* dan jelaskan sisanya.
+
+## Skill untuk agen
+
+Konvensi dan cara menguji yang berulang dikemas sebagai skill di `.claude/skills/`, supaya sesi
+lain tidak menemukannya ulang: `kb-conventions` (aturan kerja), `kb-local-env` (menjalankan dan menguji
+di browser secara lokal), `kb-review` (daftar periksa dan format review). Perbarui skill bila
+langkahnya berubah.
