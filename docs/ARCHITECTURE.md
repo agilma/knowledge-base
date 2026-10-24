@@ -79,3 +79,20 @@ terbaru di atas.
 - **Kenapa ekspresi, bukan kolom `tsvector`:** menambah kolom (generated atau lewat trigger) menulis ulang atau memperbarui seluruh tabel `documents` dan mengunci tabel itu selama migrasi, padahal build Vercel menjalankan migrasi di setiap PR dan database Preview mungkin sama dengan production. `CREATE INDEX CONCURRENTLY` hanya menambah index tanpa menghalangi tulis. Harganya: ekspresi harus identik di migrasi dan di query (dijaga test `search-query.test.ts`), dan `ts_rank` menghitung ulang vektor untuk baris yang cocok. Diukur: kata yang cocok di *semua* 30 ribu dokumen butuh sekitar 7 detik; pada skala ratusan sampai ribuan dokumen tidak terasa. Bila suatu hari terasa, jalur lanjutannya kolom `tsvector` tersimpan, dibuat dengan migrasi terjadwal tersendiri.
 - **Batas:** isi dipotong 200 000 karakter dalam index (`left(content, 200000)`) karena satu `tsvector` tidak boleh lebih dari 1 MB; tanpa itu menyimpan dokumen raksasa gagal. Hasil dibatasi 50 teratas. Pencocokan memakai kata utuh atau awalan kata (tiga huruf ke atas), bukan potongan di tengah kata seperti `ILIKE` dulu.
 - **Ditolak:** `pg_trgm` (mencocokkan potongan huruf, tidak mengenal imbuhan, index jauh lebih besar), mesin pencari terpisah (infrastruktur baru tanpa manfaat pada skala ini).
+
+### 4. Editor memakai Tiptap (ProseMirror), isi tetap markdown
+Diputuskan 24 Okt 2026. Pengguna menulis SOP dan panduan dari HP, jadi yang dipilih adalah editor rich text
+ala Outline (menu `/`, bilah alat di atas keyboard, simbol markdown disembunyikan), bukan gaya Live Preview
+Obsidian: itu berbasis CodeMirror, yang sering bermasalah dengan keyboard HP, dan menampilkan simbol yang
+mengganggu penulis non-teknis. Editor Outline sendiri berlisensi BSL sehingga tidak dipakai; Tiptap (MIT)
+dibangun di ProseMirror yang sama.
+
+- **Penyimpanan tidak berubah.** `Document.content` tetap markdown; tidak ada migrasi dan halaman baca
+  (`react-markdown`) tidak berubah. Dokumen lama dibuka lewat `@tiptap/markdown`; uji bolak-balik pada contoh
+  yang berisi judul, daftar bersarang, centang, kutipan, blok kode, tabel, dan tautan menghasilkan teks
+  yang sama kecuali tabel yang diberi spasi rata dan satu baris kosong tambahan setelah blok kode. Hasilnya stabil
+  (dibuka dan disimpan lagi tidak berubah lagi).
+- **Paragraf kosong tidak disimpan.** Serializer menulis tiap Enter kosong sebagai `&nbsp;`; `dropEmptyParagraphs`
+  membuangnya di tingkat atas dokumen sebelum ditulis. Yang di dalam daftar, kutipan, dan tabel dibiarkan.
+- **Kolaborasi real-time ditunda** (butuh server WebSocket yang hidup terus); lihat FEATURES "Dipertimbangkan".
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ export interface MarkdownEditorProps {
   className?: string;
 }
 
-const DynamicMDXEditor = dynamic(
-  () => import("./InitializedMDXEditor"),
+const DynamicRichTextEditor = dynamic(
+  () => import("@/components/editor/RichTextEditor"),
   {
     ssr: false,
     loading: () => (
@@ -75,7 +75,6 @@ export function MarkdownEditor({
   rows = 14,
   className = "",
 }: MarkdownEditorProps) {
-  const [hasError, setHasError] = useState(false);
   const mode = useSyncExternalStore(
     subscribeEditorMode,
     readEditorMode,
@@ -87,32 +86,20 @@ export function MarkdownEditor({
     writeEditorMode(raw ? "raw" : "visual");
   }, []);
 
-  const handleError = useCallback((err: { error: string; source: string }) => {
-    console.warn("MarkdownEditor Parse Error:", err);
-    setHasError(true);
-  }, []);
-
-  if (hasError || useRawMode) {
+  if (useRawMode) {
     return (
       <div className={`space-y-2 ${className}`}>
-        {hasError && (
-          <div className="p-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-md">
-            Konten ini berisi sintaks yang tidak didukung editor visual; diedit dalam mode Markdown.
-          </div>
-        )}
         <div className="flex items-center justify-between border-b pb-2">
           <span className="text-xs font-medium text-muted-foreground">Mode Markdown (Mentah)</span>
-          {!hasError && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => chooseMode(false)}
-              className="text-xs h-7 px-2"
-            >
-              Beralih ke Editor Visual
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => chooseMode(false)}
+            className="text-xs h-7 px-2"
+          >
+            Beralih ke Editor Visual
+          </Button>
         </div>
         <Textarea
           id={id}
@@ -141,12 +128,7 @@ export function MarkdownEditor({
         </Button>
       </div>
 
-      <DynamicMDXEditor
-        markdown={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        onError={handleError}
-      />
+      <DynamicRichTextEditor markdown={value} onChange={onChange} placeholder={placeholder} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 ## Bug
 
 - [ ] **React hydration error #418** di seluruh aplikasi — muncul di
-      `/collections` maupun `/docs/new`, jadi bukan dari editor MDX. Sudah ada
+      `/collections` maupun `/docs/new`, jadi bukan dari editor. Sudah ada
       sebelum pekerjaan Oktober 2026 (diverifikasi dengan build di commit
       `049c9f8`). Tidak merusak fungsi, tapi React membuang HTML server dan
       merender ulang di klien — memperlambat setiap halaman. Curigai
@@ -91,6 +91,12 @@ Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
       sebelum PR-nya sempat di-review. Cek env var Preview di dashboard Vercel;
       kalau memang sama, pisahkan databasenya atau keluarkan langkah prisma
       dari build untuk Preview.
+
+- [ ] **Editor Tiptap belum dicoba di HP asli.** Diuji hanya di Chromium dengan emulasi layar 390px
+      dan `visualViewport` buatan (bilah alat tepat di atas keyboard simulasi). Yang belum terbukti: keyboard
+      Android sungguhan (Gboard, IME, koreksi otomatis di dalam editor), mode gelap, dan dokumen panjang. Tautan
+      masih memakai `window.prompt`; kalau terasa kasar di HP, ganti dengan isian kecil di bilah alat.
+      Belum ada toolbar melayang dekat teks terpilih dan belum ada gambar (menunggu object storage).
 
 - [ ] **Deploy production 23 Okt 2026 — sebagian sudah terverifikasi.**
       Build-nya **sukses**, dan header `x-vercel-id` menunjukkan `sin1::`,

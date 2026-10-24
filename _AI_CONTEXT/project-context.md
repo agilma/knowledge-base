@@ -24,9 +24,9 @@ Alur utama pengguna: **Search → Read → Related Knowledge**.
 | Markdown / Obsidian | Obsidian hanya sebagai **cermin ekspor**, bukan sumber data. Opsional, tahap akhir | Push/pull Git dari HP tidak practical |
 | Hosting | Vercel | Deploy otomatis dari GitHub |
 | Offline | **Tahap 1: offline-baca** (PWA Serwist + cache halaman yang pernah dibuka). Penulisan offline disokong via **Draf Lokal (localStorage)**. Antrian sinkron otomatis **belum** masuk scope | Offline-tulis penuh butuh IndexedDB, antrian sinkron, dan resolusi konflik; draf lokal menangani kegagalan form secara anggun tanpa kehilangan tulisan |
-| Editor konten | MDXEditor (`@mdxeditor/editor`) | Mengedit visual (WYSIWYG) rasa markdown, ramah untuk HP Android, menghasilkan markdown bersih, serta mendukung Mode Markdown mentah dan Dark Mode token CSS |
+| Editor konten | Tiptap 3 (ProseMirror) + `@tiptap/markdown` | WYSIWYG ala Outline, menyimpan markdown, menu `/`, toolbar di atas keyboard HP, Mode Markdown mentah |
 | Bahasa UI | Indonesia | Pengguna internal |
-| Mode tampilan | Light mode & dark mode diselaraskan via variabel CSS project dan MDXEditor | — |
+| Mode tampilan | Light mode & dark mode diselaraskan via variabel CSS project | — |
 
 Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project.
 
@@ -35,7 +35,7 @@ Jangan mengubah keputusan di atas tanpa persetujuan eksplisit dari owner project
 ## 3. Stack Aktual (terverifikasi dari kode)
 
 - Next.js 16.3.5 (App Router), React 19.2.8, TypeScript 5
-- Editor: MDXEditor (`@mdxeditor/editor` `4.3.2`)
+- Editor: Tiptap (`@tiptap/*` `3.32.0`)
 - Tailwind CSS 4, shadcn/ui, lucide-react, next-themes
 - Prisma 5.22.0, PostgreSQL (target: Neon)
 - Auth.js v5 (`next-auth@5.0.0-beta.32`), `@auth/prisma-adapter@2.11.3`
@@ -100,11 +100,13 @@ Aturan relasi & visualisasi:
 
 ## 6. Editor Content
 
-Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/editor` `4.3.2`) di `src/components/document/MarkdownEditor.tsx` (yang secara dinamis memuat `InitializedMDXEditor.tsx` dengan `ssr: false`).
-- **Antarmuka Props**: Menjaga antarmuka props persis `{ value: string; onChange: (value: string) => void; id?: string; name?: string; placeholder?: string; rows?: number; className?: string }` tanpa mengubah `DocumentForm.tsx`.
-- **Fitur Toolbar & GFM**: Mendukung Headings (H1-H6), Bold, Italic, List (peluru, nomor, checklist), Link, Quote, Kode inline, Blok Kode (CodeMirror), dan Tabel GFM.
-- **Mode Markdown Mentah & Fallback Error**: Menyediakan tombol "Mode Markdown" untuk mengedit markdown mentah (cocok untuk paster Obsidian) dan secara otomatis jatuh kembali (*fallback*) ke textarea mentah jika ada sintaks markdown tak tersupport / error parser.
-- **Tema Dark Mode & Responsivitas**: Seluruh variabel CSS internal MDXEditor (`--baseBg`, `--baseText`, `--baseBorder`, `--accentBg`, dll.) dipetakan ke design tokens project di `markdown-editor.css`. `InitializedMDXEditor` juga meneruskan class `dark-theme` dari `next-themes` (`resolvedTheme`) agar dialog/popover portal otomatis berwarna gelap. Toolbar dapat di-scroll horizontal pada HP Android (~380px).
+Editor utama adalah Tiptap (ProseMirror) di `src/components/editor/RichTextEditor.tsx`, dimuat dinamis (`ssr: false`) oleh `src/components/document/MarkdownEditor.tsx`.
+- **Antarmuka Props** `MarkdownEditor`: `{ value: string; onChange: (value: string) => void; id?: string; name?: string; placeholder?: string; rows?: number; className?: string }`; `DocumentForm.tsx` tidak berubah.
+- **Format simpan**: markdown (GFM) lewat `@tiptap/markdown`; `onUpdate` menulis `serialize(dropEmptyParagraphs(getJSON()))` (`src/lib/editor-content.ts`) sehingga paragraf kosong dari Enter berlebih tidak tertulis sebagai `&nbsp;`. Perubahan `value` dari luar (pemulihan draf, ganti template) disinkronkan lewat `setContent` bila berbeda dari yang terakhir dikirim editor.
+- **Menu `/`**: `slash-extension.ts` (Tiptap Suggestion), daftar item di `slash-items.ts`, keadaan menu di `slash-store.ts` (store luar React agar tidak memakai ref saat render).
+- **Toolbar**: sticky di bawah header mobile; saat keyboard HP terbuka (`useKeyboardInset`, `visualViewport`) menjadi `fixed` tepat di atas keyboard.
+- **Mode Markdown Mentah**: textarea, pilihan disimpan di `localStorage`.
+- **Gaya**: `rich-text-editor.css` memakai token desain project, isi memakai `PROSE_CLASSNAME` yang sama dengan halaman dokumen.
 
 ---
 
@@ -162,7 +164,7 @@ PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.
 3. Hubungkan halaman UI dengan `src/lib/services` menggantikan `mockData`
 4. Autentikasi sungguhan + RBAC (VIEWER / EDITOR / ADMIN)
 5. CRUD Document / Collection + editor markdown
-6. Integrasi Rich-Text Markdown Editor (MDXEditor)
+6. Integrasi Rich-Text Markdown Editor (semula MDXEditor, diganti Tiptap 24 Okt 2026)
 7. Search (PostgreSQL full-text)
 8. Favorit & Recent persisten
 9. PWA + offline-baca

@@ -14,7 +14,7 @@ rencana per fase ada di bagian bawah.
 | Koleksi: buat, ubah, arsip | selesai | `src/app/collections/`, `src/lib/services/collections.ts` | |
 | Dokumen: buat, ubah, terbit, arsip | selesai | `src/app/docs/`, `src/lib/services/documents.ts` | Tipe: Panduan, Masalah, Referensi. Status: Draf, Terbit, Arsip |
 | Template per tipe dokumen | selesai | `src/lib/document-templates.ts` | Kerangka bagian untuk tiap tipe |
-| Editor rich-text + mode markdown | selesai | `src/components/document/` | MDXEditor, mendukung dark mode |
+| Editor rich-text + mode markdown | selesai | `src/components/editor/`, `src/components/document/MarkdownEditor.tsx`, `src/lib/editor-content.ts` | Tiptap (ProseMirror) ala Outline: tampilan langsung WYSIWYG, ketikan markdown (`## `, `- `, `**tebal**`) langsung menjadi format, menu `/` untuk menyisipkan blok (judul, daftar, centang, kutipan, kode, tabel, garis), toolbar yang menempel di atas keyboard HP. Isi tetap disimpan sebagai markdown (tanpa migrasi). Baris kosong dari Enter berlebih tidak disimpan. Tombol **Mode Markdown** tetap ada. Belum ada: gambar (menunggu object storage), kolaborasi real-time, toolbar melayang di dekat teks terpilih |
 | Draf lokal otomatis | selesai | `src/components/document/DocumentForm.tsx` | Draf yang hanya beda format dari versi tersimpan tidak disimpan dan tidak memunculkan banner |
 | Test otomatis dan CI | selesai | `npm test`, `.github/workflows/ci.yml` | Aturan route service worker, izin login, normalisasi markdown. CI: lint, tsc, test, build |
 | Validasi env | selesai | `src/lib/env.ts` | Kredensial Google kosong memberi pesan yang menyebut nama variabelnya. `DATABASE_URL` yang hilang atau salah format sudah memberi galat jelas dari Prisma (diperiksa), jadi tidak divalidasi ulang |
@@ -50,6 +50,12 @@ supaya tidak dibahas dari nol:
   dan tanpa token; (2) baru kemudian sinkronisasi terjadwal ke repo privat, yang butuh token GitHub dan
   tempat menyimpan rahasia, dan sebaiknya berjalan sebagai pekerjaan terpisah, bukan dari tombol Arsipkan
   (GitHub bisa gagal atau lambat saat tombol ditekan).
+
+### Kolaborasi real-time di editor
+Status: **ide**, 24 Okt 2026. Editor sekarang (Tiptap/ProseMirror) bisa dikembangkan ke penyuntingan bersama lewat
+Yjs, tetapi butuh server WebSocket yang tetap hidup (Hocuspocus atau sejenisnya); Vercel serverless tidak cocok
+untuk itu. Belum ada kode. Cukup bernilai hanya bila sering ada dua editor di dokumen yang sama pada saat yang sama;
+saat ini penyunting terakhir dan riwayat sudah menutup kebutuhan "siapa mengubah apa".
 
 ## Direncanakan
 
