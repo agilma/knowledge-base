@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loading sudah selesai)
+Terakhir diperbarui: 2026-10-24 (pencarian full-text selesai)
 
 ---
 
@@ -51,14 +51,6 @@ Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loadi
       menguji lokal dengan database dimatikan. `src/app/global-error.tsx` ada
       untuk kegagalan layout, tapi belum teruji di runtime karena jalur ini
       tidak sampai melemparkan galat.
-
-- [ ] **Pencarian akan melambat.** `src/lib/services/documents.ts:97` memakai
-      `contains` + `mode: "insensitive"` pada `title`, `excerpt`, dan `content`.
-      Itu `ILIKE '%kata%'` — tidak bisa memakai index, selalu full scan, dan
-      `content` kolom teks panjang. Tidak ada index teks di tabel `documents`.
-      Pencarian adalah fitur yang paling sering dipakai; begitu lambat, orang
-      berhenti memakai knowledge base-nya. Solusinya Postgres full-text
-      (`tsvector` + index GIN), didukung Neon.
 
 - [ ] **Tidak ada catatan penyunting terakhir.** `Document` punya `authorId`
       tapi tidak `lastEditedById` atau riwayat versi. Begitu beberapa orang

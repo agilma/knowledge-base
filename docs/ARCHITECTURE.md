@@ -35,6 +35,8 @@ Didefinisikan di `prisma/schema.prisma`.
 
 Hanya dokumen `PUBLISHED` terlihat oleh VIEWER. Draf dan arsip hanya untuk EDITOR dan ADMIN.
 
+Tabel `documents` punya index GIN pencarian berbasis ekspresi (`documents_search_idx`, lihat keputusan 3). Prisma tidak bisa menggambarkannya di `schema.prisma`; migrasi adalah sumber kebenarannya, dan `prisma migrate diff` tidak melaporkannya sebagai drift.
+
 ## Infrastruktur
 
 | Komponen | Status | Peran |
@@ -65,6 +67,10 @@ terbaru di atas.
 
 ### 3. Pencarian memakai full-text Postgres
 
-- **Status:** diusulkan.
-- **Konteks:** `ILIKE '%kata%'` tidak bisa memakai index (lihat `TODO.md`).
-- **Keputusan:** kolom `tsvector` dengan index GIN, didukung Neon. Tidak perlu mesin pencari terpisah pada skala ini.
+- **Status:** diterapkan (migrasi `3_fulltext_search`).
+- **Konteks:** `ILIKE '%kata%'` tidak bisa memakai index (lihat `TODO.md`): selalu membaca seluruh tabel, dan `content` panjang. Diukur lokal pada 30 ribu dokumen: `ILIKE` 970 ms, full-text untuk kata yang jarang 0,5 ms.
+- **Keputusan:** index GIN pada *ekspresi* `setweight(to_tsvector('indonesian', title), 'A') || ...excerpt 'B' || ...content 'C'`, tanpa kolom baru. Query (`searchDocuments`) memakai `to_tsquery` yang disusun dari input pengguna oleh `src/lib/search-query.ts`, diurutkan dengan `ts_rank` (judul lebih berat daripada ringkasan, ringkasan daripada isi), disorot dengan `ts_headline`. Hak lihat (hanya `PUBLISHED` untuk VIEWER) ditegakkan di SQL yang sama. Tidak perlu mesin pencari terpisah pada skala ini.
+- **Konfigurasi bahasa `indonesian`:** stemmer Snowball bawaan PostgreSQL 15+ yang membuang imbuhan (memotong, dipotong, pemotongan → potong). Teks campuran Indonesia–Inggris aman: kata Inggris nyaris tidak diubah, dan dokumen serta query distem oleh konfigurasi yang sama sehingga tetap saling cocok. Alternatif `simple` (tanpa stem) ditolak karena "dipotong" tidak akan menemukan "memotong". Konfigurasi ini tidak punya daftar stop word (diverifikasi di PostgreSQL 16), jadi kata seperti "yang" tetap ikut dicari.
+- **Kenapa ekspresi, bukan kolom `tsvector`:** menambah kolom (generated atau lewat trigger) menulis ulang atau memperbarui seluruh tabel `documents` dan mengunci tabel itu selama migrasi, padahal build Vercel menjalankan migrasi di setiap PR dan database Preview mungkin sama dengan production. `CREATE INDEX CONCURRENTLY` hanya menambah index tanpa menghalangi tulis. Harganya: ekspresi harus identik di migrasi dan di query (dijaga test `search-query.test.ts`), dan `ts_rank` menghitung ulang vektor untuk baris yang cocok. Diukur: kata yang cocok di *semua* 30 ribu dokumen butuh sekitar 7 detik; pada skala ratusan sampai ribuan dokumen tidak terasa. Bila suatu hari terasa, jalur lanjutannya kolom `tsvector` tersimpan, dibuat dengan migrasi terjadwal tersendiri.
+- **Batas:** isi dipotong 200 000 karakter dalam index (`left(content, 200000)`) karena satu `tsvector` tidak boleh lebih dari 1 MB; tanpa itu menyimpan dokumen raksasa gagal. Hasil dibatasi 50 teratas. Pencocokan memakai kata utuh atau awalan kata (tiga huruf ke atas), bukan potongan di tengah kata seperti `ILIKE` dulu.
+- **Ditolak:** `pg_trgm` (mencocokkan potongan huruf, tidak mengenal imbuhan, index jauh lebih besar), mesin pencari terpisah (infrastruktur baru tanpa manfaat pada skala ini).

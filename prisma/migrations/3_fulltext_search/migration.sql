@@ -1,0 +1,19 @@
+-- Full-text search over documents (title A, excerpt B, content C).
+--
+-- Additive only: one index, no new column, no change to existing data, so it is
+-- safe on a database that already holds documents and the code that is
+-- currently deployed (which still uses ILIKE) is unaffected by it.
+--
+-- CONCURRENTLY builds the index without blocking writes to "documents". It
+-- cannot run inside a transaction, so this file MUST contain exactly one
+-- statement; Prisma runs a single statement outside an explicit transaction.
+-- IF NOT EXISTS makes a re-run harmless. If a previous run was interrupted it
+-- can leave an INVALID index behind; drop it (DROP INDEX "documents_search_idx")
+-- and deploy again.
+--
+-- The expression must match SEARCH_VECTOR_SQL in src/lib/search-query.ts, or
+-- queries silently stop using the index (a test checks this).
+-- 'indonesian' needs PostgreSQL 15+ (Snowball stemmer for affixes such as
+-- memotong/dipotong/pemotongan). left(content, 200000) keeps a huge document
+-- under the 1 MB tsvector limit so that saving it cannot fail.
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "documents_search_idx" ON "documents" USING GIN ((setweight(to_tsvector('indonesian', coalesce(title, '')), 'A') || setweight(to_tsvector('indonesian', coalesce(excerpt, '')), 'B') || setweight(to_tsvector('indonesian', left(content, 200000)), 'C')));

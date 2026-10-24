@@ -18,7 +18,7 @@ rencana per fase ada di bagian bawah.
 | Draf lokal otomatis | selesai | `src/components/document/DocumentForm.tsx` | Draf yang hanya beda format dari versi tersimpan tidak disimpan dan tidak memunculkan banner |
 | Test otomatis dan CI | selesai | `npm test`, `.github/workflows/ci.yml` | Aturan route service worker, izin login, normalisasi markdown. CI: lint, tsc, test, build |
 | Validasi env | sebagian | `src/lib/env.ts` | Kredensial Google kosong memberi pesan jelas; `DATABASE_URL` belum divalidasi |
-| Pencarian | sebagian | `src/app/search/page.tsx`, `documents.ts` | Memakai `ILIKE`, melambat seiring data bertambah |
+| Pencarian full-text | selesai | `src/app/search/page.tsx`, `searchDocuments` di `documents.ts`, `src/lib/search-query.ts`, migrasi `3_fulltext_search` | Postgres full-text (`tsvector` + GIN, stemmer Indonesia): kata berimbuhan cocok, urut menurut relevansi, kutip untuk frasa, filter jenis dan koleksi, kata cocok disorot. Maksimal 50 hasil teratas |
 | Pengetahuan Terkait | sebagian | `getRelatedDocuments` di `documents.ts` | Tampil jika data relasi ada, belum ada UI untuk mengelola relasi |
 | PWA dan offline-baca | selesai | `src/app/sw.ts`, `src/app/manifest.ts` | Halaman yang pernah dibuka bisa dibaca offline |
 | Penjaga offline pada form | selesai | `src/lib/use-online-status.ts` | Tombol simpan nonaktif saat offline |
@@ -41,7 +41,7 @@ Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`, banner draf 
 Belum: hydration error #418 (tidak bisa direproduksi lokal, lihat `TODO.md`) dan pemisahan database Preview.
 
 ### Fase 1 — Mudah dipakai
-Pencarian full-text Postgres dengan filter dan sorotan hasil · UI Pengetahuan
+Pencarian full-text Postgres dengan filter dan sorotan hasil (sudah) · UI Pengetahuan
 Terkait · Favorit dan Terakhir dilihat per pengguna · penyunting terakhir dan
 riwayat revisi · penanda kesegaran (pemilik dan tanggal ditinjau) · daftar isi
 dan tautan ke bagian.
