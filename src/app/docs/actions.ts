@@ -53,7 +53,9 @@ export async function createDocumentAction(
 
   try {
     const newDoc = await createDocument(parsed.data, user.id);
-    await setRelatedDocuments(newDoc.id, parseRelatedIds(formData.getAll("relatedIds"), newDoc.id));
+    if (formData.get("relatedTouched") === "1") {
+      await setRelatedDocuments(newDoc.id, parseRelatedIds(formData.getAll("relatedIds"), newDoc.id));
+    }
     const createdWithCol = await getDocumentById(newDoc.id);
     revalidatePath("/collections");
     if (createdWithCol?.collection) {
@@ -106,7 +108,9 @@ export async function updateDocumentAction(
   try {
     const oldDoc = await getDocumentById(id);
     const updatedDoc = await updateDocument(id, parsed.data);
-    await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id));
+    if (formData.get("relatedTouched") === "1") {
+      await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id));
+    }
     const newDocWithCol = await getDocumentById(updatedDoc.id);
 
     revalidatePath("/collections");

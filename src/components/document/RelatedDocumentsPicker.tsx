@@ -58,6 +58,10 @@ export function RelatedDocumentsPicker({
         yang dipilih juga menampilkan dokumen ini. Maksimal {MAX_RELATED}.
       </p>
 
+      {/* Tells the server this form really carries the list. Without it a form
+          posted by hand, or from a tab opened before this field existed, would
+          read as "no related documents" and wipe the existing ones. */}
+      <input type="hidden" name="relatedTouched" value="1" />
       {selected.map((id) => (
         <input key={id} type="hidden" name="relatedIds" value={id} />
       ))}
