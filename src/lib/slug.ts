@@ -4,8 +4,10 @@ export function slugify(text: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
+    // Underscores must become hyphens before symbols are stripped: stripping
+    // first deleted them and glued the words together ("e_mail" -> "email").
     .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 }

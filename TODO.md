@@ -6,7 +6,7 @@ maupun tidak. Tujuannya supaya temuan tidak hilang begitu percakapan selesai.
 Setiap entri mencantumkan **kenapa** itu penting dan **di mana** letaknya,
 supaya bisa dikerjakan tanpa harus menggali ulang konteksnya.
 
-Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loading sudah selesai)
+Terakhir diperbarui: 2026-10-24
 
 ---
 
@@ -23,12 +23,10 @@ Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loadi
       error di konsol pada `/`, `/collections`, `/docs/new`, `/docs/[slug]`,
       `/search`. Kemungkinan hanya muncul di Vercel (zona waktu server UTC vs
       klien, PWA terpasang, atau service worker lama). Ambil teks lengkap error
-      dari konsol production atau build dev. Kandidat: `formatDate` di
-      `src/lib/format.ts` tanpa `timeZone`.
-
-- [ ] **`shadcn` ada di `dependencies`, bukan `devDependencies`** (1.9 MB).
-      Itu CLI, tidak pernah di-import kode. Memindahkannya memangkas install
-      production di Vercel tanpa efek ke runtime.
+      dari konsol production atau build dev. Kandidat yang sudah ditutup tanpa
+      bukti: `formatDate` kini memakai zona Asia/Jakarta (server UTC dan klien
+      bisa beda hari di dekat tengah malam). Bila #418 tetap muncul di production
+      setelah itu, penyebabnya di tempat lain.
 
 ## Jaring pengaman
 
