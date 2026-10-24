@@ -49,7 +49,7 @@ tertutup sebelum tersimpan, akan ada tawaran **Pulihkan** saat dibuka lagi.
 ## Memakai tanpa internet
 
 Pasang aplikasi ke layar utama (menu browser, lalu **Tambahkan ke layar utama**).
-Halaman yang pernah Anda buka tetap bisa dibaca saat offline. Menyimpan perubahan
+Halaman yang pernah Anda buka tetap bisa dibaca saat offline (kecuali pencarian, Favorit, dan Terakhir Dibuka). Bila akun atau peran di browser itu berganti, daftar halaman yang tersimpan dikosongkan dan terisi lagi seiring Anda membuka halaman. Menyimpan perubahan
 butuh internet; tombol simpan nonaktif saat offline.
 
 ## Kalau muncul "Akses Ditolak"

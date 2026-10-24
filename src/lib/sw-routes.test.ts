@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { isEditorRoute, isNetworkOnlyRequest, isPersonalRoute, isTargetPageRoute } from "./sw-routes";
 
 test("readable pages are cached for offline reading", () => {
-  for (const path of ["/", "/search", "/collections", "/collections/pos", "/docs/pos-gagal-closing"]) {
+  for (const path of ["/", "/collections", "/collections/pos", "/docs/pos-gagal-closing"]) {
     assert.equal(isTargetPageRoute(path), true, path);
   }
 });
@@ -44,11 +44,12 @@ test("login, editors and every write go straight to the network", () => {
 });
 
 test("per-user lists are never cached, or the next person on the browser would see them", () => {
-  for (const path of ["/favorites", "/recent"]) {
+  for (const path of ["/favorites", "/recent", "/search"]) {
     assert.equal(isPersonalRoute(path), true, path);
     assert.equal(isTargetPageRoute(path), false, path);
     assert.equal(isNetworkOnlyRequest("GET", path), true, path);
   }
   assert.equal(isPersonalRoute("/favorites/x"), false);
+  assert.equal(isPersonalRoute("/searching"), false);
   assert.equal(isPersonalRoute("/docs/favorites"), false);
 });

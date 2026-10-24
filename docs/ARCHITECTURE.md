@@ -35,7 +35,9 @@ Didefinisikan di `prisma/schema.prisma`.
 
 Hanya dokumen `PUBLISHED` terlihat oleh VIEWER. Draf dan arsip hanya untuk EDITOR dan ADMIN.
 
-Service worker men-cache halaman baca per URL, tanpa membedakan pengguna. Karena itu halaman yang berisi data pribadi (`/favorites`, `/recent`) **tidak** di-cache (`src/lib/sw-routes.ts`, `isPersonalRoute`). Halaman baru yang menampilkan data satu pengguna harus ikut ke sana.
+Service worker men-cache halaman baca per URL, tanpa membedakan pengguna. Karena itu halaman yang berisi data pribadi (`/favorites`, `/recent`) **tidak** di-cache (`src/lib/sw-routes.ts`, `isPersonalRoute`). `/search` ikut di dalamnya (hasil bergantung peran, editor juga mendapat draf). Halaman baru yang menampilkan data satu pengguna harus ikut ke sana.
+
+Halaman lain (mis. dokumen draf yang dibuka editor) tetap di-cache, jadi cache dikaitkan dengan pemiliknya: setiap halaman mencatat `id:peran` pengguna di `localStorage` (`kb:cache-owner`), dan `CacheGuard` mengosongkan `pages-rsc-cache` bila pengguna atau perannya berbeda dari yang tercatat (`src/lib/cache-owner.ts`). Keluar tetap mengosongkannya lewat `UserMenu`.
 
 Tabel `documents` punya index GIN pencarian berbasis ekspresi (`documents_search_idx`, lihat keputusan 3). Prisma tidak bisa menggambarkannya di `schema.prisma`; migrasi adalah sumber kebenarannya, dan `prisma migrate diff` tidak melaporkannya sebagai drift.
 
