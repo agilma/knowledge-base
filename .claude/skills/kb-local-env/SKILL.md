@@ -112,4 +112,4 @@ Test itu hanya menyentuh baris yang dibuatnya sendiri dan membersihkannya.
   `npx next build --webpack`.
 - Matikan database untuk menguji "DB mati" tidak memunculkan halaman galat: `auth()` menganggap
   gagalnya pencarian sesi sebagai belum login dan menampilkan halaman login (tercatat di `TODO.md`).
-- Hydration error #418 belum bisa direproduksi lokal; jangan buang waktu mencarinya di sini tanpa data baru.
+- Hydration error #418 bisa direproduksi lokal: simpan draf di `/docs/new` (isi judul, tunggu 2 detik autosave), muat ulang, lihat `pageerror` di build production. Penyebab itu sudah diperbaiki; bila muncul lagi di halaman lain, cari komponen yang membaca `localStorage`, `window`, `Date.now()` atau zona waktu saat render.

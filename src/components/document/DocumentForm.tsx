@@ -121,29 +121,34 @@ export function DocumentForm({
     [baseline]
   );
 
-  // Initialize draft state lazily
-  const [localDraft, setLocalDraft] = useState<LocalDraft | null>(() => {
-    if (typeof window === "undefined") return null;
+  // The saved draft lives in the browser, so the server cannot know it. Reading it
+  // while rendering (as this used to) gave the server one page and the browser
+  // another, which React reports as hydration error #418 on every load with a
+  // draft. It is read once the form has mounted instead.
+  const [localDraft, setLocalDraft] = useState<LocalDraft | null>(null);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as LocalDraft;
-        if (parsed && typeof parsed.savedAt === "number") {
-          if (
-            (!isEditing || parsed.savedAt > serverUpdatedAt) &&
-            !isUnchanged(parsed)
-          ) {
-            return parsed;
-          }
-        }
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as LocalDraft;
+      if (
+        parsed &&
+        typeof parsed.savedAt === "number" &&
+        (!isEditing || parsed.savedAt > serverUpdatedAt) &&
+        !isUnchanged(parsed)
+      ) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- the browser is the only place the draft can be read
+        setLocalDraft(parsed);
+        setShowDraftBanner(true);
       }
     } catch (e) {
       console.warn("Gagal membaca draf lokal:", e);
     }
-    return null;
-  });
-
-  const [showDraftBanner, setShowDraftBanner] = useState<boolean>(() => !!localDraft);
+    // once per form: later edits are the autosave's business, not a new draft to offer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
 
   // Debounced autosave to localStorage
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
