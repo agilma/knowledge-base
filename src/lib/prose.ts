@@ -6,10 +6,10 @@
  * import this instead.
  */
 export const PROSE_CLASSNAME = [
-  "prose prose-neutral dark:prose-invert max-w-none prose-lg",
+  "prose prose-neutral dark:prose-invert max-w-none prose-base",
   "prose-headings:font-semibold prose-p:leading-relaxed prose-p:text-foreground/90",
   "prose-a:text-primary hover:prose-a:text-primary/80",
-  // Keep body headings below the document title (36px), which `prose-lg`
+  // Keep body headings below the document title (36px), which a larger prose size
   // otherwise outgrows with a 48px h1.
   "prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl",
   // Preflight zeroes the borders typography relies on, leaving tables as
