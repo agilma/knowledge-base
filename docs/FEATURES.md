@@ -17,7 +17,7 @@ rencana per fase ada di bagian bawah.
 | Editor rich-text + mode markdown | selesai | `src/components/document/` | MDXEditor, mendukung dark mode |
 | Draf lokal otomatis | selesai | `src/components/document/DocumentForm.tsx` | Draf yang hanya beda format dari versi tersimpan tidak disimpan dan tidak memunculkan banner |
 | Test otomatis dan CI | selesai | `npm test`, `.github/workflows/ci.yml` | Aturan route service worker, izin login, normalisasi markdown. CI: lint, tsc, test, build |
-| Validasi env | sebagian | `src/lib/env.ts` | Kredensial Google kosong memberi pesan jelas; `DATABASE_URL` belum divalidasi |
+| Validasi env | selesai | `src/lib/env.ts` | Kredensial Google kosong memberi pesan yang menyebut nama variabelnya. `DATABASE_URL` yang hilang atau salah format sudah memberi galat jelas dari Prisma (diperiksa), jadi tidak divalidasi ulang |
 | Pencarian | sebagian | `src/app/search/page.tsx`, `documents.ts` | Memakai `ILIKE`, melambat seiring data bertambah |
 | Pengetahuan Terkait | sebagian | `getRelatedDocuments` di `documents.ts` | Tampil jika data relasi ada, belum ada UI untuk mengelola relasi |
 | PWA dan offline-baca | selesai | `src/app/sw.ts`, `src/app/manifest.ts` | Halaman yang pernah dibuka bisa dibaca offline |
@@ -28,6 +28,7 @@ rencana per fase ada di bagian bawah.
 | Favorit per pengguna | selesai | `src/lib/services/favorites.ts`, `src/components/document/FavoriteButton.tsx`, `src/app/favorites/page.tsx` | Tombol di halaman dokumen; draf dan arsip hanya muncul untuk editor/admin; nonaktif saat offline; halaman `/favorites` tidak di-cache service worker (data pribadi) |
 | Terakhir dibuka per pengguna | selesai | `src/lib/services/recent-views.ts`, `src/components/document/RecordView.tsx`, `src/app/recent/page.tsx` | Dicatat dari klien setelah halaman tampil (bukan saat prefetch); satu baris per dokumen (aman terhadap dua permintaan bersamaan), 50 terbaru disimpan dan ditampilkan; `/recent` tidak di-cache service worker |
 | Daftar isi dan tautan ke bagian | selesai | `src/lib/markdown.ts`, `src/components/document/TableOfContents.tsx`, `SectionHeading.tsx`, `src/app/docs/[slug]/page.tsx` | Bagian (`##`) dan sub-bagian (`###`); kolom samping di layar lebar, lipatan di atas teks di HP; ikon salin tautan di setiap judul bagian. Id sama dengan yang dibuat halaman, termasuk judul kembar, dan baris di dalam blok kode tidak dihitung |
+| Tanggal konsisten (zona Jakarta) | selesai | `src/lib/format.ts` | Server (UTC) dan browser menampilkan hari yang sama di dekat tengah malam |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
 
 ## Direncanakan
