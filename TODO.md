@@ -12,23 +12,14 @@ Terakhir diperbarui: 2026-10-24 (koleksi terbatas selesai: penegakan dan layar a
 
 ## Bug
 
-- [ ] **React hydration error #418** — *petunjuk dari review PR #32:* galat muncul di `/docs/new` bila ada
-      draf lokal tersimpan (banner draf dibaca dari `localStorage` saat render di `DocumentForm.tsx`), dan
-      terjadi juga di `main`. Tanpa draf, tidak muncul di halaman itu. Belum menjelaskan `/collections`. di seluruh aplikasi — muncul di
-      `/collections` maupun `/docs/new`, jadi bukan dari editor. Sudah ada
-      sebelum pekerjaan Oktober 2026 (diverifikasi dengan build di commit
-      `049c9f8`). Tidak merusak fungsi, tapi React membuang HTML server dan
-      merender ulang di klien — memperlambat setiap halaman. Curigai
-      `layout.tsx` atau theme provider.
-      **Belum bisa direproduksi lokal:** build production dengan sesi login,
-      database lokal, mode terang dan gelap, zona waktu Asia/Jakarta — tidak ada
-      error di konsol pada `/`, `/collections`, `/docs/new`, `/docs/[slug]`,
-      `/search`. Kemungkinan hanya muncul di Vercel (zona waktu server UTC vs
-      klien, PWA terpasang, atau service worker lama). Ambil teks lengkap error
-      dari konsol production atau build dev. Kandidat yang sudah ditutup tanpa
-      bukti: `formatDate` kini memakai zona Asia/Jakarta (server UTC dan klien
-      bisa beda hari di dekat tengah malam). Bila #418 tetap muncul di production
-      setelah itu, penyebabnya di tempat lain.
+- [ ] **React hydration error #418: satu penyebab sudah diperbaiki, sisanya belum terbukti hilang di production.**
+      Penyebab yang terbukti dan diperbaiki (25 Okt 2026): `DocumentForm.tsx` membaca draf lokal dari `localStorage` saat
+      render, sehingga server dan klien merender halaman berbeda di `/docs/new` dan `/docs/[slug]/edit` setiap kali ada draf
+      tersimpan. Direproduksi di build production lokal (draf ada: galat; tanpa draf: bersih), kini draf dibaca setelah form
+      terpasang dan galat hilang pada semua rute yang diuji. **Laporan awal menyebut `/collections` juga.** Itu tidak muncul
+      di lokal, dengan atau tanpa draf. Bila galat #418 masih terlihat di production pada halaman selain form dokumen,
+      ambil teks lengkapnya dari konsol (bagian `args[]`) dan buka entri ini lagi; kandidat yang masih mungkin: zona waktu server
+      UTC vs klien, PWA terpasang, atau service worker lama.
 
 ## Jaring pengaman
 
