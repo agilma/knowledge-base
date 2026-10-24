@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatSizeChange, hasMeaningfulChange, nextVersion, sizeChanges } from "./revisions";
+import { REVISION_LIMIT, formatSizeChange, hasMeaningfulChange, nextVersion, sizeChanges } from "./revisions";
 
 const base = { title: "Judul", excerpt: null, content: "## A\n\n- satu\n- dua", type: "PANDUAN" };
 
@@ -42,4 +42,9 @@ test("the next version follows the latest, starting at 1", () => {
   assert.equal(nextVersion(null), 1);
   assert.equal(nextVersion(undefined), 1);
   assert.equal(nextVersion(7), 8);
+});
+
+test("the number of versions kept is the documented 100", () => {
+  // docs/USER-GUIDE.md and the history page promise this number.
+  assert.equal(REVISION_LIMIT, 100);
 });

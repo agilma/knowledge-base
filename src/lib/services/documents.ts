@@ -338,7 +338,15 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
     // same moment must not both read the same latest. The lock ends on commit.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${id}`}))`;
 
-    const meaningful = hasMeaningfulChange(existingDoc, {
+    // Read the document again, now that the lock is held. The copy read before the
+    // transaction can be stale: if another save committed in between, comparing
+    // against it would call a revert "no change" and skip its revision.
+    const current = await tx.document.findUnique({ where: { id } });
+    if (!current) {
+      throw new Error("Dokumen tidak ditemukan");
+    }
+
+    const meaningful = hasMeaningfulChange(current, {
       title: validated.title,
       excerpt: validated.excerpt || null,
       content: validated.content,
@@ -360,13 +368,13 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
         data: {
           documentId: id,
           version: nextVersion(latest),
-          title: existingDoc.title,
-          excerpt: existingDoc.excerpt,
-          content: existingDoc.content,
-          type: existingDoc.type,
-          status: existingDoc.status,
-          editedById: existingDoc.lastEditedById ?? existingDoc.authorId,
-          createdAt: existingDoc.updatedAt,
+          title: current.title,
+          excerpt: current.excerpt,
+          content: current.content,
+          type: current.type,
+          status: current.status,
+          editedById: current.lastEditedById ?? current.authorId,
+          createdAt: current.updatedAt,
         },
       });
       latest = 1;
@@ -382,7 +390,7 @@ export async function updateDocument(id: string, data: DocumentInput, editorId?:
         excerpt: validated.excerpt || null,
         content: validated.content,
         status: validated.status,
-        lastEditedById: editorId ?? existingDoc.lastEditedById,
+        lastEditedById: editorId ?? current.lastEditedById,
       },
     });
 

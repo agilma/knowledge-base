@@ -30,8 +30,26 @@ rencana per fase ada di bagian bawah.
 | Daftar isi dan tautan ke bagian | selesai | `src/lib/markdown.ts`, `src/components/document/TableOfContents.tsx`, `SectionHeading.tsx`, `src/app/docs/[slug]/page.tsx` | Bagian (`##`) dan sub-bagian (`###`); kolom samping di layar lebar, lipatan di atas teks di HP; ikon salin tautan di setiap judul bagian. Id sama dengan yang dibuat halaman, termasuk judul kembar, dan baris di dalam blok kode tidak dihitung |
 | Tanggal konsisten (zona Jakarta) | selesai | `src/lib/format.ts` | Server (UTC) dan browser menampilkan hari yang sama di dekat tengah malam |
 | Cache offline per pemilik | selesai | `src/lib/cache-owner.ts`, `src/components/layout/CacheGuard.tsx`, `src/lib/sw-routes.ts` | Cache halaman dikosongkan bila orang atau perannya di browser berganti, supaya draf yang dibuka editor tidak terlihat oleh pengguna berikutnya; `/search` tidak di-cache. Masih terbuka bagi orang yang belum login di perangkat itu (lihat `TODO.md`) |
-| Penyunting terakhir dan riwayat revisi | selesai | `prisma/migrations/4_document_revisions`, `src/lib/services/revisions.ts`, `src/lib/revisions.ts`, `src/app/docs/[slug]/history/` | Halaman dokumen menampilkan "diperbarui ... oleh ..."; editor/admin membuka Riwayat (daftar versi, selisih karakter) dan melihat isi tiap versi (hanya baca). Simpan yang tidak mengubah isi tidak mencatat versi; maksimal 100 versi per dokumen. Memulihkan versi belum ada |
+| Penyunting terakhir dan riwayat revisi | selesai | `prisma/migrations/4_document_revisions`, `src/lib/services/revisions.ts`, `src/lib/revisions.ts`, `src/app/docs/[slug]/history/` | Halaman dokumen menampilkan "diperbarui ... oleh ..."; editor/admin membuka Riwayat (daftar versi, selisih karakter) dan melihat isi tiap versi (hanya baca). Simpan yang tidak mengubah isi tidak mencatat versi; maksimal 100 versi per dokumen. Perubahan status (terbit/arsip) tidak tercatat di riwayat, hanya di "diperbarui oleh". Memulihkan versi belum ada |
 | Penolakan izin yang jelas | selesai | `src/app/akses-ditolak/`, `requireRole` di `src/lib/auth/session.ts` | VIEWER yang mencoba aksi EDITOR melihat penjelasan, bukan dilempar ke beranda |
+
+## Dipertimbangkan (belum diputuskan dipakai atau tidak)
+
+### Ekspor dokumen ke `.md` di GitHub
+Status: **ide**, 24 Okt 2026; pemilik belum memutuskan akan dipakai. Belum ada kode. Catatan rancangan
+supaya tidak dibahas dari nol:
+
+- Tujuannya belum dipilih: **cadangan di luar database** atau **bisa dibaca di Obsidian**. Cadangan
+  cukup dengan ekspor sederhana; untuk Obsidian struktur (folder per koleksi, tautan antar dokumen) perlu dirancang.
+- Satu arah, database ke Git. Kalau berkas diedit di GitHub, database tidak ikut berubah, jadi repo harus
+  tertulis sebagai hasil ekspor.
+- Repo privat terpisah dari repo kode (isinya prosedur internal).
+- Semua dokumen bukan draf, bukan hanya yang diarsipkan, dengan status di frontmatter (judul, slug, jenis,
+  koleksi, status, tanggal, penyunting) agar bisa diimpor kembali dan dokumen yang dibuka dari arsip tidak jadi kasus khusus.
+- Urutan yang dianjurkan: (1) tombol **Ekspor** khusus admin yang mengunduh zip `.md`, tanpa infrastruktur
+  dan tanpa token; (2) baru kemudian sinkronisasi terjadwal ke repo privat, yang butuh token GitHub dan
+  tempat menyimpan rahasia, dan sebaiknya berjalan sebagai pekerjaan terpisah, bukan dari tombol Arsipkan
+  (GitHub bisa gagal atau lambat saat tombol ditekan).
 
 ## Direncanakan
 

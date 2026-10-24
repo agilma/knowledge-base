@@ -122,6 +122,29 @@ test("saves at the same moment get different version numbers", { skip: !enabled 
   assert.equal(versions[0], Math.max(...versions));
 });
 
+test("a save that read an older copy cannot silently revert a newer one", { skip: !enabled }, async () => {
+  const [col, ana, budi] = [await collection(), await user("ana7"), await user("budi7")];
+  // A edits while B, who opened the original, saves it unchanged at the same moment.
+  // Whichever commits last, the current text must be the latest version in history.
+  for (let round = 0; round < 20; round++) {
+    const doc = await createDocument(input(col.id, 700 + round, "## orig"), ana.id);
+    created.documents.push(doc.id);
+    await Promise.all([
+      updateDocument(doc.id, input(col.id, 700 + round, "## A edit"), ana.id),
+      updateDocument(doc.id, input(col.id, 700 + round, "## orig"), budi.id),
+    ]);
+    const [current, latest] = await Promise.all([
+      db.document.findUnique({ where: { id: doc.id } }),
+      db.documentRevision.findFirst({ where: { documentId: doc.id }, orderBy: { version: "desc" } }),
+    ]);
+    assert.equal(
+      latest?.content,
+      current?.content,
+      `round ${round}: the document reads "${current?.content}" but history ends at "${latest?.content}"`
+    );
+  }
+});
+
 test("only the latest versions are kept", { skip: !enabled }, async () => {
   const [col, ana] = [await collection(), await user("ana6")];
   const doc = await createDocument(input(col.id, 6, "## v1"), ana.id);
