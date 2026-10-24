@@ -113,7 +113,7 @@ Editor markdown utama diimplementasikan menggunakan MDXEditor (`@mdxeditor/edito
 PWA diimplementasikan dengan Serwist (`@serwist/next` `9.5.13` + `serwist` `9.5.13`):
 - **Build**: `next build --webpack` digunakan dalam script `build` di `package.json` untuk menjamin build Vercel dan lokal berjalan mulus.
 - **Strategi Cache**:
-  - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`, `/favorites`, `/recent`), serta `GET /api/auth/session`.
+  - `NetworkFirst` (timeout 3 detik, max 100 entri, kedaluwarsa 30 hari) untuk halaman navigasi & request RSC (`/`, `/collections`, `/collections/*`, `/docs/*`, `/search*`), serta `GET /api/auth/session`.
   - **Dokumen HTML Latar Belakang**: Ketika navigasi client mengambil payload RSC (`_rsc`), Service Worker mengambil dokumen HTML dari rute tersebut satu kali di latar belakang dan menyimpan hasilnya di `pages-rsc-cache` (deduplikasi 5 menit) agar rute dapat dibuka kembali saat offline via reload/PWA icon.
   - `StaleWhileRevalidate` untuk aset statis (`/_next/static/*`, font Google, `/icons/*`).
   - `NetworkOnly` (tanpa cache) untuk `/api/auth/*` (selain `GET /api/auth/session`), `/login`, request non-GET, dan halaman editor/pembuatan (`/docs/new`, `/docs/*/edit`, `/collections/new`, `/collections/*/edit`).

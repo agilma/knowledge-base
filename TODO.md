@@ -45,6 +45,16 @@ Terakhir diperbarui: 2026-10-23 (`requireRole` dan halaman error/not-found/loadi
 
 ## Skala
 
+- [ ] **Favorit pada dokumen yang di-unpublish tertinggal.** Baris `Favorite` tetap ada
+      bila dokumen kembali ke draf, karena tombol hapus hanya ada di halaman
+      dokumen yang sudah tidak terlihat bagi VIEWER; baris muncul lagi saat dokumen
+      dipublikasikan ulang. Tidak merusak, hanya tidak bisa dibersihkan oleh
+      pemiliknya. Daftar `/favorites` juga belum dibatasi jumlahnya.
+
+- [ ] **Halaman dokumen yang ter-cache memuat status favorit lama.** Setelah favorit
+      diubah, salinan `/docs/<slug>` di service worker menampilkan status sebelumnya
+      sampai ada fetch jaringan berikutnya (terlihat saat offline). Kecil.
+
 - [ ] **Database mati terlihat seperti logout.** Saat database tidak terjangkau,
       pencarian sesi gagal dan `auth()` memperlakukan pengguna sebagai belum
       login, jadi yang tampil halaman login, bukan pesan galat. Terlihat saat

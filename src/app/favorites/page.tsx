@@ -1,8 +1,14 @@
 import { Star } from "lucide-react";
+import { requireUser } from "@/lib/auth/session";
+import { getFavoriteDocuments } from "@/lib/services/favorites";
+import { DocumentRow } from "@/components/document/DocumentRow";
 
 export const dynamic = "force-dynamic";
 
-export default function FavoritesPage() {
+export default async function FavoritesPage() {
+  const user = await requireUser();
+  const docs = await getFavoriteDocuments(user.id, user.role);
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <header className="space-y-4">
@@ -15,14 +21,22 @@ export default function FavoritesPage() {
         </p>
       </header>
 
-      <section className="space-y-4">
-        <div className="text-center py-20 border rounded-xl border-dashed border-border bg-muted/20">
-          <Star className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg text-foreground font-medium">Fitur Favorit belum aktif.</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Fitur ini akan aktif dan dapat digunakan setelah fitur masuk/login tersedia.
-          </p>
-        </div>
+      <section>
+        {docs.length > 0 ? (
+          <div className="space-y-3">
+            {docs.map((doc) => (
+              <DocumentRow key={doc.id} doc={doc} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 border rounded-xl border-dashed border-border bg-muted/20">
+            <Star className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg text-foreground font-medium">Belum ada favorit.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Buka sebuah dokumen lalu pilih &ldquo;Tambah favorit&rdquo; untuk menyimpannya di sini.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );
