@@ -3,50 +3,50 @@ title: PO atau Purchase Receipt Tidak Bisa Disubmit
 slug: po-pr-tidak-bisa-submit
 type: MASALAH
 collection: murni-erpnext
-excerpt: PO atau Purchase Receipt (PR) gagal disubmit karena dokumen draft menumpuk, Material Request sudah pernah ditarik, atau qty PO dan PR berbeda. Cara mengeceknya lewat Connections.
+excerpt: PO atau Purchase Receipt (PR) gagal disubmit karena PR draft menumpuk, Material Request sudah pernah ditarik, atau qty PO dan PR berbeda. Cara mengeceknya lewat Connections di PO.
 ---
 ## Konteks
 
-Admin outlet atau purchasing gagal men-submit **Purchase Order (PO)** atau **Purchase Receipt (PR)**. Sistem tidak memberi petunjuk yang jelas. Penyebab yang pernah ditemukan CS:
+Admin outlet atau purchasing gagal men-submit **Purchase Order (PO)** atau **Purchase Receipt (PR)**. Penyebab yang pernah ditemukan CS:
 
-- Satu PO sudah ditarik menjadi PR berkali-kali, sehingga ada banyak PR berstatus **draft** dan PR yang benar tidak bisa disubmit.
+- Satu PO ditarik menjadi PR berkali-kali, sehingga ada banyak PR berstatus **draft** (pada satu tiket 8 dokumen) dan PR yang benar tidak bisa disubmit.
 - **Material Request (MR)** sudah pernah ditarik menjadi PO dan PO itu sudah disetujui, sehingga PO kedua tidak bisa disubmit atau disetujui.
-- **Qty di PO dan di PR berbeda** sehingga PR ditolak karena melebihi (exceeds).
+- **Qty di PO dan di PR berbeda**, sehingga PR ditolak karena melebihi (exceeds).
 
 ## Prasyarat
 
 - Akses melihat PO, PR, dan MR yang bersangkutan.
-- Untuk membatalkan PO yang salah: akun yang berhak membatalkan (dalam tiket dilakukan oleh akun manager).
 
 ## Langkah Pemeriksaan
 
 1. Buka dokumen **PO**.
-2. Buka bagian **Connections** di PO. Di sana terlihat semua dokumen turunan, misalnya PR yang pernah dibuat dari PO ini. Pilih PR yang terhubung untuk melihat daftarnya.
-3. Periksa kasusnya:
-   - **Ada banyak PR berstatus draft.** Hapus PR draft yang tidak digunakan, lalu submit PR yang benar.
-   - **PO tidak bisa disubmit atau disetujui karena MR sudah pernah ditarik.** Cek di MR apakah sudah ada PO yang disetujui. Bila PO yang sudah ada itu keliru, batalkan PO yang salah lalu buat ulang dengan benar.
-   - **Qty PO dan qty PR berbeda.** Samakan qty PR dengan PO (atau ubah PO bila memang berbeda), lalu submit ulang.
+2. Buka bagian **Connections** di PO. Di sana terlihat dokumen yang terhubung dengan PO ini. Pilih PR yang terhubung untuk melihat daftarnya.
+3. Cocokkan dengan kasusnya:
+   - **Banyak PR berstatus draft.** Hapus PR yang tidak digunakan, lalu submit PR yang benar.
+   - **PO tidak bisa disubmit atau disetujui karena MR sudah pernah ditarik menjadi PO.** Cek bahwa MR itu sudah pernah ditarik dan PO-nya sudah disetujui. Jika ada kesalahan, PO yang salah **dibatalkan (cancel)**. Pada tiket yang ada pembatalan dilakukan dengan akun seorang Area Manager.
+   - **Qty PO dan qty PR berbeda.** Itu penyebab PR tidak bisa disubmit. Pada tiket CS hanya menyampaikan penyebabnya.
 
 ## Verifikasi
 
 - PR atau PO berhasil disubmit.
-- Di Connections PO hanya tersisa dokumen turunan yang memang dipakai.
+- Di Connections PO hanya tersisa dokumen yang memang dipakai.
 
 ## Jika Masih Gagal
 
-- Jika pesan errornya tidak sesuai tiga kasus di atas, eskalasi ke tim Thunderlab dengan nomor PO, nomor PR atau MR, dan foto layar pesan error.
-- Jika PO yang akan dibatalkan sudah disetujui dan perlu dibatalkan, pastikan dengan pembuat PO sebelum membatalkan.
+- Jika pesan errornya tidak sesuai tiga kasus di atas, teruskan ke tim Thunderlab.
 
 ## Catatan untuk CS
 
-- Penanya sering hanya menulis "kenapa tidak bisa submit" dengan foto. Minta nomor dokumennya, lalu mulai dari Connections.
-- Mengedukasi penanya mencari sendiri lewat Connections lebih baik daripada menghapus dokumen untuknya.
+- Mengedukasi penanya mencari sendiri lewat Connections adalah cara yang dipakai CS pada tiket PO yang ditarik berkali-kali.
+- Ada tiket terkait: penolakan (reject) PO oleh akun Area Manager pernah gagal karena workflow berubah, dan diselesaikan dengan memperbaiki workflow.
+- Ada permintaan (belum diterapkan, status masih menunggu) agar Area Manager (Manager Operasional) bisa menghapus dan membatalkan PO, PR, PI, SO, DN, dan SI untuk membantu dokumen yang tersangkut.
+- Pada tiket input PO yang itemnya macet atau tidak muncul, CS menyarankan memakai **PO page**.
 
 ## Perlu dikonfirmasi
 
-- Siapa yang boleh membatalkan PO yang sudah disetujui (di tiket dilakukan akun manager).
-- Apakah ada cara mencegah banyak PR draft dari satu PO.
+- **Cara memperbaiki qty** bila PO dan PR berbeda (menyesuaikan PR, atau PO), dan siapa yang berwenang mengubahnya.
+- **Siapa yang boleh membatalkan PO** yang sudah disetujui. Tiket menyebut akun Area Manager, tetapi kalimatnya terpotong.
 
 ## Sumber
 
-Tiket CS di log tiket (nomor baris): 9, 26, 102, 112, 114.
+Tiket CS di log tiket (nomor baris): 9, 20, 24, 26, 65, 102, 109, 112, 114.

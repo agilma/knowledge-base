@@ -3,19 +3,20 @@ title: Harga atau Diskon di POS Tidak Sesuai
 slug: harga-diskon-pos-tidak-sesuai
 type: MASALAH
 collection: murni-erpnext
-excerpt: Kasir melihat harga 0, muncul pesan perubahan harga saat bayar, atau diskon berbeda antara mode offline dan online. Penyebab umum adalah pengaturan promo dan harga yang berubah saat transaksi berjalan.
+excerpt: Kasir melihat harga 0, muncul pesan perubahan harga saat bayar, atau diskon dan harga berbeda antara mode offline dan online. Langkah per gejala dari tiket CS.
 ---
 ## Konteks
 
-Kasir POS melaporkan angka yang tidak sesuai saat transaksi. Gejala dan penyebab yang pernah ditemukan CS:
+Kasir POS melaporkan angka yang tidak sesuai saat transaksi. Gejala dan apa yang dilakukan CS pada tiket yang ada:
 
-| Gejala | Penyebab yang ditemukan |
+| Gejala | Yang tercatat di tiket |
 | --- | --- |
-| Muncul pesan ada perubahan harga saat klik bayar (POS hijau) | Harga berubah di sistem ketika transaksi sedang disiapkan |
-| Harga item yang di-scan menjadi 0, atau tampilan harga tidak sesuai | Ada diskon yang diaktifkan tanpa pengaturan company dan brand sehingga semua item terkena efeknya, atau harga masih tersetting dengan masa berlaku (valid up to) |
-| Jumlah berbeda setelah kembali online | Harga dan diskon di mode offline bisa berbeda dengan di mode online |
-| Transaksi gagal setelah sistem normal | Perhitungan diskon saat offline tidak sama dengan perhitungan saat online |
+| Muncul pesan ada perubahan harga saat klik bayar (POS hijau) | Penyebab belum dijelaskan. Diselesaikan dengan simpan keranjang lalu checkout |
+| Harga item menjadi 0, atau harga yang tampil tidak sesuai | Pada satu kejadian ada diskon yang diaktifkan tanpa pengaturan company dan brand, sehingga semua item terkena efeknya. Pada kejadian lain harga masih tersetting dengan masa berlaku (valid up to) |
+| Jumlah berbeda setelah kembali online | Harga bisa berbeda antara mode offline dan online |
+| Transaksi offline gagal setelah sistem normal | Perhitungan diskon saat offline berbeda dengan saat online |
 | Transaksi nominal kecil dengan diskon tidak bisa dibayar | Penyebab belum dijelaskan |
+| Voucher masih terpakai setelah masa berlaku, atau diskon reguler tidak terhitung | Pada tiket yang ada diarahkan **update ke POS ungu** |
 
 ## Prasyarat
 
@@ -31,23 +32,30 @@ Kasir POS melaporkan angka yang tidak sesuai saat transaksi. Gejala dan penyebab
 3. Pastikan customer dan metode pembayaran sudah sesuai.
 4. Klik **Bayar**.
 5. Jika transaksi belum terbentuk, kasir membuat pesanan yang sama dengan harga yang sudah diperbarui.
+6. Catatan: fitur simpan keranjang saat ini **hanya bisa digunakan sekali**, lalu langsung ditransaksikan. Setelah disimpan, keranjang tidak bisa diisi lagi.
 
 **Harga tampil 0 atau tidak sesuai**
 
-1. **Konfirmasi ke tim sales** apakah ada diskon atau harga yang baru diaktifkan, atau yang masa berlakunya belum diatur.
+1. **Konfirmasi ke tim sales** apakah ada diskon atau harga yang baru diaktifkan, atau yang masa berlakunya (valid up to) masih tersetting.
 2. Jika transaksi **belum disubmit**, klik tombol **refresh** di samping tombol belanja untuk memuat harga terbaru.
 3. Jika transaksi **sudah terlanjur disubmit**, batalkan (void) transaksinya dengan akun koordinator, lalu buat kembali dengan harga yang benar.
 
 **Harga berbeda antara offline dan online**
 
 1. Jelaskan bahwa perbedaan harga antara mode offline dan online memang mungkin terjadi.
-2. Saat POS berpindah dari offline ke online dan muncul peringatan perubahan mode, jangan diabaikan jika ada transaksi yang sedang berjalan, karena harga pasti berubah.
+2. Saat POS berpindah dari offline ke online dan muncul peringatan perubahan mode, jangan diabaikan jika ada transaksi yang sedang berjalan, karena akan ada perubahan harga.
 3. Selisih yang sudah terlanjur dibayar customer dikoordinasikan dengan tim manajemen: dikembalikan ke customer atau diselesaikan dengan cara lain.
 
-**Transaksi offline gagal setelah sistem normal karena diskon berbeda**
+**Transaksi offline gagal karena perhitungan diskon berbeda**
 
-1. Input transaksinya sebagai Sales Invoice manual sesuai nominal yang dibayar customer.
-2. Detail langkah input manual ada di dokumen **Panduan Penyelesaian POS Gagal Closing**.
+1. Input transaksinya sebagai **Sales Invoice secara manual**, sesuai nominal yang dibayar customer.
+2. Saat input Sales Invoice, **centang "ignore pricing rule"** dan **isi channel dengan "Sales"**. Tanpa itu, nominal hasil submit bisa berbeda dari nota (tanpa diskon).
+3. Langkah lengkap penanganan transaksi yang gagal ada di dokumen **Panduan Penyelesaian POS Gagal Closing**.
+
+**Voucher atau diskon tidak sesuai (POS hijau)**
+
+1. Pada tiket yang ada, solusinya **update ke POS ungu** (dikerjakan lewat remote oleh tim).
+2. Selisih harga yang sudah terjadi dikonfirmasi langsung ke tim manajemen.
 
 ## Verifikasi
 
@@ -56,19 +64,19 @@ Kasir POS melaporkan angka yang tidak sesuai saat transaksi. Gejala dan penyebab
 
 ## Jika Masih Gagal
 
-- Pada kasus transaksi nominal kecil dengan diskon yang tidak bisa dibayar, tiket hanya mencatat: edit diskon kembali, tekan refresh, dan **minta kasir merekam video** proses tersebut untuk dianalisis. Eskalasi ke tim Thunderlab dengan video tersebut.
-- Jika harga 0 muncul pada banyak item dan banyak outlet sekaligus, segera hubungi tim sales karena kemungkinan ada promo yang diaktifkan tanpa batasan brand.
+- Pada kasus transaksi nominal kecil dengan diskon yang tidak bisa dibayar, tiket mencatat: edit diskon kembali, tekan refresh, dan **minta kasir merekam video** proses tersebut. Teruskan videonya ke tim Thunderlab.
 
 ## Catatan untuk CS
 
-- Banyak kasus harga 0 atau tidak sesuai bersumber dari **pengaturan promo oleh tim sales**, bukan dari POS. Arahkan penanya ke tim sales untuk memastikan.
-- Bila transaksi sudah dibayar customer dengan nominal berbeda, keputusan pengembalian selisih ada di manajemen, bukan CS.
+- Pada dua tiket harga 0 atau tidak sesuai, penyebabnya ada di **pengaturan promo atau harga oleh tim sales**. Karena itu CS mengarahkan penanya untuk konfirmasi ke tim sales.
+- Bila transaksi sudah dibayar customer dengan nominal berbeda, keputusan soal selisih dikoordinasikan dengan manajemen.
 
 ## Perlu dikonfirmasi
 
-- Penyebab dan solusi tetap untuk transaksi nominal kecil dengan diskon yang gagal dibayar.
+- Penyebab dan solusi tetap untuk pesan perubahan harga saat bayar, dan untuk transaksi nominal kecil dengan diskon yang gagal dibayar.
+- Apakah "update ke POS ungu" menjadi solusi umum untuk voucher kedaluwarsa dan diskon tidak terhitung, atau hanya untuk kasus-kasus tiket itu.
 - Apakah ada panduan resmi untuk pengembalian selisih ke customer.
 
 ## Sumber
 
-Tiket CS di log tiket (nomor baris): 29, 48, 78, 83, 96, 101.
+Tiket CS di log tiket (nomor baris): 29, 48, 78, 82, 83, 85, 90, 93, 94, 96, 101.
