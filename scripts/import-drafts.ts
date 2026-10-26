@@ -20,7 +20,7 @@ function arg(name: string): string | undefined {
 
 async function main() {
   const dir = arg("dir") ?? join(process.cwd(), "content", "drafts");
-  const files = readdirSync(dir).filter((f) => f.endsWith(".md")).sort();
+  const files = readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "README.md").sort();
   if (files.length === 0) {
     console.log(`Tidak ada berkas .md di ${dir}`);
     return;

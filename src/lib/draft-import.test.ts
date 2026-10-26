@@ -45,7 +45,7 @@ test("the document input is always a draft", () => {
 
 // What is in the repository: every draft must be safe to publish into a knowledge base.
 const DIR = join(process.cwd(), "content", "drafts");
-const files = readdirSync(DIR).filter((f) => f.endsWith(".md"));
+const files = readdirSync(DIR).filter((f) => f.endsWith(".md") && f !== "README.md");
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
 
 test("there are drafts to import", () => {
