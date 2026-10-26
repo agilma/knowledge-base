@@ -75,6 +75,10 @@ Hal yang perlu diketahui:
 - Editor anggota bisa memindahkan dokumen dari koleksi terbatas ke koleksi terbuka; riwayatnya ikut terbaca semua orang. Pindahkan hanya bila memang dimaksudkan.
 - Slug dokumen dipakai bersama semua koleksi: editor di luar koleksi bisa tahu bahwa suatu slug sudah dipakai, tetapi tidak judul atau isinya.
 
+## Memasukkan draf dari berkas (ADMIN, perintah di komputer)
+
+Dokumen yang disiapkan sebagai berkas di folder `content/drafts/` dimasukkan sebagai **draf** dengan `npm run docs:import` (lihat `content/drafts/README.md`). Hanya editor dan admin yang melihat draf; tinjau isinya, lengkapi bagian "Perlu dikonfirmasi", lalu tekan **Publish**. Menjalankannya ulang tidak menimpa dokumen yang sudah ada.
+
 ## Memakai tanpa internet
 
 Pasang aplikasi ke layar utama (menu browser, lalu **Tambahkan ke layar utama**).

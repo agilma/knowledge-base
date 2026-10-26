@@ -130,6 +130,19 @@ Terakhir diperbarui: 2026-10-24 (koleksi terbatas selesai: penegakan dan layar a
       Empat branch dari pekerjaan Oktober 2026 sudah dihapus; sisanya dari
       pekerjaan sebelumnya dan belum diperiksa satu per satu.
 
+## Dari log tiket CS (25 Okt 2026)
+
+- [ ] **Tinjau enam draf** yang diimpor dari `content/drafts/` (bagian "Perlu dikonfirmasi" di tiap dokumen): batas selisih harga Purchase
+      Invoice (10% atau 50% di tiket) dan cara Area Manager menyetujui; langkah menu menambah permission brand; apakah mencabut kabel LAN aman
+      disarankan umum; penyebab diskon nominal kecil yang gagal dibayar; siapa yang boleh membatalkan PO yang sudah disetujui.
+- [ ] **Tambahkan ke dokumen terbit `pos-gagal-closing`** (tiket 90 dan 94): saat input Sales Invoice manual untuk transaksi yang gagal,
+      centang "ignore pricing rule" dan isi channel dengan "Sales"; dan (tiket 59, 95, 98) retry transaksi offline harus dari komputer yang
+      sama saat transaksi, dengan akun koordinator. Tidak diubah otomatis karena dokumennya sudah terbit.
+- [ ] **Topik dari log tiket yang belum dibuat** (bahan tipis atau menunggu bug selesai): POS ungu tidak bisa dibuka atau macet; login dan password;
+      laporan lambat (Sales By Product, Sales Register); simpan keranjang dan customer "no name"; voucher atau promo tidak berlaku; cetak dan PDF;
+      retur dan credit note; selisih angka antar laporan; katalog laporan. Perlu konfirmasi isi dari pemilik pengetahuan.
+- [ ] **Kualitas log tiket**: 13 tiket Completed tanpa kolom Penyelesaian, kolom "Berulang" menunjuk nomor baris yang bergeser, dan banyak kolom kosong.
+
 ## Dokumen yang belum lengkap
 
 Dua dokumen punya bagian bertanda
