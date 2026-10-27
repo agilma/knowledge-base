@@ -2,7 +2,7 @@
 title: Mengaktifkan Mode Offline POS Saat Internet atau Server Bermasalah
 slug: mode-offline-pos
 type: PANDUAN
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Langkah kasir mengaktifkan mode offline POS saat internet mati atau server lambat, apa yang tidak boleh dilakukan, dan keterbatasannya ketika listrik mati.
 ---
 ## Konteks

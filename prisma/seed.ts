@@ -11,7 +11,7 @@ async function main() {
 
   const murniErpnext = await prisma.collection.create({
     data: {
-      slug: "murni-erpnext",
+      slug: "murni-erp",
       name: "Murni ERPNext",
       description: "Pengetahuan operasional ERPNext untuk Bali Murni",
     },

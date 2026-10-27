@@ -2,7 +2,7 @@
 title: Laporan Sales Payment Summary Lambat Saat Closing Kasir
 slug: laporan-sales-payment-summary-lambat
 type: MASALAH
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Laporan Sales Payment Summary lama dibuka atau muncul tulisan antrian saat kasir akan closing. Minta outlet menunggu, lalu pakai cetak sesi di POS atau laporan POS Shift Closing sebagai alternatif.
 ---
 ## Konteks

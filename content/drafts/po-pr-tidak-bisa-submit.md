@@ -2,7 +2,7 @@
 title: PO atau Purchase Receipt Tidak Bisa Disubmit
 slug: po-pr-tidak-bisa-submit
 type: MASALAH
-collection: murni-erpnext
+collection: murni-erp
 excerpt: PO atau Purchase Receipt (PR) gagal disubmit karena PR draft menumpuk, Material Request sudah pernah ditarik, atau qty PO dan PR berbeda. Cara mengeceknya lewat Connections di PO.
 ---
 ## Konteks
