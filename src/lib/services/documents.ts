@@ -629,6 +629,9 @@ export async function setDocumentAccess(documentId: string, access: DocumentAcce
   await db.$transaction(async (tx) => {
     // Two admins saving at once must not both read the same list and then write over each other.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`document_members:${documentId}`}))`;
+    // The document's own time is written back as it was read, so a save of the text must not
+    // slip in between: take the lock every writer of the text holds (see lockRevisions).
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${documentId}`}))`;
 
     const doc = await tx.document.findUnique({ where: { id: documentId }, select: { restricted: true, updatedAt: true } });
     if (!doc) throw new Error("Dokumen tidak ditemukan");

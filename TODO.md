@@ -192,3 +192,5 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Editor yang menjadi anggota koleksi dan dokumen bisa memindahkan dokumen terbatas ke koleksi lain; batas dokumennya ikut, tetapi koleksi tujuan menentukan siapa lagi yang melihat daftarnya.
 - [ ] Salinan offline orang yang dicabut dikosongkan baru saat ia membuka aplikasi online berikutnya (sama seperti koleksi).
 - [ ] Layar admin untuk melihat semua dokumen terbatas dan siapa saja anggotanya (saat ini harus membuka dokumennya satu per satu).
+- [ ] Kunci cache offline memuat semua id dokumen terbatas pada setiap render layout untuk non-admin; bila jumlahnya ribuan, hitung sidik jarinya di SQL (md5 dari id terurut) atau simpan per permintaan.
+- [ ] Menyimpan dokumen oleh admin dengan perubahan akses dilakukan dalam dua langkah (isi lalu akses); bila langkah kedua gagal, isi sudah tersimpan dan akses belum berubah (aman: tertutup), tetapi pesannya hanya "gagal memperbarui".
