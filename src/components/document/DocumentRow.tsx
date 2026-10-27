@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { DocumentStatus } from "@prisma/client";
-import { FileText } from "lucide-react";
+import { FileText, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 
@@ -10,6 +10,7 @@ interface DocumentRowProps {
     title: string;
     excerpt: string | null;
     status: DocumentStatus;
+    restricted?: boolean;
     updatedAt: Date;
     collection: { name: string } | null;
   };
@@ -27,6 +28,7 @@ export function DocumentRow({ doc }: DocumentRowProps) {
         <div className="space-y-1 flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-lg font-medium group-hover:text-primary transition-colors">
+              {doc.restricted && <Lock className="mr-1.5 inline size-4 text-muted-foreground" aria-label="Dokumen terbatas" />}
               {doc.title}
             </h3>
             {doc.status === DocumentStatus.DRAFT && (

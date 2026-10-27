@@ -46,6 +46,7 @@ model User {
   editedDocuments  Document[]         @relation("DocumentEditor")
   revisions        DocumentRevision[]
   collectionAccess CollectionMember[]
+  documentAccess   DocumentMember[]
 
   @@map("users")
 }
@@ -134,6 +135,8 @@ model Document {
   authorId       String?
   // Who saved the document last. Null until the first save after this existed.
   lastEditedById String?
+  // When true only admins and the users in `members` can read it (and the collection must allow them too).
+  restricted     Boolean        @default(false)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -143,11 +146,26 @@ model Document {
   relatedFrom  DocumentRelation[] @relation("RelatedFrom")
   relatedTo    DocumentRelation[] @relation("RelatedTo")
   revisions    DocumentRevision[]
+  members      DocumentMember[]
 
   @@index([collectionId])
   @@index([status])
   @@index([type])
   @@map("documents")
+}
+
+/// Who may read (and, for editors, write) a restricted document.
+model DocumentMember {
+  documentId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, userId])
+  @@index([userId])
+  @@map("document_members")
 }
 
 /// One saved state of a document, newest version highest. Written on every

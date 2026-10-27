@@ -2,7 +2,7 @@ import { CollectionStatus, DocumentStatus, Role } from "@prisma/client";
 import { db } from "../db";
 import { collectionSchema, CollectionInput } from "../validation/collection";
 import { cache } from "react";
-import { collectionReadableWhere, MAX_COLLECTION_MEMBERS, type Viewer } from "../collection-access";
+import { collectionReadableWhere, documentReadableWhere, MAX_COLLECTION_MEMBERS, type Viewer } from "../collection-access";
 
 // Rendered by the sidebar on every page, so dedupe it within a request. The key
 // is the user and role as plain values: `cache` compares arguments by identity,
@@ -55,10 +55,13 @@ export async function getCollectionsWithDocumentCount(options: { includeDrafts?:
     include: {
       _count: {
         select: {
+          // The count follows the same rule as the list it stands for: a restricted
+          // document in an open collection must not show up in the number either.
           documents: {
-            where: options.includeDrafts
-              ? undefined
-              : { status: DocumentStatus.PUBLISHED },
+            where: {
+              ...(options.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
+              ...documentReadableWhere(options.viewer),
+            },
           },
         },
       },

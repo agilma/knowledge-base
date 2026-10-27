@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search as SearchIcon, FileText, ChevronRight, Plus } from "lucide-react";
+import { Search as SearchIcon, FileText, ChevronRight, Plus, Lock } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { searchDocuments } from "@/lib/services/documents";
@@ -176,6 +176,7 @@ export default async function SearchPage({
                         <h2 className="text-xl font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
                           <FileText className="w-5 h-5 text-muted-foreground" />
                           <span>
+                            {doc.restricted && <Lock className="mr-1.5 inline size-4 text-muted-foreground" aria-label="Dokumen terbatas" />}
                             <Highlighted text={doc.titleHighlight} />
                           </span>
                         </h2>

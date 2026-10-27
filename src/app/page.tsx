@@ -95,7 +95,7 @@ export default async function Home() {
                 className="block p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-medium truncate">{doc.title}</h3>
+                  <h3 className="font-medium truncate">{doc.restricted && <Lock className="mr-1.5 inline size-4 text-muted-foreground" aria-label="Dokumen terbatas" />}{doc.title}</h3>
                   {doc.status === DocumentStatus.DRAFT && (
                     <Badge variant="outline" className="text-xs shrink-0 border-amber-500/50 text-amber-600 dark:text-amber-400">
                       Draf

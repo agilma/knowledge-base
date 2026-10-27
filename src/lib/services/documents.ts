@@ -1,4 +1,4 @@
-import { DocumentStatus, DocumentType, Prisma, type Document } from "@prisma/client";
+import { DocumentStatus, DocumentType, Prisma, Role, type Document } from "@prisma/client";
 import { db } from "../db";
 import {
   HIGHLIGHT_MARKERS,
@@ -13,7 +13,13 @@ import { documentSchema, DocumentInput } from "../validation/document";
 import { diffRelations, parseRelatedIds } from "../related";
 import { REVISION_LIMIT, hasMeaningfulChange, nextVersion } from "../revisions";
 import { idsToPrune } from "../user-documents";
-import { collectionReadableSql, collectionReadableWhere, documentReadableWhere, type Viewer } from "../collection-access";
+import {
+  MAX_DOCUMENT_MEMBERS,
+  collectionReadableWhere,
+  documentReadableSql,
+  documentReadableWhere,
+  type Viewer,
+} from "../collection-access";
 
 /**
  * `viewer` is required on purpose: a read without one would silently skip the
@@ -25,6 +31,7 @@ export interface ReadOptions {
 }
 
 type Db = Pick<Prisma.TransactionClient, "collection">;
+type Tx = Prisma.TransactionClient;
 
 /** Writes go through the same rule: a user cannot add to, move into or edit what they cannot read. */
 async function assertCollectionAccess(client: Db, viewer: Viewer, collectionId: string) {
@@ -254,7 +261,7 @@ export async function searchDocuments(query: string, options: SearchOptions) {
       FROM documents d
       JOIN collections c ON c.id = d."collectionId", q
       WHERE ${vector} @@ q.query
-        AND ${collectionReadableSql(options.viewer, "c")}
+        AND ${documentReadableSql(options.viewer, "d", "c")}
         ${options.includeDrafts ? Prisma.empty : Prisma.sql`AND d.status = 'PUBLISHED'`}
         ${options.collectionId ? Prisma.sql`AND d."collectionId" = ${options.collectionId}` : Prisma.empty}
         ${options.type ? Prisma.sql`AND d.type = ${options.type}::"DocumentType"` : Prisma.empty}
@@ -324,9 +331,52 @@ export async function isDocumentSlugAvailable(slug: string, excludeId?: string) 
   return false;
 }
 
-export async function createDocument(data: DocumentInput, actor: Viewer) {
+/** Who may read a restricted document, as chosen by an admin on the form. */
+export interface DocumentAccessInput {
+  restricted: boolean;
+  memberIds: string[];
+}
+
+function assertAdmin(actor: Viewer) {
+  if (actor.role !== Role.ADMIN) throw new Error("Hanya admin yang boleh membatasi akses dokumen");
+}
+
+/** The ids that may be stored as members: strings only, no repeats, within the limit. */
+function cleanMemberIds(memberIds: unknown): string[] {
+  if (!Array.isArray(memberIds)) throw new Error("Permintaan tidak valid");
+  const wanted = [...new Set(memberIds.filter((id): id is string => typeof id === "string" && id.length > 0))];
+  if (wanted.length > MAX_DOCUMENT_MEMBERS) {
+    throw new Error(`Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`);
+  }
+  return wanted;
+}
+
+/**
+ * Makes the document's member list exactly `userIds` (ones that do not exist are
+ * dropped). Returns whether anything changed. Callers hold the document's lock.
+ */
+async function writeDocumentMembers(tx: Tx, documentId: string, userIds: string[]): Promise<boolean> {
+  const known = await tx.user.findMany({ where: { id: { in: userIds } }, select: { id: true } });
+  const desired = new Set(known.map((u) => u.id));
+  const rows = await tx.documentMember.findMany({ where: { documentId }, select: { userId: true } });
+  const current = new Set(rows.map((r) => r.userId));
+
+  const add = [...desired].filter((id) => !current.has(id));
+  const remove = [...current].filter((id) => !desired.has(id));
+  if (remove.length > 0) {
+    await tx.documentMember.deleteMany({ where: { documentId, userId: { in: remove } } });
+  }
+  if (add.length > 0) {
+    await tx.documentMember.createMany({ data: add.map((userId) => ({ documentId, userId })), skipDuplicates: true });
+  }
+  return add.length > 0 || remove.length > 0;
+}
+
+export async function createDocument(data: DocumentInput, actor: Viewer, access?: DocumentAccessInput) {
   const authorId = actor.id;
   const validated = documentSchema.parse(data);
+  // Only an admin may open a document already restricted; checked before anything is written.
+  const memberIds = access?.restricted ? (assertAdmin(actor), cleanMemberIds(access.memberIds)) : [];
   // Before the slug check, so asking for a collection one cannot read is answered the
   // same whatever the slug is.
   await assertCollectionAccess(db, actor, validated.collectionId);
@@ -348,8 +398,10 @@ export async function createDocument(data: DocumentInput, actor: Viewer) {
         status: validated.status,
         authorId: authorId || null,
         lastEditedById: authorId || null,
+        restricted: access?.restricted === true,
       },
     });
+    if (access?.restricted) await writeDocumentMembers(tx, doc.id, memberIds);
     await tx.documentRevision.create({
       data: {
         documentId: doc.id,
@@ -365,8 +417,6 @@ export async function createDocument(data: DocumentInput, actor: Viewer) {
     return doc;
   });
 }
-
-type Tx = Prisma.TransactionClient;
 
 /**
  * Serialises everything that writes a document's revisions. Version numbers come
@@ -561,4 +611,56 @@ export async function deleteDocument(id: string, actor: Viewer) {
   return db.document.delete({
     where: { id },
   });
+}
+
+/**
+ * Restricts or opens a document and sets who may read it. Admin only. The change is
+ * not an edit of the text, so the document's own `updatedAt` is left as it was (the
+ * "last updated" lists would otherwise move it to the top), and no revision is written.
+ * Members are kept when the document is opened again, like a collection's.
+ */
+export async function setDocumentAccess(documentId: string, access: DocumentAccessInput, actor: Viewer) {
+  assertAdmin(actor);
+  if (typeof documentId !== "string" || !documentId || typeof access?.restricted !== "boolean") {
+    throw new Error("Permintaan tidak valid");
+  }
+  const wanted = cleanMemberIds(access.memberIds);
+
+  await db.$transaction(async (tx) => {
+    // Two admins saving at once must not both read the same list and then write over each other.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`document_members:${documentId}`}))`;
+    // The document's own time is written back as it was read, so a save of the text must not
+    // slip in between: take the lock every writer of the text holds (see lockRevisions).
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${documentId}`}))`;
+
+    const doc = await tx.document.findUnique({ where: { id: documentId }, select: { restricted: true, updatedAt: true } });
+    if (!doc) throw new Error("Dokumen tidak ditemukan");
+
+    if (doc.restricted !== access.restricted) {
+      await tx.document.update({
+        where: { id: documentId },
+        data: { restricted: access.restricted, updatedAt: doc.updatedAt },
+      });
+    }
+    await writeDocumentMembers(tx, documentId, wanted);
+  });
+}
+
+/** The people listed on a document, for an admin's form. */
+export async function getDocumentMemberIds(documentId: string, actor: Viewer): Promise<string[]> {
+  assertAdmin(actor);
+  const rows = await db.documentMember.findMany({ where: { documentId }, select: { userId: true } });
+  return rows.map((r) => r.userId);
+}
+
+/** Every restricted document, for the offline cache key (ids only: an edit must not change it). */
+export async function getRestrictedDocumentIds(): Promise<string[]> {
+  const rows = await db.document.findMany({ where: { restricted: true }, select: { id: true } });
+  return rows.map((r) => r.id);
+}
+
+/** The restricted documents a user is listed on. */
+export async function getMemberDocumentIds(userId: string): Promise<string[]> {
+  const rows = await db.documentMember.findMany({ where: { userId }, select: { documentId: true } });
+  return rows.map((r) => r.documentId);
 }
