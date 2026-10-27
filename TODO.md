@@ -168,3 +168,10 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] `panduan-training-pos-ungu-dan-mode-offline`, draf `mode-offline-pos`, dan dokumen terbit `pos-gagal-closing` membahas topik yang sama (offline, Retry, Input Manual). Setelah ketiganya dibaca pemilik, putuskan: gabung jadi satu, atau saling menaut. Materi training lebih lengkap dan lebih baru (POS ungu).
 - [ ] Bagian "Tampilan POS ungu dan POS hijau" di materi training masih kosong; pertanyaan kasir tentang closing minus setelah retur belum terjawab.
 - [ ] Penulis dokumen dari Lala: impor dengan `--as lalaagnesta@gmail.com` (editor, harus pernah login). Dokumen yang sudah diimpor atas nama admin tidak berubah penulisnya; ganti manual bila perlu.
+
+## Dari sheet Bintang Berkat dan SMPN 13 (topik yang belum ditulis)
+
+- [ ] Bintang Berkat: retur penjualan dan Down Payment/Tempo; Adjustment Stock dan rekonsiliasi stok antar gudang; alur produksi (Ambil Stok Bahan, QC, surat jalan); mengganti satuan atau menggabung item; membaca laporan stok; mencatat ongkir dan biaya produksi; stok tertahan di gudang yang salah akibat invoice lama. Beberapa topik di sheet tidak punya langkah tertulis (retur POS setelah tutup, SO belum Completed padahal lunas, kasus qty tagihan membengkak karena selisih harga).
+- [ ] SMPN 13: akun guru atau panitia tahun lalu (menimpa akun), welcome mail tidak masuk (Forgot Password), import peserta gagal karena duplikat, submit jadwal select all gagal, salah buat jadwal atau sesi dan lembar jawaban dobel, aturan pelanggaran SekolahPro v3.2.4.
+- [ ] **Keamanan:** sheet ujian SMPN 13 (tab ujian kelas 9, April 2025) memuat email dan kata sandi akun pengawas. Ganti kata sandinya dan hapus dari sheet; jangan masuk ke dokumen.
+- [ ] Penulis dokumen dari sheet dan Google Doc ini adalah Lala; impor dengan `--as lalaagnesta@gmail.com` (editor, harus pernah login).

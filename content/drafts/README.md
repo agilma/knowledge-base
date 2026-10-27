@@ -25,3 +25,12 @@ Tumpang tindih dengan `mode-offline-pos` dan dokumen terbit `pos-gagal-closing`;
 
 Penulis yang tercatat di riwayat adalah pengguna yang disebut `--as` (admin atau editor; orangnya harus sudah pernah masuk). Untuk dokumen yang aslinya ditulis orang lain,
 mis. materi training POS ungu dari Lala, jalankan: `npm run docs:import -- --as lalaagnesta@gmail.com`. Penulis tidak ditulis di isi dokumen.
+
+## Draf kedelapan sampai keempat belas (27 Okt 2026)
+
+Dari dua sheet log isu, ditulis dari baris sumbernya (dibaca ulang langsung dari sheet) dan ditandai "Perlu dikonfirmasi" untuk yang tidak jelas:
+
+- Koleksi `bintang-berkat` (log isu go-live ERPNext, 2023 sampai 2026): `surat-jalan-gagal-submit-stok-kurang`, `koreksi-penerimaan-barang-yang-salah`, `revisi-atau-cancel-sales-order-yang-sudah-submit`, `invoice-tidak-masuk-pos-closing-entry`.
+- Koleksi `smpn-13-malang` (log isu ujian berbasis komputer): `alur-pengaturan-ujian-v2`, `login-siswa-dan-batas-satu-perangkat`, `soal-tidak-muncul-karena-salah-format-input`.
+
+Dua sheet itu ditulis Lala, jadi impor dengan `--as lalaagnesta@gmail.com`. Kata sandi akun pengawas yang terlihat di sheet ujian tidak disalin.
