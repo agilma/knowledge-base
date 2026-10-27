@@ -40,7 +40,7 @@ Belum ada approval? **Jangan mulai development.** Lengkapi design dan skenario U
 - Desain sumber memuat dua halaman untuk SOP 01 dengan isi berbeda. Dokumen ini mengikuti halaman yang berlaku sejak 21 Oktober 2026 (enam langkah, Tim QA). Halaman lainnya memuat **tujuh langkah**: SOW, **Vernon Project** (buat task), **Design dan UAT** (design jika perlu, tulis skenario UAT), Approval, Development, **UAT dan Simulasi** dengan **Tim UAT**, serta Launch dan Training; labelnya "Versi 2, revisi 16 Oktober 2026, berlaku sejak 14 Oktober 2026". Perlu dipastikan halaman lama itu sudah tidak berlaku dan dihapus dari sumbernya.
 - Label versi di footer halaman yang dipakai masih tertulis "Versi 1, berlaku 14 Oktober 2026", padahal tanggal berlakunya 21 Oktober 2026. Perlu diseragamkan.
 - Kalimat "Design wajib jika flow" di langkah 2 terpotong; perlu dilengkapi (misalnya "jika ada perubahan flow").
-- Kotak peringatan menulis "belum ada approval PM", padahal alurnya PL lalu PC. Perlu dipastikan maksudnya.
+- Kotak peringatan di sumber menulis "belum ada approval PM" (kata "PM" sengaja tidak dibawa ke dokumen ini), padahal alurnya PL lalu PC. Perlu dipastikan maksudnya.
 
 ## Sumber
 

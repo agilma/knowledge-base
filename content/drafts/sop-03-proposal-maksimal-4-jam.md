@@ -40,6 +40,7 @@ Tidak bisa selesai dalam 4 jam? **Kabari sebelum batas waktu habis**, jangan dia
 - Di desain sumber penyetuju proposal ditulis dengan nama seorang anggota tim, bukan jabatan. Dokumen ini menyebutnya "penyetuju yang ditunjuk"; perlu dituliskan jabatannya dan siapa penggantinya bila yang bersangkutan tidak ada.
 - Kepada siapa dikabari bila proposal tidak bisa selesai dalam 4 jam.
 - Apakah 4 jam dihitung dalam jam kerja atau jam kalender.
+- Footer halaman sumber ini menulis "Versi 1, berlaku 14 Oktober 2026", sedangkan headernya "berlaku sejak 21 Oktober 2026". Dokumen ini memakai 21 Oktober 2026; perlu dipastikan tanggal berlakunya.
 
 ## Sumber
 

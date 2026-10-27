@@ -37,6 +37,7 @@ Belum ada konfirmasi di grup? **Jangan dikerjakan dulu**, walaupun customer mend
 - Grup mana yang dimaksud, dan siapa yang berhak menyetujui.
 - Di mana log CS disimpan.
 - Batas waktu menunggu persetujuan bila customer mendesak.
+- Footer halaman sumber ini menulis "Versi 1, berlaku 14 Oktober 2026", sedangkan headernya "berlaku sejak 21 Oktober 2026". Dokumen ini memakai 21 Oktober 2026; perlu dipastikan tanggal berlakunya.
 
 ## Sumber
 

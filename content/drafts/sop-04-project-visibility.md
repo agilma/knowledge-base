@@ -39,6 +39,7 @@ Berdampak ke jadwal atau operasional client? **Informasikan kendala segera.** Ja
 - Hari dan jam batas pengiriman weekly report.
 - Siapa yang menyusun dan mengirim laporan di tiap project.
 - Format atau templat laporan, bila ada.
+- Footer halaman sumber ini menulis "Versi 1, berlaku 14 Oktober 2026", sedangkan headernya "berlaku sejak 21 Oktober 2026". Dokumen ini memakai 21 Oktober 2026; perlu dipastikan tanggal berlakunya.
 
 ## Sumber
 

@@ -40,6 +40,7 @@ Solusi belum ada di dokumentasi? **Minta Leader update wiki.** CS berhak meminta
 
 - Siapa yang disebut "Leader" untuk meminta update wiki (Project Leader atau Leader tim CS).
 - Di mana problem log dan solution log disimpan, dan apakah sama dengan Knowledge Base ini.
+- Footer halaman sumber ini menulis "Versi 1, berlaku 14 Oktober 2026", sedangkan headernya "berlaku sejak 21 Oktober 2026". Dokumen ini memakai 21 Oktober 2026; perlu dipastikan tanggal berlakunya.
 
 ## Sumber
 

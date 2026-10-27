@@ -65,6 +65,8 @@ Solusi belum ada sampai meeting HR berikutnya? **Angkat lagi di meeting HR.** Is
 - Bentuk dan lokasi "rekap" tempat kode berulang dicatat, serta bentuk kode.
 - Jadwal meeting HR (hari dan jam) dan siapa saja yang hadir.
 - Beda "Leader" dan "Project Leader" di kedua bagian: apakah orang yang sama.
+- Footer kedua halaman sumber menulis "Versi 1, berlaku 14 Oktober 2026" (halaman closure) dan "Versi 1, berlaku 21 Oktober 2026" (halaman eskalasi), sedangkan header keduanya "berlaku sejak 21 Oktober 2026". Dokumen ini memakai 21 Oktober 2026; perlu dipastikan.
+- Di bagian eskalasi, "Berulang" berarti "isu yang sama muncul lagi" tanpa batas "lebih dari 2 kali" seperti di bagian closure; perlu dipastikan apakah batasnya sama.
 - Dua halaman di desain sumber sama-sama bernomor SOP 05; dokumen ini menggabungkannya. Perlu dipastikan apakah salah satunya seharusnya SOP 07.
 
 ## Sumber
