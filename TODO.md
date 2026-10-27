@@ -194,3 +194,9 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Layar admin untuk melihat semua dokumen terbatas dan siapa saja anggotanya (saat ini harus membuka dokumennya satu per satu).
 - [ ] Kunci cache offline memuat semua id dokumen terbatas pada setiap render layout untuk non-admin; bila jumlahnya ribuan, hitung sidik jarinya di SQL (md5 dari id terurut) atau simpan per permintaan.
 - [ ] Menyimpan dokumen oleh admin dengan perubahan akses dilakukan dalam dua langkah (isi lalu akses); bila langkah kedua gagal, isi sudah tersimpan dan akses belum berubah (aman: tertutup), tetapi pesannya hanya "gagal memperbarui".
+
+## Dari desain SOP Thunderlab
+
+- [ ] Koleksi `thunderlab` harus sudah ada sebelum `npm run docs:import` (draf SOP memakai `collection: thunderlab`).
+- [ ] Desain Canva "6 SOP THUNDERLAB" masih memuat dua versi SOP 01 dan label versi yang tidak konsisten; bersihkan di sumbernya setelah dokumen di Knowledge Base dipublikasikan, agar satu sumber kebenaran.
+- [ ] Penyetuju proposal (SOP 03) ditulis dengan nama orang di sumber; tuliskan jabatannya.

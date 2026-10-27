@@ -39,3 +39,8 @@ Dua sheet itu ditulis Lala, jadi impor dengan `--as lalaagnesta@gmail.com`. Kata
 
 Dari tab LIVE (PROBLEM & SOP) di sheet "List Fitur Tambahan Murni" (koleksi `murni-erp`): `pos-lambat-hang-atau-tidak-bisa-diklik`, `pos-tidak-bisa-login-no-app-atau-layar-logout`, `pos-diblokir-smart-app-control-windows`, `sales-invoice-item-entered-multiple-times`, `harga-nol-atau-tidak-muncul-di-pos`, `laporan-sell-out-dan-sell-in`, `barang-gratis-di-pembelian-dan-penjualan`.
 Kata sandi atau kunci bawaan aplikasi HR yang tertulis di sheet itu, email, dan nama pelapor tidak disalin. Banyak solusi POS bergantung versi (1.8.x, 2.0.0, 2.1); dokumen menyebut versinya bila log menyebutnya.
+
+## Draf kedua puluh dua sampai dua puluh tujuh (27 Okt 2026)
+
+Dari desain Canva "6 SOP THUNDERLAB" (koleksi `thunderlab`): `sop-01-workflow-produksi`, `sop-02-cs-operational`, `sop-03-proposal-maksimal-4-jam`, `sop-04-project-visibility`, `sop-05-eskalasi-isu-lama`, `sop-06-akses-di-luar-scope`.
+SOP 01 memakai halaman yang berlaku sejak 21 Okt 2026 (enam langkah, Tim QA); versi lain di desain dicatat di bagian "Perlu dikonfirmasi". SOP 05 hanya Eskalasi Isu Lama (halaman 7); halaman Closure Issue Berulang tidak dimasukkan atas keputusan pemilik. Nama orang di desain diganti peran dan tautan Canva tidak disalin.

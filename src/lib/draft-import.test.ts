@@ -49,7 +49,7 @@ const files = readdirSync(DIR).filter((f) => f.endsWith(".md") && f !== "README.
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
 
 test("there are drafts to import", () => {
-  assert.ok(files.length >= 21);
+  assert.ok(files.length >= 27);
 });
 
 for (const file of files) {
@@ -72,7 +72,7 @@ for (const file of files) {
     assert.match(draft.content, /^## Sumber$/m, "no Sumber section");
     assert.match(
       draft.content,
-      /Tiket CS di log tiket \(nomor baris\): \d|^Dokumen panduan training .+ dari tim|^Sheet log isu .+ \(tab .+\)/m,
+      /Tiket CS di log tiket \(nomor baris\): \d|^Dokumen panduan training .+ dari tim|^Dokumen SOP .+ dari tim|^Sheet log isu .+ \(tab .+\)/m,
       "Sumber names neither ticket numbers, the team document, nor the sheet and tab it came from"
     );
     assert.match(draft.content, /^## Perlu (dikonfirmasi|dilengkapi)$/m, "no section for what is unconfirmed");
