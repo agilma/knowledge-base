@@ -49,7 +49,7 @@ const files = readdirSync(DIR).filter((f) => f.endsWith(".md") && f !== "README.
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
 
 test("there are drafts to import", () => {
-  assert.ok(files.length >= 7);
+  assert.ok(files.length >= 14);
 });
 
 for (const file of files) {
@@ -64,7 +64,7 @@ for (const file of files) {
     assert.ok(!/@/.test(text), "contains an @ (email or mention)");
     assert.ok(!/https?:\/\//i.test(text), "contains a link");
     assert.ok(!/docs\.google|drive\.google/i.test(text), "contains a Google link");
-    for (const person of ["vera", "arika", "intan", "ronny", "erick", "marcel", "yulianta", "risma", "lala", "agil", "chelsy"]) {
+    for (const person of ["vera", "arika", "intan", "ronny", "erick", "marcel", "yulianta", "risma", "lala", "agil", "chelsy", "yohana", "eko", "hizban", "bayu", "shandy", "ilham", "ervin", "susan", "firman", "amel"]) {
       assert.ok(!new RegExp(`\\b${person}`, "i").test(text), `names ${person}`);
     }
 
@@ -72,8 +72,8 @@ for (const file of files) {
     assert.match(draft.content, /^## Sumber$/m, "no Sumber section");
     assert.match(
       draft.content,
-      /Tiket CS di log tiket \(nomor baris\): \d|^Dokumen panduan training .+ dari tim/m,
-      "Sumber names neither ticket numbers nor the team document it came from"
+      /Tiket CS di log tiket \(nomor baris\): \d|^Dokumen panduan training .+ dari tim|^Sheet log isu .+ \(tab .+\)/m,
+      "Sumber names neither ticket numbers, the team document, nor the sheet and tab it came from"
     );
     assert.match(draft.content, /^## Perlu (dikonfirmasi|dilengkapi)$/m, "no section for what is unconfirmed");
 
