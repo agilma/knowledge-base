@@ -7,7 +7,7 @@ excerpt: Urutan pengaturan ujian di sistem versi 2: apa yang dikerjakan admin, g
 ---
 ## Konteks
 
-Panduan urutan kerja ujian di sistem versi 2 untuk sekolah, dibagi per peran dan per tahap. Tiap langkah di sheet sumber punya video panduan; tautannya tidak disalin ke sini.
+Panduan urutan kerja ujian di sistem versi 2 untuk sekolah, dibagi per peran dan per tahap. Sebagian besar langkah di sheet sumber punya video panduan (Ikut Ujian dan Lihat Nilai tidak); tautannya tidak disalin ke sini.
 
 ## Prasyarat
 
@@ -34,15 +34,15 @@ Dikerjakan **panitia**:
 6. Buat Jadwal. Di versi 2, fitur acak soal, acak jawaban, dan input ruangan pada jadwal dihilangkan.
 7. Input Peserta. Di versi 2 peserta memakai **nomor peserta** (pengganti email) dan **token** (pengganti kata sandi).
 8. Buat Sesi. Di versi 2 sesi dibuat manual untuk mengurangi kemungkinan server down dan error throttle.
-9. Cancel dan Amend Soal bila ada soal yang perlu dibetulkan.
+9. Cancel dan Amend Soal bila ada soal yang perlu dibetulkan. Cancel dan amend gagal kalau sudah ada lembar jawaban; lihat dokumen soal tidak muncul karena salah format input.
 10. Menambahkan Pengawas. Pengawas diinput berdasarkan akses ruang, supaya mudah membuka kembali sesi dan melihat log.
 
-**Urutan ideal:** Soal, lalu Jadwal, lalu Pengawas, lalu Peserta, lalu Sesi.
+**Urutan ideal untuk submit** (dari catatan "flow submit ideal"): Soal, lalu Jadwal, lalu Pengawas, lalu Peserta, lalu Sesi. Nomor langkah di atas mengikuti urutan sheet sumber, bukan urutan ini.
 
 **2. Saat ujian**
 
 - **Peserta** ikut ujian dengan nomor peserta dan token (tidak perlu email).
-- **Panitia dan pengawas** dapat membuka kembali sesi (Reopen Sesi). Di menu Buka Kembali Sesi, siswa bisa dikelompokkan per ruang lewat filter dengan operator "like" pada nomor peserta, karena nomor peserta membedakan siswa berdasarkan kelas dan rombel.
+- **Panitia dan pengawas** dapat membuka kembali sesi (Reopen Sesi). Di menu Buka Kembali Sesi, siswa bisa dikelompokkan per ruang lewat filter dengan operator "like" pada nomor peserta. Ini berlaku di sekolah ini karena menurut pihak sekolah nomor pesertanya membedakan siswa berdasarkan kelas dan rombel.
 - Aktivitas dapat dilacak di menu Log Aplikasi Ujian.
 
 **3. Selesai ujian**
@@ -66,6 +66,7 @@ Dikerjakan **panitia**:
 
 - Langkah klik rinci tiap tahap: di sheet sumber hanya satu baris per langkah dengan video.
 - Langkah **Lihat Nilai** di tahap selesai ujian kosong di sheet sumber.
+- Permintaan pembedaan status "STARTED" (mengerjakan versus keluar sesi karena pelanggaran) tercatat tanpa jawaban.
 - Langkah Reopen Sesi dan Cancel dan Amend Soal hanya berupa video; belum ditulis.
 
 ## Sumber

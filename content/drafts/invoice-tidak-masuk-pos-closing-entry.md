@@ -18,7 +18,7 @@ Admin ingin mencetak penjualan POS (menu **Print Penjualan Item POS**) untuk tan
 
 1. Buka **POS Closing Entry** dan cari dokumen pada tanggal itu.
 2. Lihat daftar invoice di dalamnya dan **cek link invoicenya**. Yang benar punya link.
-3. **Cancel** dokumen POS Closing Entry itu, lalu **Amend** atau **Duplicate**.
+3. Kalau daftar invoice atau link-nya tidak ada, **Cancel** dokumen POS Closing Entry itu, lalu **Duplicate** (atau **Amend**).
 4. Pastikan **period end date** dan **posting date** sama.
 5. Cari transaksi POS pada tanggal bermasalah di **POS List**.
 6. Kembali ke dokumen hasil Amend atau Duplicate, lalu masukkan invoice-nya **satu per satu** lewat **Add row**.
@@ -27,7 +27,7 @@ Admin ingin mencetak penjualan POS (menu **Print Penjualan Item POS**) untuk tan
 ## Verifikasi
 
 - Penjualan POS tanggal itu muncul di **Print Penjualan Item POS**.
-- Jumlah invoice di POS Closing Entry sama dengan transaksi di POS List.
+- Sebagai saran (tidak tertulis di log): cocokkan jumlah invoice di POS Closing Entry dengan transaksi di POS List.
 
 ## Perhatian
 

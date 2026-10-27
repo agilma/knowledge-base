@@ -18,9 +18,11 @@ Di sistem ujian versi 2, siswa login tanpa email. Panduan ini menjelaskan cara l
 1. Siswa membuka aplikasi ujian dan login memakai **nomor peserta** dan **token** yang diinput panitia saat menginput peserta.
 2. Satu login hanya bisa dipakai di **satu perangkat**.
 
-## Masalah yang sering muncul
+## Masalah yang pernah dilaporkan
 
-- **Siswa salah ketik nomor peserta dan masuk memakai akun temannya.** Jawaban dari sheet sumber: tidak bisa dikerjakan, karena di versi 2 satu login hanya bisa di satu perangkat.
+Butir indikator jaringan, tombol nomor soal, dan soal Matematika berasal dari uji telaah soal yang dilaporkan guru penelaah (April 2023), bukan dari ujian siswa yang berjalan.
+
+- **Siswa salah ketik nomor peserta dan masuk memakai akun temannya.** Jawaban dari sheet sumber: "tidak, untuk versi 2 satu login hanya bisa di satu perangkat". Hasil pastinya mungkin bergantung pada apakah akun teman itu sedang aktif di perangkat lain; log tidak merincinya.
 - **Bisa login tapi soal tidak muncul** (kasus mapel Matematika). Kemungkinan besar karena akun yang sama sedang login di dua perangkat.
 - **Klik nomor soal tidak ada tindakan apa pun.** Lihat indikator jaringan: warna **merah** berarti tidak ada jaringan.
 - **Indikator berkedip merah dan hijau bergantian.** Disarankan menghapus aplikasi lalu memasangnya lagi.
@@ -33,7 +35,7 @@ Di sistem ujian versi 2, siswa login tanpa email. Panduan ini menjelaskan cara l
 
 ## Perhatian
 
-- Kalau ada siswa yang nilainya 0, di log siswa tersebut di-collect manual oleh admin.
+- Kalau ada siswa yang nilainya 0, di log siswa tersebut di-collect manual (pelakunya tidak disebut).
 
 ## Perlu dikonfirmasi
 
