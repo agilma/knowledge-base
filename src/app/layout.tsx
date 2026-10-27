@@ -11,6 +11,7 @@ import { CacheGuard } from "@/components/layout/CacheGuard";
 import { cacheOwner } from "@/lib/cache-owner";
 import { accessKey } from "@/lib/collection-access";
 import { getMemberCollectionIds, getRestrictedCollections } from "@/lib/services/collections";
+import { getMemberDocumentIds, getRestrictedDocumentIds } from "@/lib/services/documents";
 
 const fontSans = Inter({
   variable: "--font-sans",
@@ -63,7 +64,13 @@ export default async function RootLayout({
   if (session?.user) {
     try {
       const viewer = { id: session.user.id, role: session.user.role };
-      access = accessKey(viewer, await getRestrictedCollections(), await getMemberCollectionIds(viewer.id));
+      const [restricted, memberOf, restrictedDocs, memberOfDocs] = await Promise.all([
+        getRestrictedCollections(),
+        getMemberCollectionIds(viewer.id),
+        getRestrictedDocumentIds(),
+        getMemberDocumentIds(viewer.id),
+      ]);
+      access = accessKey(viewer, restricted, memberOf, restrictedDocs, memberOfDocs);
     } catch {
       access = "open";
     }

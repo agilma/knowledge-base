@@ -75,6 +75,23 @@ Hal yang perlu diketahui:
 - Editor anggota bisa memindahkan dokumen dari koleksi terbatas ke koleksi terbuka; riwayatnya ikut terbaca semua orang. Pindahkan hanya bila memang dimaksudkan.
 - Slug dokumen dipakai bersama semua koleksi: editor di luar koleksi bisa tahu bahwa suatu slug sudah dipakai, tetapi tidak judul atau isinya.
 
+## Membatasi satu dokumen (ADMIN)
+
+Kalau hanya satu dokumen yang sensitif, tidak perlu membatasi seluruh koleksinya:
+
+1. Buka dokumennya, pilih **Edit** (atau buat **Dokumen Baru**).
+2. Di bagian **Batasi akses dokumen ini**, centang kotaknya, lalu cari nama atau email orang yang boleh membaca dan pilih.
+3. Simpan. Mulai saat itu hanya admin dan orang yang dipilih yang melihat dokumen itu, termasuk lewat pencarian, riwayat, favorit, dan daftar terkait. Bagi yang lain dokumennya seolah tidak ada. Dokumen terbatas bergembok di daftar.
+
+Hal yang perlu diketahui:
+
+- **Koleksinya tetap berlaku.** Kalau koleksinya juga terbatas, orang itu harus ada di daftar koleksi **dan** di daftar dokumen. Berada di daftar dokumen tidak membuka koleksi yang tertutup.
+- Hanya admin yang bisa membatasi dokumen atau mengubah daftarnya; editor tidak melihat bagian ini. Editor yang ada di daftar tetap bisa membaca dan menyunting dokumennya.
+- Mengubah batas atau daftar **bukan suntingan isi**: tidak membuat versi baru dan tidak mengubah "Diperbarui".
+- Mencabut akses langsung berlaku di server. Salinan yang sudah tersimpan di perangkat seseorang dikosongkan saat ia membuka aplikasi dengan internet berikutnya.
+- Mematikan kotaknya membuka dokumen untuk semua orang (sesuai koleksinya), tetapi daftar disimpan.
+- Riwayat versi tetap memuat isi lama; siapa pun yang bisa membaca dokumen itu sekarang bisa membaca riwayatnya.
+
 ## Mengundang pengguna dan mengatur peran (ADMIN)
 
 Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.

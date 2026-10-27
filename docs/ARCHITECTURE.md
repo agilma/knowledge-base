@@ -151,3 +151,13 @@ dan viewer ikut daftar. Model: `collections.restricted` (bawaan `false`, jadi da
   `restrictedTouched` dan `membersTouched`: form yang tidak membawanya (dikirim manual, atau dari tab yang dibuka sebelum
   fitur ada) tidak boleh dibaca sebagai "buka koleksi" atau "kosongkan anggota". Anggota disimpan saat koleksi dibuka kembali.
 
+
+### 6. Dokumen terbatas: aturan yang sama, dan harus lolos koleksi dan dokumen
+
+Satu dokumen bisa dibatasi seperti koleksi: `Document.restricted` dan tabel `document_members` (migrasi `7_document_access`). Perilakunya sama: admin selalu bisa, selebihnya hanya orang di daftar dokumen (viewer membaca, editor membaca dan menulis), dan yang tidak berhak mendapat "tidak ditemukan".
+
+- **Harus lolos keduanya** (keputusan pemilik): dokumen terbatas di koleksi terbatas butuh tempat di dua daftar; dokumen terbuka di koleksi terbatas tetap mengikuti koleksi; berada di daftar dokumen tidak membuka koleksi yang tertutup. Aturannya ada di `src/lib/collection-access.ts` (`documentReadableWhere`, bentuk `AND` agar tidak bertabrakan dengan pemanggil yang men-spread hasilnya; `documentReadableSql` untuk SQL mentah; `canAccessDocument`).
+- **Hanya admin** yang membatasi dokumen dan mengatur daftar (`setDocumentAccess`, kunci advisory `document_members:<id>`, maksimal 200 anggota). Editor tidak bisa mengubahnya, tidak ada bagian itu di form mereka, dan aksi mengabaikan field-nya. Mengubah batas **bukan suntingan teks**: `updatedAt` dokumen tidak berubah dan tidak ada revisi.
+- **Raw SQL**: pencarian dan daftar revisi menyaring di `WHERE` yang sama dengan `count(*) OVER ()`; jumlah dokumen per koleksi (`_count`) ikut aturan yang sama, jadi tidak ada angka yang membocorkan dokumen tersembunyi.
+- **Kunci cache offline** memuat id semua dokumen terbatas dan dokumen tempat orang itu terdaftar. Sengaja **tidak** memakai `Document.updatedAt`: itu berubah di setiap suntingan, dan setiap suntingan dokumen terbatas akan mengosongkan cache semua orang. Kunci berubah saat dokumen dibatasi, dibuka, dibuat, dihapus, atau saat orang itu ditambah atau dicabut.
+- **Yang tidak dilakukan**: grup, batas baca-saja untuk editor, merekam perubahan akses di riwayat. Lihat `TODO.md`.

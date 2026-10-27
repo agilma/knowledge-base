@@ -182,3 +182,13 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Tambahan untuk draf yang sudah ada: PO tidak bisa disetujui (Material Request sudah cancel, Limit Crossed, Not a Valid Workflow action, BrokenPipe banyak tab, PO Page antar CV) ke `po-pr-tidak-bisa-submit`; Purchase Invoice over billing, diskon tidak bisa diubah, nomor invoice supplier ganda, is paid, macet di halaman 2/3 ke `purchase-invoice-gagal-submit-selisih-po`; Gagal menghitung harga (refresh; selisih pembulatan 2 rupiah di POS 2.1.1.13), kurang bayar karena pajak tidak include, dan diskon offline lawan online ke `harga-diskon-pos-tidak-sesuai`.
 - [ ] **Keamanan:** sheet itu memuat email, dan satu baris menyebut kata sandi atau kunci bawaan aplikasi HR (versi 1.0.2: ganti license harus login system manager). Ganti nilai bawaan itu dan jangan simpan di sheet.
 - [ ] Banyak solusi POS dijanjikan "diperbaiki di versi 2.0.0 atau 2.1"; setelah rilis, periksa dan perbarui draf POS agar tidak usang.
+
+## Dari dokumen terbatas
+
+- [ ] Slug dokumen terbatas masih "terpakai" bagi editor lain saat membuat dokumen dengan slug itu (ruang nama global, sama seperti koleksi); hanya keberadaan slug yang terlihat, bukan judul atau isinya.
+- [ ] Perubahan akses (dibatasi, dibuka, daftar anggota) tidak tercatat di riwayat versi.
+- [ ] Draf lokal di `localStorage` (`kb:draft:doc:...`) menyimpan isi dokumen yang sedang disunting di perangkat; pada perangkat bersama, isinya tetap ada setelah akun berganti. Kosongkan saat keluar akun.
+- [ ] Tautan di isi dokumen terbuka ke slug dokumen terbatas tetap tertulis; pembaca tanpa hak hanya mendapat "tidak ditemukan".
+- [ ] Editor yang menjadi anggota koleksi dan dokumen bisa memindahkan dokumen terbatas ke koleksi lain; batas dokumennya ikut, tetapi koleksi tujuan menentukan siapa lagi yang melihat daftarnya.
+- [ ] Salinan offline orang yang dicabut dikosongkan baru saat ia membuka aplikasi online berikutnya (sama seperti koleksi).
+- [ ] Layar admin untuk melihat semua dokumen terbatas dan siapa saja anggotanya (saat ini harus membuka dokumennya satu per satu).

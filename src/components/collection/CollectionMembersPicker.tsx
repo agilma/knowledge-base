@@ -23,9 +23,19 @@ const SUGGESTION_LIMIT = 8;
 export function CollectionMembersPicker({
   users,
   initialIds,
+  noun = "koleksi",
+  max = MAX_COLLECTION_MEMBERS,
+  fieldName = "memberIds",
+  touchedName = "membersTouched",
 }: {
   users: AssignableUser[];
   initialIds: string[];
+  /** What is being restricted, for the wording ("koleksi" or "dokumen"). */
+  noun?: string;
+  max?: number;
+  /** Names of the hidden fields the form submits; a document form uses its own so it never mixes with a collection's. */
+  fieldName?: string;
+  touchedName?: string;
 }) {
   const byId = useMemo(() => new Map(users.map((u) => [u.id, u])), [users]);
   const [selected, setSelected] = useState<string[]>(initialIds);
@@ -43,7 +53,7 @@ export function CollectionMembersPicker({
       .slice(0, SUGGESTION_LIMIT);
   }, [users, needle, selected]);
 
-  const full = selected.length >= MAX_COLLECTION_MEMBERS;
+  const full = selected.length >= max;
 
   const add = (id: string) => {
     if (full || selected.includes(id)) return;
@@ -57,13 +67,13 @@ export function CollectionMembersPicker({
       <Label htmlFor="member-search">Anggota yang boleh membaca</Label>
       <p className="text-xs text-muted-foreground">
         Admin selalu bisa. Viewer yang dipilih bisa membaca; editor yang dipilih bisa membaca dan menulis. Yang tidak
-        dipilih tidak melihat koleksi ini sama sekali. Hanya orang yang pernah masuk ke aplikasi yang bisa dipilih
-        (maksimal {MAX_COLLECTION_MEMBERS} anggota{users.length >= 500 ? "; daftar ini menampilkan 500 pengguna pertama" : ""}).
+        dipilih tidak melihat {noun} ini sama sekali. Hanya orang yang pernah masuk ke aplikasi yang bisa dipilih
+        (maksimal {max} anggota{users.length >= 500 ? "; daftar ini menampilkan 500 pengguna pertama" : ""}).
       </p>
 
-      <input type="hidden" name="membersTouched" value="1" />
+      <input type="hidden" name={touchedName} value="1" />
       {selected.map((id) => (
-        <input key={id} type="hidden" name="memberIds" value={id} />
+        <input key={id} type="hidden" name={fieldName} value={id} />
       ))}
 
       {selected.length > 0 ? (

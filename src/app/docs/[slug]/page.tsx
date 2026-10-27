@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getDocumentBySlug, getRelatedDocuments } from "@/lib/services/documents";
-import { ChevronRight, FolderOpen, Calendar, AlertCircle, History } from "lucide-react";
+import { ChevronRight, FolderOpen, Calendar, AlertCircle, History, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { DocumentActions } from "@/components/document/DocumentActions";
@@ -90,6 +90,7 @@ export default async function DocumentPage({
         {/* Document Header */}
         <header className="space-y-6 mb-8">
           <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+            {doc.restricted && <Lock className="mr-3 inline size-7 text-muted-foreground" aria-label="Dokumen terbatas" />}
             {doc.title}
           </h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">

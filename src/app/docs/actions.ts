@@ -11,8 +11,12 @@ import {
   setDocumentStatus,
   deleteDocument,
   getDocumentForRevalidate,
+  getDocumentMemberIds,
+  setDocumentAccess,
   setRelatedDocuments,
+  type DocumentAccessInput,
 } from "@/lib/services/documents";
+import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
 import { documentSchema, DocumentInput } from "@/lib/validation/document";
 
@@ -21,11 +25,37 @@ export type ActionState = {
   fieldErrors?: Record<string, string>;
 };
 
+/** Ids chosen in the member picker; anything that is not a string is dropped. */
+function documentMemberIds(formData: FormData): string[] {
+  return formData.getAll("documentMemberIds").filter((id): id is string => typeof id === "string");
+}
+
+/** Said before anything is written: the document and its access are saved in two steps. */
+function tooManyDocumentMembers(formData: FormData): string | null {
+  if (formData.get("documentMembersTouched") !== "1") return null;
+  return new Set(documentMemberIds(formData)).size > MAX_DOCUMENT_MEMBERS
+    ? `Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`
+    : null;
+}
+
+/**
+ * What the form says about who may read the document. Only an admin's form carries it,
+ * and only a form that says it has the field decides: a post made by hand, or from a tab
+ * opened before the field existed, must not read as "open this document".
+ */
+function accessFromForm(role: Role, formData: FormData): DocumentAccessInput | null {
+  if (role !== Role.ADMIN || formData.get("documentRestrictedTouched") !== "1") return null;
+  return { restricted: formData.get("documentRestricted") === "on", memberIds: documentMemberIds(formData) };
+}
+
 export async function createDocumentAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
+
+  const tooMany = user.role === Role.ADMIN ? tooManyDocumentMembers(formData) : null;
+  if (tooMany) return { error: tooMany };
 
   const rawData: DocumentInput = {
     title: formData.get("title") as string,
@@ -53,7 +83,7 @@ export async function createDocumentAction(
   }
 
   try {
-    const newDoc = await createDocument(parsed.data, { id: user.id, role: user.role });
+    const newDoc = await createDocument(parsed.data, { id: user.id, role: user.role }, accessFromForm(user.role, formData) ?? undefined);
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(
         newDoc.id,
@@ -85,6 +115,9 @@ export async function updateDocumentAction(
 ): Promise<ActionState> {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
   if (typeof id !== "string") return { error: "Permintaan tidak valid" };
+
+  const tooMany = user.role === Role.ADMIN ? tooManyDocumentMembers(formData) : null;
+  if (tooMany) return { error: tooMany };
 
   const rawData: DocumentInput = {
     title: formData.get("title") as string,
@@ -119,6 +152,15 @@ export async function updateDocumentAction(
         id: user.id,
         role: user.role,
       });
+    }
+    const access = accessFromForm(user.role, formData);
+    if (access) {
+      // A picker that was not loaded sends no list: keep the people already on it.
+      const memberIds =
+        formData.get("documentMembersTouched") === "1"
+          ? access.memberIds
+          : await getDocumentMemberIds(id, { id: user.id, role: user.role });
+      await setDocumentAccess(id, { restricted: access.restricted, memberIds }, { id: user.id, role: user.role });
     }
     const newDocWithCol = await getDocumentForRevalidate(updatedDoc.id);
 

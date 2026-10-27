@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "../db";
 import { sizeChanges, statusChangeLabel } from "../revisions";
-import { collectionReadableSql, documentReadableWhere, type Viewer } from "../collection-access";
+import { documentReadableSql, documentReadableWhere, type Viewer } from "../collection-access";
 
 export interface RevisionListItem {
   version: number;
@@ -38,7 +38,7 @@ export async function getRevisionList(documentId: string, viewer: Viewer): Promi
     JOIN collections c ON c.id = d."collectionId"
     LEFT JOIN users u ON u.id = r."editedById"
     WHERE r."documentId" = ${documentId}
-      AND ${collectionReadableSql(viewer, "c")}
+      AND ${documentReadableSql(viewer, "d", "c")}
     ORDER BY r.version DESC`);
 
   const changes = sizeChanges(rows.map((row) => ({ version: row.version, size: row.size })));

@@ -3,10 +3,11 @@ import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import {
   getDocumentBySlug,
+  getDocumentMemberIds,
   getRelatedDocumentIds,
   getRelationCandidates,
 } from "@/lib/services/documents";
-import { getCollections } from "@/lib/services/collections";
+import { getCollections, listAssignableUsers } from "@/lib/services/collections";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,12 @@ export default async function EditDocumentPage({
     getRelatedDocumentIds(document.id, viewer),
   ]);
 
+  // Only an admin may restrict a document, so only an admin's form carries the section.
+  const [accessUsers, initialMemberIds] =
+    user.role === Role.ADMIN
+      ? await Promise.all([listAssignableUsers(viewer), getDocumentMemberIds(document.id, viewer)])
+      : [undefined, undefined];
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <div>
@@ -45,6 +52,9 @@ export default async function EditDocumentPage({
         collections={collections}
         relatedCandidates={relatedCandidates}
         initialRelatedIds={initialRelatedIds}
+        accessUsers={accessUsers}
+        initialRestricted={document.restricted}
+        initialMemberIds={initialMemberIds}
         initialData={document}
       />
     </div>

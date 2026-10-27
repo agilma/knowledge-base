@@ -9,6 +9,8 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
 import { RelatedDocumentsPicker, type RelatedCandidate } from "@/components/document/RelatedDocumentsPicker";
+import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
+import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { slugify } from "@/lib/slug";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { createDocumentAction, updateDocumentAction, ActionState } from "@/app/docs/actions";
@@ -40,6 +42,13 @@ interface DocumentFormProps {
   collections: CollectionOption[];
   relatedCandidates?: RelatedCandidate[];
   initialRelatedIds?: string[];
+  /**
+   * Given only to admins, who alone may restrict a document: everyone who can be made a
+   * member, and the current setting. Without `users` the section is not shown at all.
+   */
+  accessUsers?: AssignableUser[];
+  initialRestricted?: boolean;
+  initialMemberIds?: string[];
   defaultCollectionId?: string;
   defaultTitle?: string;
   initialData?: {
@@ -59,6 +68,9 @@ export function DocumentForm({
   collections,
   relatedCandidates = [],
   initialRelatedIds = [],
+  accessUsers,
+  initialRestricted = false,
+  initialMemberIds = [],
   defaultCollectionId,
   defaultTitle,
   initialData,
@@ -66,6 +78,7 @@ export function DocumentForm({
   const isEditing = !!initialData;
   const isSlugLocked = isEditing && initialData.status !== DocumentStatus.DRAFT;
   const isOnline = useOnlineStatus();
+  const [restricted, setRestricted] = useState(initialRestricted);
 
   // Storage key determination
   const draftKey = isEditing
@@ -489,6 +502,42 @@ export function DocumentForm({
         candidates={relatedCandidates}
         initialIds={initialRelatedIds}
       />
+
+      {accessUsers && (
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          {/* Tells the server this form carries the setting; without it a form posted by hand
+              would read as "not restricted" and open the document. */}
+          <input type="hidden" name="documentRestrictedTouched" value="1" />
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="documentRestricted"
+              checked={restricted}
+              onChange={(e) => setRestricted(e.target.checked)}
+              className="mt-1 size-4"
+            />
+            <span>
+              <span className="font-medium">Batasi akses dokumen ini</span>
+              <span className="block text-xs text-muted-foreground">
+                Hanya admin dan orang yang dipilih yang bisa membaca dokumen ini (termasuk lewat pencarian, riwayat,
+                dan daftar terkait). Koleksinya tetap berlaku: kalau koleksinya terbatas, orang itu harus ada di daftar
+                koleksi juga. Untuk yang lain dokumennya seolah tidak ada.
+              </span>
+            </span>
+          </label>
+          {/* kept mounted (only hidden) so choices not yet saved survive unticking the box */}
+          <div hidden={!restricted}>
+            <CollectionMembersPicker
+              users={accessUsers}
+              initialIds={initialMemberIds}
+              noun="dokumen"
+              max={MAX_DOCUMENT_MEMBERS}
+              fieldName="documentMemberIds"
+              touchedName="documentMembersTouched"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2 max-w-xs">
         <Label htmlFor="status">Status Dokumen</Label>
