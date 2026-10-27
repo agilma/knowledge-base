@@ -1,7 +1,8 @@
 "use client";
 
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, Search, Star, Clock, FolderOpen } from "lucide-react";
+import { Menu, Home, Search, Star, Clock, FolderOpen, Users } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -9,6 +10,7 @@ import { Mark } from "@/components/brand/Mark";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const isAdmin = useSession().data?.user?.role === "ADMIN";
 
   const closeSheet = () => setOpen(false);
 
@@ -66,6 +68,16 @@ export function MobileNav() {
                 Lihat Semua Koleksi
               </Link>
             </div>
+
+            {isAdmin && (
+              <div className="space-y-1">
+                <h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Admin</h4>
+                <Link onClick={closeSheet} href="/admin/users" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  Pengguna
+                </Link>
+              </div>
+            )}
           </nav>
 
           <div className="border-t border-border/50 shrink-0">

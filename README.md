@@ -42,7 +42,8 @@ Aplikasi menggunakan Auth.js v5 (`next-auth@5`) dengan login khusus Google OAuth
 - `AUTH_ALLOWED_EMAILS`: Email di luar domain itu yang tetap diizinkan (dipisah koma).
 - `AUTH_ADMIN_EMAILS`: Email yang otomatis diberi role `ADMIN` saat login (dipisah koma).
 
-Login ditolak kecuali email cocok dengan salah satu dari dua yang pertama.
+Login ditolak kecuali email cocok dengan salah satu dari dua yang pertama, atau
+admin sudah mengundangnya di halaman **Pengguna** (`/admin/users`).
 Mengosongkan `AUTH_ALLOWED_DOMAIN` **tidak** membuka akses untuk semua
 orang — justru menyisakan `AUTH_ALLOWED_EMAILS` sebagai satu-satunya pintu.
 

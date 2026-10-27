@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine } from "lucide-react";
+import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine, Users } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
 import { Mark } from "@/components/brand/Mark";
@@ -12,15 +12,18 @@ export async function Sidebar() {
   // person now, so the sidebar fails closed.
   let collections: Awaited<ReturnType<typeof getCollections>> = [];
   let canWrite = false;
+  let isAdmin = false;
   try {
     const user = await getCurrentUser();
     if (user) {
       collections = await getCollections({ id: user.id, role: user.role });
       canWrite = user.role === Role.EDITOR || user.role === Role.ADMIN;
+      isAdmin = user.role === Role.ADMIN;
     }
   } catch {
     collections = [];
     canWrite = false;
+    isAdmin = false;
   }
 
   return (
@@ -87,6 +90,16 @@ export async function Sidebar() {
             </Link>
           ))}
         </div>
+
+        {isAdmin && (
+          <div className="space-y-1">
+            <h4 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Admin</h4>
+            <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              Pengguna
+            </Link>
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-border/50 shrink-0">
