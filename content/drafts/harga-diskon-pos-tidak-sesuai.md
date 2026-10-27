@@ -2,7 +2,7 @@
 title: Harga atau Diskon di POS Tidak Sesuai
 slug: harga-diskon-pos-tidak-sesuai
 type: MASALAH
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Kasir melihat harga 0, muncul pesan perubahan harga saat bayar, atau diskon dan harga berbeda antara mode offline dan online. Langkah per gejala dari tiket CS.
 ---
 ## Konteks

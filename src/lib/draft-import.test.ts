@@ -12,7 +12,7 @@ const OK = `---
 title: Judul Uji
 slug: judul-uji
 type: MASALAH
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Ringkasan singkat.
 ---
 ## Konteks
@@ -24,7 +24,7 @@ test("a well formed file is read", () => {
   const d = parseDraft(OK, "judul-uji");
   assert.equal(d.title, "Judul Uji");
   assert.equal(d.type, DocumentType.MASALAH);
-  assert.equal(d.collection, "murni-erpnext");
+  assert.equal(d.collection, "murni-erp");
   assert.match(d.content, /^## Konteks/);
 });
 

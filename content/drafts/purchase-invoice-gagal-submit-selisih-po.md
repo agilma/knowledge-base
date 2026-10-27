@@ -2,7 +2,7 @@
 title: Purchase Invoice Gagal Submit Karena Harga Berbeda dari PO
 slug: purchase-invoice-gagal-submit-selisih-po
 type: MASALAH
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Purchase Invoice tidak bisa disubmit dengan pesan over limit karena harga berbeda dari PO. Cek perbedaannya dengan PO; bila memang berbeda, perlu persetujuan. Menurut pemilik penyetujunya Area Manager, sedangkan tiket mencatat akun purchasing.
 ---
 ## Konteks

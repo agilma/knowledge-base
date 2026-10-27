@@ -2,7 +2,7 @@
 title: Menambah Permission Brand untuk User Penarik Laporan Sell Out
 slug: menambah-permission-brand-user
 type: PANDUAN
-collection: murni-erpnext
+collection: murni-erp
 excerpt: Cara kerja permintaan akses brand agar BA atau admin sales bisa menarik laporan sell out. Pendaftaran lewat HRD atau lewat aplikasi BA yang disetujui HR; di tiket, permission brand ditambahkan tim CS.
 ---
 ## Konteks
