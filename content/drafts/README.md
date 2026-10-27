@@ -42,5 +42,5 @@ Kata sandi atau kunci bawaan aplikasi HR yang tertulis di sheet itu, email, dan 
 
 ## Draf kedua puluh dua sampai dua puluh tujuh (27 Okt 2026)
 
-Dari desain Canva "6 SOP THUNDERLAB" (koleksi `thunderlab`): `sop-01-workflow-produksi`, `sop-02-cs-operational`, `sop-03-proposal-maksimal-4-jam`, `sop-04-project-visibility`, `sop-05-closure-dan-eskalasi-issue`, `sop-06-akses-di-luar-scope`.
-SOP 01 memakai halaman yang berlaku sejak 21 Okt 2026 (enam langkah, Tim QA); versi lain di desain dicatat di bagian "Perlu dikonfirmasi". Nama orang di desain diganti peran dan tautan Canva tidak disalin.
+Dari desain Canva "6 SOP THUNDERLAB" (koleksi `thunderlab`): `sop-01-workflow-produksi`, `sop-02-cs-operational`, `sop-03-proposal-maksimal-4-jam`, `sop-04-project-visibility`, `sop-05-eskalasi-isu-lama`, `sop-06-akses-di-luar-scope`.
+SOP 01 memakai halaman yang berlaku sejak 21 Okt 2026 (enam langkah, Tim QA); versi lain di desain dicatat di bagian "Perlu dikonfirmasi". SOP 05 hanya Eskalasi Isu Lama (halaman 7); halaman Closure Issue Berulang tidak dimasukkan atas keputusan pemilik. Nama orang di desain diganti peran dan tautan Canva tidak disalin.
