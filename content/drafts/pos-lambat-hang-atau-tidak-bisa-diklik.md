@@ -16,12 +16,12 @@ Kasir melaporkan POS lambat: loading lama saat pembayaran, layar tidak bisa dikl
 
 ## Langkah Pemeriksaan
 
-1. **Tutup aplikasi POS lalu buka kembali.** Ini langkah pertama untuk loading lama saat payment, timeout, dan kupon yang menggantung.
+1. **Tutup aplikasi POS lalu buka kembali.** Ini solusi yang dicatat untuk loading lama saat payment dan kupon yang menggantung (untuk pop up timeout log hanya mencatat penyebabnya).
 2. **POS hang dan tidak bisa diklik sama sekali.** Coba close POS. Kalau masih bermasalah:
    - Hapus atau ganti nama folder `balimurni_pos` di folder backup dokumen.
    - Restart komputer.
    Penyebab yang dicatat: POS memakai RAM besar. Dicatat akan diperbarui di POS versi baru.
-3. **Loading lama saat ramai walau internet aman (POS hijau).** Setiap penambahan item membuat sistem menghitung ulang diskon. Saat ramai, hitungan sebelumnya belum selesai padahal item baru sudah ditambahkan, sehingga proses tertahan. Belum ada penyesuaian dari sisi aplikasi. Alternatif yang disarankan: pakai **POS ungu** dengan mode **Belanja Banyak**, terutama untuk transaksi dengan banyak item atau saat antrean panjang.
+3. **Loading lama saat ramai walau internet aman (POS hijau).** Setiap penambahan item membuat sistem menghitung ulang diskon. Saat ramai, hitungan sebelumnya belum selesai padahal item baru sudah ditambahkan, sehingga proses tertahan. Belum ada penyesuaian dari sisi aplikasi. Alternatif yang disarankan: pakai **POS ungu** dengan mode **Belanja Banyak**, terutama untuk transaksi dengan banyak item atau saat antrean panjang. Catatan: POS ungu juga punya masalah sendiri di log (gagal hitung diskon setelah offline lalu online, transaksi gagal sinkron setelah koneksi putus).
 4. **Hindari menarik laporan periode panjang** (misalnya satu bulan, atau laporan penjualan per produk berulang) di jam ramai, terutama dengan banyak tab terbuka. Ini dicatat sebagai salah satu penyebab POS lambat.
 5. **Jaringan tidak stabil dan POS berputar terus saat pindah ke offline, tidak bisa ditutup.** Solusi yang dicatat: close POS secara paksa.
 6. **Loading lama saat payment padahal transaksi sudah masuk di database.** Respons dari server sekitar 11 detik. Tutup aplikasi lalu buka kembali.
@@ -30,11 +30,13 @@ Kasir melaporkan POS lambat: loading lama saat pembayaran, layar tidak bisa dikl
 ## Verifikasi
 
 - POS kembali bisa diklik dan transaksi bisa dilanjutkan.
-- Transaksi yang tadi macet ada di riwayat atau tidak dobel.
+- Sebagai saran (bukan kutipan log): periksa transaksi yang tadi macet di riwayat. Pop up timeout lalu retry pernah menghasilkan invoice dobel; report **Sales Invoice Duplicate** menandai total yang sama dalam 10 menit, tetapi bisa salah tanda bila isi item berbeda walau grand total sama.
 
 ## Jika Masih Gagal
 
-- Minta bantuan tim sistem dengan menyebut versi POS, cabang, dan jam kejadian. Beberapa kasus di log ditangani dengan remote ke komputer kasir.
+- Beberapa kasus di log ditangani dengan remote ke komputer kasir. Sebagai saran, sebut versi POS, cabang, dan jam kejadian saat melapor.
+- Kalau POS tidak bisa transaksi karena status **UNKNOWN** (POS hijau): buka riwayat lalu tutup lagi, atau tutup aplikasi lalu buka kembali.
+- Kalau closing kasir gagal karena transaksi failed, lihat dokumen **Panduan Penyelesaian POS Gagal Closing**.
 
 ## Perlu dikonfirmasi
 

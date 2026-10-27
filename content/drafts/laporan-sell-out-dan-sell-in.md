@@ -1,13 +1,13 @@
 ---
-title: Mengambil Data Sell Out dan Sell In Antar Cabang
+title: Mengambil Data Sell Out dan Sell In Antar CV Murni
 slug: laporan-sell-out-dan-sell-in
 type: PANDUAN
 collection: murni-erp
-excerpt: Laporan mana yang dipakai untuk penjualan antar cabang (sell out), pembelian (sell in), dan data penjualan toko per bulan, serta catatan tentang laporan Sales Analytics yang berubah.
+excerpt: Laporan mana yang dipakai untuk penjualan antar CV Murni (sell out), pembelian (sell in), dan data penjualan toko per bulan, serta catatan tentang laporan Sales Analytics yang berubah.
 ---
 ## Konteks
 
-Tim operasional dan purchasing kantor pusat sering perlu data penjualan antar cabang Murni (misalnya untuk menghitung pajak pembelian antar CV), data pembelian, dan data penjualan toko per bulan. Dokumen ini merangkum laporan yang dipakai menurut log.
+Tim operasional dan purchasing kantor pusat sering perlu data penjualan antar CV Murni (misalnya untuk menghitung pajak pembelian antar CV), data pembelian, dan data penjualan toko per bulan. Dokumen ini merangkum laporan yang dipakai menurut log.
 
 ## Prasyarat
 
@@ -23,16 +23,17 @@ Tim operasional dan purchasing kantor pusat sering perlu data penjualan antar ca
 
 ## Catatan
 
-- Laporan **Sales Analytics** bisa berubah-ubah hasilnya karena otomatis menjadi **prepared report** bila pemuatan data lebih dari 15 detik (mekanisme ERPNext). Perbaikan yang dicatat: hook sebelum job untuk memasukkan filter customer internal.
+- Laporan **Sales Analytics** bisa berubah-ubah hasilnya karena otomatis menjadi **prepared report** bila pemuatan data lebih dari 15 detik (mekanisme ERPNext). Perbaikan yang dicatat di kolom solusi lanjutan: hook sebelum job untuk memasukkan filter customer internal; apakah sudah berlaku tidak diketahui.
 
 ## Verifikasi
 
-- Total penjualan di Sales Register untuk periode dan customer group sesuai harapan.
+- Sebagai saran (tidak tertulis di log): cocokkan total penjualan di Sales Register untuk periode dan customer group dengan yang diharapkan.
 
 ## Perlu dikonfirmasi
 
 - Cara melihat item yang harga modal atau harga belinya masih 0: pertanyaan ini muncul dua kali di log tanpa jawaban yang bisa dipakai.
 - Daftar customer group Murni per daerah (log hanya menyebut "sesuai daerah").
+- Beberapa permintaan laporan masih berstatus permintaan di log: Sales Out untuk semua Murni, laporan penjualan dan pembelian bulanan per cabang, dan filter company di Sales Register yang sulit diganti.
 
 ## Sumber
 

@@ -16,12 +16,11 @@ Admin atau koordinator gagal menyimpan **Sales Invoice** dengan error seperti "i
 ## Langkah
 
 1. Periksa apakah item yang sama muncul di dua baris atau lebih.
-2. **Hapus salah satu baris** item yang sama, lalu simpan (solusi yang dicatat di log).
-3. **Kalau salah satunya barang gratis:**
-   - Pakai **diskon 100%** pada barang gratis itu dalam satu baris, atau
-   - Buat **invoice terpisah** untuk barang gratis.
-   Saran dari tim: jika tetap ingin satu invoice, pakai satu baris item dengan diskon yang mengurangi bagian barang gratis.
-4. **Scan barcode barang yang sama.** Di log, pengaturan "Allow multiple item" awalnya membuat scan barang yang sama menambah baris baru. Dicatat sudah diperbarui agar scan item sama menambah qty di baris yang sama (penjelasan di log terpotong).
+2. **Hapus salah satu baris** item yang sama, lalu simpan (solusi yang dicatat di log). Sebagai saran (tidak tertulis di log): pastikan qty yang dihapus tidak hilang dengan menggabungkannya ke baris yang tersisa.
+3. **Kalau salah satunya barang gratis** (kasus 29 Juni 2026):
+   - Info yang diberikan ke pengguna: input **diskon 100%** jika itu barang gratis.
+   - Solusi dari tim (masih ditandai perlu info ke pusat): buat **invoice terpisah** untuk barang gratis; atau, kalau tetap satu invoice, pakai **satu baris** item dengan diskon yang mengurangi bagian barang gratis.
+4. **Scan barcode barang yang sama** (30 April 2026). Penyebab yang dicatat: pengaturan penjualan mengizinkan item ditambahkan berkali-kali dan item belum diisi barcodenya. Log menulis sudah ada pembaruan agar scan item yang sama menambah qty di baris yang sama, tetapi kalimatnya terpotong sehingga cakupannya (termasuk di Sales Invoice) belum jelas.
 
 ## Verifikasi
 

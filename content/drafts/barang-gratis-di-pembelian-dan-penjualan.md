@@ -17,18 +17,18 @@ Supplier sering memberi barang gratis, dan kadang barang gratis ikut dalam penju
 
 **Barang gratis dari supplier (Purchase Receipt):**
 
-1. Di dokumen Purchase Receipt, tambahkan kolom **is free** bila belum ada.
+1. Di dokumen Purchase Receipt, pastikan ada kolom (table) **is free**. Log mencatat "table is free belum ada" lalu "tambah table is free", tanpa menyebut siapa pelaksananya; jika belum ada, kemungkinan perlu ditambahkan oleh tim sistem.
 2. Centang **is free** pada baris barang yang gratis.
 3. Barang gratis boleh sama dengan barang di PO atau bukan.
 4. Setelah dicentang, rate di price list otomatis menjadi **0**.
 
 **Barang gratis di penjualan (Sales Invoice):**
 
-5. Jangan memasukkan item yang sama di dua baris. Pakai **diskon 100%** untuk bagian barang gratis dalam satu baris, atau buat **invoice terpisah** untuk barang gratis.
+5. Jangan memasukkan item yang sama di dua baris. Info yang diberikan ke pengguna: input **diskon 100%** jika itu barang gratis. Solusi dari tim (masih perlu info ke pusat): buat **invoice terpisah** untuk barang gratis, atau tetap satu invoice dengan satu baris yang dikurangi diskon.
 
 ## Verifikasi
 
-- Barang gratis tercatat di Purchase Receipt dengan rate 0 dan stok bertambah sesuai qty.
+- Barang gratis tercatat di Purchase Receipt dengan rate 0. Sebagai saran (tidak tertulis di log): periksa stok bertambah sesuai qty.
 - Sales Invoice tersimpan tanpa error item ganda.
 
 ## Perhatian

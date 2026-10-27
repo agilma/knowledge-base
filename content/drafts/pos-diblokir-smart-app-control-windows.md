@@ -11,7 +11,7 @@ Setelah Windows melakukan update otomatis, kasir tidak bisa membuka POS. Muncul 
 
 ## Prasyarat
 
-- Akses administrator di komputer kasir, atau bantuan tim sistem.
+- Akses pengaturan Windows di komputer yang bermasalah.
 
 ## Langkah
 
@@ -25,13 +25,13 @@ Setelah Windows melakukan update otomatis, kasir tidak bisa membuka POS. Muncul 
 
 ## Jika Masih Gagal
 
-Minta bantuan tim sistem (remote) dengan menyebut cabang dan komputer yang bermasalah.
+Jalur eskalasi tidak ditulis di log untuk kasus ini. Sebagai saran, sebut cabang dan komputer yang bermasalah saat melapor (kasus POS lain di log ditangani lewat remote).
 
 ## Perlu dikonfirmasi
 
 - Langkah rinci mematikan Smart App Control di menu Windows tidak ditulis di log.
 - Solusi lanjutan di log hanya berbunyi "upload di Microsoft Store" tanpa penjelasan, jadi belum jelas apakah aplikasi akan didistribusikan lewat jalur itu.
-- Kasus yang sama dilaporkan kembali pada 12 Agustus 2026 di cabang lain tanpa penyelesaian tertulis.
+- Kasus yang sama dilaporkan kembali pada 12 Agustus 2026 oleh admin cabang lain tanpa penyelesaian tertulis.
 - Apakah mematikan fitur ini aman menurut kebijakan IT toko.
 
 ## Sumber

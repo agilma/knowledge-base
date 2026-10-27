@@ -12,7 +12,7 @@ Setelah POS versi terbaru dipakai, ada dua keluhan yang berulang: akun tidak bis
 ## Prasyarat
 
 - Email akun yang bermasalah dan perannya saat ini (kasir, admin, atau koordinator).
-- Akses untuk menambahkan role pengguna (tim sistem atau admin yang berwenang).
+- Akses untuk menambahkan role pengguna (log tidak menyebut siapa pelaksananya).
 
 ## Langkah Pemeriksaan
 
@@ -28,11 +28,11 @@ Setelah POS versi terbaru dipakai, ada dua keluhan yang berulang: akun tidak bis
 
 ## Jika Masih Gagal
 
-Laporkan ke tim sistem dengan menyebut akun, peran, dan versi POS.
+Jalur eskalasi tidak ditulis di log. Sebagai saran, sebut akun, peran, dan versi POS saat melapor.
 
 ## Perlu dikonfirmasi
 
-- Siapa yang berhak menambahkan role Kasir (di log dilakukan oleh tim sistem).
+- Siapa yang berhak menambahkan role Kasir (log hanya menulis "ditambahkan role kasir").
 - Penyebab layar logout; di log hanya dicatat solusinya, bukan sebabnya.
 - Apakah role Kasir sekarang otomatis ikut pada akun baru atau role profile koordinator.
 
