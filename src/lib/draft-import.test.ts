@@ -49,7 +49,7 @@ const files = readdirSync(DIR).filter((f) => f.endsWith(".md") && f !== "README.
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
 
 test("there are drafts to import", () => {
-  assert.ok(files.length >= 6);
+  assert.ok(files.length >= 7);
 });
 
 for (const file of files) {
@@ -70,7 +70,11 @@ for (const file of files) {
 
     // the reader can trace it back, and what is unsure is said so
     assert.match(draft.content, /^## Sumber$/m, "no Sumber section");
-    assert.match(draft.content, /Tiket CS di log tiket \(nomor baris\): \d/, "no ticket numbers");
+    assert.match(
+      draft.content,
+      /Tiket CS di log tiket \(nomor baris\): \d|^Dokumen panduan training .+ dari tim/m,
+      "Sumber names neither ticket numbers nor the team document it came from"
+    );
     assert.match(draft.content, /^## Perlu (dikonfirmasi|dilengkapi)$/m, "no section for what is unconfirmed");
 
     // it opens in the rich editor instead of falling back to raw markdown

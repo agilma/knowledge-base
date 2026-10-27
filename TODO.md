@@ -162,3 +162,9 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Mencabut akses tidak menghapus akun, dan orang yang lolos lewat domain atau `AUTH_ALLOWED_EMAILS` tetap bisa masuk lagi. Perlu penanda "nonaktif" di `users` (migrasi) bila admin ingin memblokir orang yang domainnya diizinkan.
 - [ ] Undangan tidak punya masa berlaku dan tidak mengirim email.
 - [ ] Daftar pengguna dibatasi 500 baris terbaru tanpa pencarian.
+
+## Dari Panduan Training POS Ungu
+
+- [ ] `panduan-training-pos-ungu-dan-mode-offline`, draf `mode-offline-pos`, dan dokumen terbit `pos-gagal-closing` membahas topik yang sama (offline, Retry, Input Manual). Setelah ketiganya dibaca pemilik, putuskan: gabung jadi satu, atau saling menaut. Materi training lebih lengkap dan lebih baru (POS ungu).
+- [ ] Bagian "Tampilan POS ungu dan POS hijau" di materi training masih kosong; pertanyaan kasir tentang closing minus setelah retur belum terjawab.
+- [ ] Penulis dokumen dari Lala: impor dengan `--as lalaagnesta@gmail.com` (editor, harus pernah login). Dokumen yang sudah diimpor atas nama admin tidak berubah penulisnya; ganti manual bila perlu.
