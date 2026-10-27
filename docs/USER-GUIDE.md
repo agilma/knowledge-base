@@ -75,6 +75,15 @@ Hal yang perlu diketahui:
 - Editor anggota bisa memindahkan dokumen dari koleksi terbatas ke koleksi terbuka; riwayatnya ikut terbaca semua orang. Pindahkan hanya bila memang dimaksudkan.
 - Slug dokumen dipakai bersama semua koleksi: editor di luar koleksi bisa tahu bahwa suatu slug sudah dipakai, tetapi tidak judul atau isinya.
 
+## Mengundang pengguna dan mengatur peran (ADMIN)
+
+Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
+
+- **Undang**: isi email Google orangnya dan pilih peran (Viewer membaca, Editor menulis dan menerbitkan, Admin juga mengelola koleksi dan pengguna). Aplikasi tidak mengirim email: beri tahu orangnya, lalu ia masuk dengan akun Google yang sama dan langsung mendapat peran itu. Selama belum masuk, ia tampil di "Menunggu masuk" dan undangannya bisa dibatalkan.
+- **Ubah peran**: pilih peran baru di daftar; berlaku langsung.
+- **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
+- Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
+
 ## Memasukkan draf dari berkas (ADMIN, perintah di komputer)
 
 Dokumen yang disiapkan sebagai berkas di folder `content/drafts/` dimasukkan sebagai **draf** dengan `npm run docs:import` (lihat `content/drafts/README.md`). Hanya editor dan admin yang melihat draf; tinjau isinya, lengkapi bagian "Perlu dikonfirmasi", lalu tekan **Publish**. Menjalankannya ulang tidak menimpa dokumen yang sudah ada.

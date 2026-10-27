@@ -61,8 +61,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       const access = readAccessConfig();
 
+      // The env lists and the domain admit people in bulk; an admin's invitation
+      // admits one address (see /admin/users).
       if (!isEmailAllowed(email, access)) {
-        return "/login?error=DomainAccessDenied";
+        const invitation = await db.invitation.findUnique({ where: { email }, select: { id: true } });
+        if (!invitation) return "/login?error=DomainAccessDenied";
       }
 
       // Check and update role to ADMIN if email is listed in AUTH_ADMIN_EMAILS
@@ -99,15 +102,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.email) return;
       const email = user.email.toLowerCase();
 
-      if (isAdminEmail(email, readAccessConfig())) {
-        try {
-          await db.user.update({
-            where: { id: user.id },
-            data: { role: Role.ADMIN },
-          });
-        } catch (error) {
-          console.error("Error setting admin role on createUser:", error);
+      try {
+        if (isAdminEmail(email, readAccessConfig())) {
+          await db.user.update({ where: { id: user.id }, data: { role: Role.ADMIN } });
+        } else {
+          const invitation = await db.invitation.findUnique({ where: { email }, select: { role: true } });
+          if (invitation) await db.user.update({ where: { id: user.id }, data: { role: invitation.role } });
         }
+      } catch (error) {
+        console.error("Error setting role on createUser:", error);
       }
     },
   },

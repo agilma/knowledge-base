@@ -156,3 +156,9 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
       Masih Berlaku**: syarat lain selain tanggal berlaku (batas pemakaian,
       minimum pembelian, pembatasan item/outlet), di menu mana data kupon
       dibuka, dan ke siapa dieskalasi.
+
+## Dari fitur undang pengguna
+
+- [ ] Mencabut akses tidak menghapus akun, dan orang yang lolos lewat domain atau `AUTH_ALLOWED_EMAILS` tetap bisa masuk lagi. Perlu penanda "nonaktif" di `users` (migrasi) bila admin ingin memblokir orang yang domainnya diizinkan.
+- [ ] Undangan tidak punya masa berlaku dan tidak mengirim email.
+- [ ] Daftar pengguna dibatasi 500 baris terbaru tanpa pencarian.

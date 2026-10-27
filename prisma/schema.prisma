@@ -207,3 +207,15 @@ model RecentView {
   @@index([userId, viewedAt])
   @@map("recent_views")
 }
+
+/// An email an admin has let in, with the role it gets on first sign-in. It works
+/// next to AUTH_ALLOWED_DOMAIN / AUTH_ALLOWED_EMAILS and is removed to withdraw access.
+model Invitation {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  role        Role     @default(VIEWER)
+  invitedById String?
+  createdAt   DateTime @default(now())
+
+  @@map("invitations")
+}
