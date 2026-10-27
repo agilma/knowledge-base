@@ -175,3 +175,10 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] SMPN 13: akun guru atau panitia tahun lalu (menimpa akun), welcome mail tidak masuk (Forgot Password), import peserta gagal karena duplikat, submit jadwal select all gagal, salah buat jadwal atau sesi dan lembar jawaban dobel, aturan pelanggaran SekolahPro v3.2.4.
 - [ ] **Keamanan:** sheet ujian SMPN 13 (tab ujian kelas 9, April 2025) memuat email dan kata sandi akun pengawas. Ganti kata sandinya dan hapus dari sheet; jangan masuk ke dokumen.
 - [ ] Penulis dokumen dari sheet dan Google Doc ini adalah Lala; impor dengan `--as lalaagnesta@gmail.com` (editor, harus pernah login).
+
+## Dari tab LIVE (PROBLEM & SOP) sheet List Fitur Tambahan Murni (topik yang belum ditulis)
+
+- [ ] Kupon dan voucher di POS (kupon tersimpan lokal, kupon kedaluwarsa tetap memotong, kupon di-setting untuk company yang keliru, voucher tidak terpotong karena custom diskon), promo/pricing rule tidak bisa dipakai (Default Warehouse di Branch, Disable dicentang), POS status UNKNOWN dan konfigurasi belum lengkap (Outlet, Warehouse, Selling Price List), dan error warehouse di aplikasi BA (hapus default company/branch/warehouse di user permission).
+- [ ] Tambahan untuk draf yang sudah ada: PO tidak bisa disetujui (Material Request sudah cancel, Limit Crossed, Not a Valid Workflow action, BrokenPipe banyak tab, PO Page antar CV) ke `po-pr-tidak-bisa-submit`; Purchase Invoice over billing, diskon tidak bisa diubah, nomor invoice supplier ganda, is paid, macet di halaman 2/3 ke `purchase-invoice-gagal-submit-selisih-po`; Gagal menghitung harga (refresh; selisih pembulatan 2 rupiah di POS 2.1.1.13), kurang bayar karena pajak tidak include, dan diskon offline lawan online ke `harga-diskon-pos-tidak-sesuai`.
+- [ ] **Keamanan:** sheet itu memuat email, dan satu baris menyebut kata sandi atau kunci bawaan aplikasi HR (versi 1.0.2: ganti license harus login system manager). Ganti nilai bawaan itu dan jangan simpan di sheet.
+- [ ] Banyak solusi POS dijanjikan "diperbaiki di versi 2.0.0 atau 2.1"; setelah rilis, periksa dan perbarui draf POS agar tidak usang.

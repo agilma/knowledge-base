@@ -49,7 +49,7 @@ const files = readdirSync(DIR).filter((f) => f.endsWith(".md") && f !== "README.
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
 
 test("there are drafts to import", () => {
-  assert.ok(files.length >= 14);
+  assert.ok(files.length >= 21);
 });
 
 for (const file of files) {
@@ -64,7 +64,7 @@ for (const file of files) {
     assert.ok(!/@/.test(text), "contains an @ (email or mention)");
     assert.ok(!/https?:\/\//i.test(text), "contains a link");
     assert.ok(!/docs\.google|drive\.google/i.test(text), "contains a Google link");
-    for (const person of ["vera", "arika", "intan", "ronny", "erick", "marcel", "yulianta", "risma", "lala", "agil", "chelsy", "yohana", "eko", "hizban", "bayu", "shandy", "ilham", "ervin", "susan", "firman", "amel"]) {
+    for (const person of ["vera", "arika", "intan", "ronny", "erick", "marcel", "yulianta", "risma", "lala", "agil", "chelsy", "yohana", "eko", "hizban", "bayu", "shandy", "ilham", "ervin", "susan", "firman", "amel", "maulina", "clara", "desy", "firgi", "dorothea", "devita", "donna", "kadek", "arlene"]) {
       assert.ok(!new RegExp(`\\b${person}`, "i").test(text), `names ${person}`);
     }
 

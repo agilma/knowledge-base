@@ -34,3 +34,8 @@ Dari dua sheet log isu, ditulis dari baris sumbernya (dibaca ulang langsung dari
 - Koleksi `smpn-13-malang` (log isu ujian berbasis komputer): `alur-pengaturan-ujian-v2`, `login-siswa-dan-batas-satu-perangkat`, `soal-tidak-muncul-karena-salah-format-input`.
 
 Dua sheet itu ditulis Lala, jadi impor dengan `--as lalaagnesta@gmail.com`. Kata sandi akun pengawas yang terlihat di sheet ujian tidak disalin.
+
+## Draf kelima belas sampai kedua puluh satu (27 Okt 2026)
+
+Dari tab LIVE (PROBLEM & SOP) di sheet "List Fitur Tambahan Murni" (koleksi `murni-erp`): `pos-lambat-hang-atau-tidak-bisa-diklik`, `pos-tidak-bisa-login-no-app-atau-layar-logout`, `pos-diblokir-smart-app-control-windows`, `sales-invoice-item-entered-multiple-times`, `harga-nol-atau-tidak-muncul-di-pos`, `laporan-sell-out-dan-sell-in`, `barang-gratis-di-pembelian-dan-penjualan`.
+Kata sandi atau kunci bawaan aplikasi HR yang tertulis di sheet itu, email, dan nama pelapor tidak disalin. Banyak solusi POS bergantung versi (1.8.x, 2.0.0, 2.1); dokumen menyebut versinya bila log menyebutnya.
