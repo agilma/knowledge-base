@@ -9,7 +9,7 @@ DATABASE_URL=postgresql://... npm run docs:import -- --as admin@contoh.com   # a
 
 - Hanya membuat dokumen yang slug-nya belum ada. Tidak pernah menimpa, jadi aman diulang dan aman setelah dokumen disunting di aplikasi.
 - Selalu berstatus **DRAFT**: hanya editor dan admin yang melihatnya sampai ada yang menekan Publish.
-- Satu berkas = satu dokumen. Nama berkas harus sama dengan `slug`. Bidang wajib di bagian atas: `title`, `slug`, `type` (PANDUAN, MASALAH, atau REFERENSI), `collection` (slug koleksi yang sudah ada), `excerpt`.
+- Satu berkas = satu dokumen. Nama berkas harus sama dengan `slug`. Bidang wajib di bagian atas: `title`, `slug`, `type` (PANDUAN, MASALAH, atau REFERENSI), `collection` (slug koleksi yang sudah ada). `excerpt` (ringkasan) boleh kosong. Baris lain di bagian atas (`status`, `restricted`, `created`, `updated`, `author`, `last_edited_by`, dari ekspor) diabaikan saat impor.
 - Setiap berkas harus punya bagian **Sumber** (nomor baris tiket, atau nama dokumen tim bila ditulis dari dokumen) dan **Perlu dikonfirmasi** atau **Perlu dilengkapi**, tanpa email, tautan, atau nama orang. Itu diperiksa otomatis oleh `src/lib/draft-import.test.ts`, yang juga memastikan isinya terbuka di editor visual.
 
 ## Sumber enam draf pertama (25 Okt 2026)
