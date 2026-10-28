@@ -166,6 +166,10 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 
 Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakapan disimpan di akun Anda selama 90 hari sejak pesan terakhir. Buka lagi lewat tombol **Riwayat** di panel (daftar percakapan Anda, buka untuk melanjutkan, ikon tempat sampah untuk menghapus), atau mulai yang baru dengan **Percakapan baru**. Riwayat hanya terlihat oleh Anda; admin lain tidak bisa membukanya. Jangan menempel kata sandi atau data pribadi pelanggan: yang ditempel ikut tersimpan sampai dihapus. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
+## Topik yang belum ada (EDITOR dan ADMIN)
+
+Kalau pembaca mencari sesuatu dan tidak menemukan apa pun, kata yang dicari dicatat (tanpa nama pencari). Buka **Topik yang belum ada** di menu untuk melihat apa yang paling sering dicari tetapi belum ditulis. Tekan **Tulis** untuk membuat dokumen dengan judul terisi, atau **Abaikan** untuk menyembunyikan kata yang tidak relevan. Tulisan "sudah ada" berarti dokumennya ada tetapi masih draf, jadi tinggal diterbitkan. Catatan dibuang otomatis setelah 180 hari.
+
 ## Memasukkan draf dari berkas (ADMIN, perintah di komputer)
 
 Dokumen yang disiapkan sebagai berkas di folder `content/drafts/` dimasukkan sebagai **draf** dengan `npm run docs:import` (lihat `content/drafts/README.md`). Hanya editor dan admin yang melihat draf; tinjau isinya, lengkapi bagian "Perlu dikonfirmasi", lalu tekan **Publish**. Menjalankannya ulang tidak menimpa dokumen yang sudah ada.
