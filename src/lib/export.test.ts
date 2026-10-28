@@ -47,7 +47,8 @@ test("paths, manifest and readme describe the archive", () => {
   assert.equal(exportPath(doc(3)), "pos/dokumen-3.md");
   const manifest = JSON.parse(exportManifest([doc(3), doc(4, { status: DocumentStatus.ARCHIVED })]));
   assert.deepEqual(manifest.map((m: { path: string; status: string }) => [m.path, m.status]), [["pos/dokumen-3.md", "PUBLISHED"], ["pos/dokumen-4.md", "ARCHIVED"]]);
-  assert.match(exportReadme({ exportedAt: new Date("2026-10-28T00:00:00Z"), count: 2 }), /Jumlah dokumen: 2/);
+  assert.match(exportReadme({ exportedAt: new Date("2026-10-28T00:00:00Z"), count: 2 }), /Jumlah dokumen saat ekspor dimulai: 2/);
+  assert.match(exportReadme({ exportedAt: new Date(), count: 2 }), /docs:import -- --dir/);
   assert.match(exportReadme({ exportedAt: new Date(), count: 1, collection: "pos" }), /hanya koleksi pos/);
 });
 
@@ -99,6 +100,23 @@ test("the export is a zip with every document, fetched in batches, plus readme a
   assert.deepEqual(names(zip), ["README.txt", ...[1, 2, 3, 4, 5].map((n) => `pos/dokumen-${n}.md`), "manifest.json"]);
   assert.equal(d.calls, 4, "5 documents in batches of 2, then an empty batch ends it");
   void inflateRawSync;
+});
+
+test("cancelling the download stops the reading, and a refused request does not use up the rate limit", async () => {
+  const d = deps({}, Array.from({ length: 40 }, (_, i) => doc(i + 1)));
+  const res = await handleExportRequest(get(), d);
+  const reader = res.body!.getReader();
+  await reader.read(); // README
+  await reader.read(); // first document of the first batch
+  await reader.cancel();
+  const calls = d.calls;
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(d.calls, calls, "no more batches after the cancel");
+  assert.ok(calls < 20, "far fewer batches than the whole library needs");
+
+  const limited = deps({ rateLimit: createRateLimiter({ limit: 1, windowMs: 60_000 }) });
+  assert.equal((await handleExportRequest(get("?koleksi=tidak-ada"), limited)).status, 404);
+  assert.equal((await handleExportRequest(get(), limited)).status, 200, "the 404 did not take the only slot");
 });
 
 test("no session, non-admin, other sites and too many requests are refused before anything is read", async () => {

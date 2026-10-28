@@ -28,11 +28,6 @@ export async function handleExportRequest(request: Request, deps: ExportHandlerD
   const site = request.headers.get("sec-fetch-site");
   if (site && site !== "same-origin" && site !== "none") return json(403, "Permintaan ditolak.");
 
-  const limit = deps.rateLimit.take(user.id);
-  if (!limit.ok) {
-    return json(429, "Ekspor baru saja dibuat. Coba lagi beberapa menit lagi.", { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) });
-  }
-
   let scope: { id: string; slug: string } | null;
   try {
     scope = await deps.resolveScope(new URL(request.url).searchParams.get("koleksi"));
@@ -42,19 +37,32 @@ export async function handleExportRequest(request: Request, deps: ExportHandlerD
   const total = await deps.count(scope?.id);
   if (total > 60_000) return json(413, "Terlalu banyak dokumen untuk satu berkas. Ekspor per koleksi.");
 
+  // Only an export that will really be written uses up one of the few allowed.
+  const limit = deps.rateLimit.take(user.id);
+  if (!limit.ok) {
+    return json(429, "Ekspor baru saja dibuat. Coba lagi beberapa menit lagi.", { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) });
+  }
+
   const now = deps.now();
   const zip = new ZipWriter();
   const manifest: ExportedDocument[] = [];
   const encoder = new TextEncoder();
   let afterId: string | undefined;
   let stage: "readme" | "documents" | "tail" | "done" = "readme";
+  let cancelled = false;
 
   const stream = new ReadableStream<Uint8Array>({
+    // The browser gave up (closed the tab, cancelled the download): stop reading documents.
+    cancel() {
+      stage = "done";
+      cancelled = true;
+    },
     // A pull that adds nothing is not called again, so it keeps going until a chunk is enqueued or the stream is closed.
     async pull(controller) {
       try {
         let sent = false;
         while (!sent) {
+          if (cancelled) return;
           if (stage === "readme") {
             controller.enqueue(zip.add("README.txt", encoder.encode(exportReadme({ exportedAt: now, count: total, collection: scope?.slug })), now));
             stage = "documents";
@@ -80,8 +88,11 @@ export async function handleExportRequest(request: Request, deps: ExportHandlerD
           }
         }
       } catch (err) {
-        console.error("[export] gagal", { name: (err as Error)?.name });
-        controller.error(err);
+        // A cancelled download makes the next enqueue throw; that is not a failure.
+        if (!cancelled) {
+          console.error("[export] gagal", { name: (err as Error)?.name });
+          controller.error(err);
+        }
       }
     },
   });

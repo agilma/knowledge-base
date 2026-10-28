@@ -1,5 +1,5 @@
 /**
- * Imports content/drafts/*.md as draft documents.
+ * Imports content/drafts/*.md (or every .md under --dir, folders included) as draft documents.
  *
  *   DATABASE_URL=postgresql://... npm run docs:import [-- --as admin@example.com] [-- --dir path]
  *
@@ -8,7 +8,7 @@
  * else wrote), or else the first admin.
  */
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { Role } from "@prisma/client";
 import { db } from "../src/lib/db";
 import { parseDraft } from "../src/lib/draft-import";
@@ -19,16 +19,25 @@ function arg(name: string): string | undefined {
   return i === -1 ? undefined : process.argv[i + 1];
 }
 
+/** Every .md file under `dir`, folders included (an export has one folder per collection), as paths relative to it. */
+function markdownFiles(dir: string, prefix = ""): string[] {
+  return readdirSync(join(dir, prefix), { withFileTypes: true }).flatMap((entry) => {
+    const rel = prefix ? join(prefix, entry.name) : entry.name;
+    if (entry.isDirectory()) return markdownFiles(dir, rel);
+    return entry.name.endsWith(".md") && entry.name !== "README.md" ? [rel] : [];
+  });
+}
+
 async function main() {
   const dir = arg("dir") ?? join(process.cwd(), "content", "drafts");
-  const files = readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "README.md").sort();
+  const files = markdownFiles(dir).sort();
   if (files.length === 0) {
     console.log(`Tidak ada berkas .md di ${dir}`);
     return;
   }
 
   // a bad file stops everything before anything is written
-  const drafts = files.map((f) => parseDraft(readFileSync(join(dir, f), "utf8"), f.replace(/\.md$/, "")));
+  const drafts = files.map((f) => parseDraft(readFileSync(join(dir, f), "utf8"), basename(f).replace(/\.md$/, "")));
 
   const email = arg("as");
   const author = await db.user.findFirst({

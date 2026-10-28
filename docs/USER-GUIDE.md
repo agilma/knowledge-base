@@ -132,7 +132,7 @@ Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. At
 
 ## Cadangan: mengekspor semua dokumen (ADMIN)
 
-Menu **Ekspor** (bagian Admin) mengunduh semua dokumen sebagai satu zip: satu folder per koleksi, satu berkas Markdown per dokumen. Ada juga tombol untuk satu koleksi. Zip memuat **semua** dokumen, termasuk draf, yang diarsipkan, dan yang terbatas, jadi simpan di tempat yang aman. Di dalamnya ada `README.txt` (penjelasan) dan `manifest.json` (daftar dokumen dan statusnya). Pengunduhan dibatasi tiga kali per sepuluh menit. Untuk memasukkan kembali, salin berkasnya ke `content/drafts/` lalu jalankan `npm run docs:import`; yang alamatnya sudah ada dilewati dan yang baru masuk sebagai draf.
+Menu **Ekspor** (bagian Admin) mengunduh semua dokumen sebagai satu zip: satu folder per koleksi, satu berkas Markdown per dokumen. Ada juga tombol untuk satu koleksi. Zip memuat **semua** dokumen, termasuk draf, yang diarsipkan, dan yang terbatas, jadi simpan di tempat yang aman. Di dalamnya ada `README.txt` (penjelasan) dan `manifest.json` (daftar dokumen dan statusnya). Pengunduhan dibatasi tiga kali per sepuluh menit. Untuk memasukkan kembali: ekstrak zip ke folder di luar repositori (jangan ke `content/drafts/`, isinya tidak boleh masuk Git) lalu jalankan `npm run docs:import -- --dir <folder>`; yang alamatnya sudah ada dilewati dan yang baru masuk sebagai draf.
 
 ## Melihat, membandingkan, dan memulihkan versi lama (EDITOR dan ADMIN)
 

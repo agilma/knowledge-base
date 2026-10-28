@@ -36,8 +36,8 @@ export default async function ExportPage() {
           Unduh semua ({total} dokumen)
         </a>
         <p className="text-xs text-muted-foreground">
-          Untuk memasukkan kembali: salin berkas ke <code>content/drafts/</code> lalu jalankan <code>npm run docs:import</code>.
-          Dokumen yang alamatnya sudah ada dilewati, yang baru masuk sebagai draf.
+          Untuk memasukkan kembali: ekstrak zip ke folder di luar repositori (bukan <code>content/drafts/</code>), lalu jalankan{" "}
+          <code>npm run docs:import -- --dir &lt;folder&gt;</code>. Dokumen yang alamatnya sudah ada dilewati, yang baru masuk sebagai draf.
         </p>
       </section>
 
