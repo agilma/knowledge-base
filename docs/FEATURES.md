@@ -67,6 +67,8 @@ saat ini penyunting terakhir dan riwayat sudah menutup kebutuhan "siapa mengubah
 
 ## Direncanakan
 
+Daftar jangka panjang yang lebih baru dan diprioritaskan ada di [`ROADMAP.md`](ROADMAP.md). Fase di bawah ini adalah rencana awal.
+
 ### Fase 0 — Jaring pengaman
 Sudah: pesan penolakan izin, halaman `error`/`not-found`/`loading`, banner draf palsu, validasi env Google, test (`npm test`), dan CI GitHub Actions (hijau di PR #21; belum diwajibkan lewat branch protection).
 Belum: pemisahan database Preview. Hydration error #418 dari draf lokal sudah diperbaiki; kemungkinan sisanya di production dicatat di `TODO.md`.
