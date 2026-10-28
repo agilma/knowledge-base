@@ -101,6 +101,18 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 - **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
 - Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
 
+## Langkah bergambar dan kotak peringatan
+
+Untuk SOP atau urutan kerja yang dibaca staf non-teknis, tampilannya seperti lembar SOP di Canva: kartu bernomor, bukan diagram. Tulis di dalam blok kode berbahasa `langkah`, satu langkah per baris, judul singkat lalu garis tegak `|` lalu satu kalimat penjelasan:
+
+```langkah
+SOW | Scope disepakati
+Design Flow | Design wajib jika ada perubahan flow
+Approval | Project Leader, lalu Project Controller
+```
+
+Nomornya dibuat otomatis (maksimal 12 langkah). Untuk satu hal yang tidak boleh keliru, pakai blok berbahasa `peringatan`: baris pertama judulnya, baris berikutnya tindakannya. Hasilnya kotak merah. Bagian "Wajib ada" dan "Cek diri" cukup daftar biasa; daftar centang `- [ ] ...` tampil sebagai kotak centang. Admin bisa meminta Asisten AI: "buatkan SOP ini dalam bentuk langkah bergambar". Pakai diagram (di bawah) hanya bila alurnya bercabang.
+
 ## Diagram alur di dokumen
 
 Tulis diagram sebagai teks di dalam blok kode berbahasa `mermaid` (di editor teks/Markdown; di editor visual, buat blok kode lalu isi bahasanya). Contoh:
