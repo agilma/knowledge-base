@@ -347,6 +347,45 @@ export async function searchDocuments(query: string, options: SearchOptions) {
   return { results, total: Number(rows[0].total) };
 }
 
+/** Fewest letters a query needs before a "did you mean" is worth offering: shorter ones match anything. */
+const SUGGEST_MIN_CHARS = 4;
+const SUGGEST_LIMIT = 3;
+/** pg_trgm's default of 0.6 misses a one-letter typo in a long title; 0.35 catches it without noise. */
+const SUGGEST_THRESHOLD = 0.35;
+
+export interface TitleSuggestion {
+  slug: string;
+  title: string;
+}
+
+/**
+ * "Mungkin maksud Anda": titles that look like what was typed, for a search that found nothing
+ * (a misspelling such as "kasr closing"). Uses pg_trgm word similarity on titles (index from
+ * migration 11) and the same access rules as the search, so a title the person may not read
+ * is never offered.
+ */
+export async function suggestDocumentTitles(
+  query: string,
+  options: Pick<SearchOptions, "viewer" | "includeDrafts">,
+): Promise<TitleSuggestion[]> {
+  const words = (query.normalize("NFKC").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).slice(0, 8).join(" ");
+  if (words.length < SUGGEST_MIN_CHARS) return [];
+
+  return db.$transaction(async (tx) => {
+    // SET LOCAL does not take bind parameters; the value is a constant of this file.
+    await tx.$executeRawUnsafe(`SET LOCAL pg_trgm.word_similarity_threshold = ${SUGGEST_THRESHOLD}`);
+    return tx.$queryRaw<TitleSuggestion[]>`
+      SELECT d.slug, d.title
+      FROM documents d
+      JOIN collections c ON c.id = d."collectionId"
+      WHERE ${words} <% d.title
+        AND ${documentReadableSql(options.viewer, "d", "c")}
+        ${options.includeDrafts ? Prisma.empty : Prisma.sql`AND d.status = 'PUBLISHED'`}
+      ORDER BY word_similarity(${words}, d.title) DESC, d."updatedAt" DESC
+      LIMIT ${SUGGEST_LIMIT}`;
+  });
+}
+
 export async function getRecentlyUpdatedDocuments(
   limit: number,
   options: ReadOptions

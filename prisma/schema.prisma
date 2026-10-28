@@ -158,6 +158,7 @@ model Document {
   @@index([type])
   @@index([searchVector], type: Gin, map: "documents_search_vector_idx")
   @@index([updatedAt(sort: Desc)])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "documents_title_trgm_idx")
   @@map("documents")
 }
 

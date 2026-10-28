@@ -7,6 +7,8 @@
  * The SQL that uses it lives in `src/lib/services/documents.ts`.
  */
 
+import { synonymsOf } from "./search-synonyms";
+
 /**
  * Text-search configuration. `indonesian` is the Snowball stemmer shipped with
  * PostgreSQL 15+: it strips affixes (memotong, dipotong, pemotongan → potong),
@@ -89,7 +91,8 @@ export function parseSearchQuery(raw: string): SearchGroup[] {
  * is nothing to search for (empty input or only symbols).
  *
  * Plain words are ANDed and, from three letters up, match as prefixes
- * (`kupon:*`), so a half-typed word still finds something. Quoted phrases match
+ * (`kupon:*`), so a half-typed word still finds something, and also match their synonyms
+ * (`kasir` or `cashier`, see search-synonyms.ts). Quoted phrases match
  * adjacent whole words (`'gagal' <-> 'closing'`).
  */
 export function buildTsQuery(groups: SearchGroup[]): string {
@@ -99,7 +102,8 @@ export function buildTsQuery(groups: SearchGroup[]): string {
         return `(${group.map((term) => `'${term}'`).join(" <-> ")})`;
       }
       const [term] = group;
-      return term.length >= MIN_PREFIX_LENGTH ? `'${term}':*` : `'${term}'`;
+      const variants = synonymsOf(term).map((word) => (word.length >= MIN_PREFIX_LENGTH ? `'${word}':*` : `'${word}'`));
+      return variants.length > 1 ? `(${variants.join(" | ")})` : variants[0];
     })
     .join(" & ");
 }

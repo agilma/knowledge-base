@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { DocumentStatus, DocumentType } from "@prisma/client";
 import { db } from "../db";
 import { ADMIN, READER } from "./test-viewers";
-import { searchDocuments } from "./documents";
+import { searchDocuments, suggestDocumentTitles } from "./documents";
 import { HIGHLIGHT_START, HIGHLIGHT_STOP, splitHighlights } from "../search-query";
 
 /**
@@ -126,4 +126,32 @@ test("highlight marker characters inside a document cannot fake a match", { skip
   const marked = splitHighlights(results[0].snippet).filter((s) => s.match).map((s) => s.text);
   assert.ok(!marked.includes("palsu"), JSON.stringify(marked));
   assert.ok(marked.includes(word));
+});
+
+test("a synonym finds the document written with the other word", { skip: !enabled }, async () => {
+  const col = await makeCollection(7);
+  const doc = await makeDocument(10, { collectionId: col.id, title: `Tutup ${word}`, content: "kendala cashier saat closing" });
+
+  const { results } = await searchDocuments(`${word} kasir`, { viewer: READER, collectionId: col.id });
+  assert.deepEqual(results.map((d) => d.id), [doc.id]);
+});
+
+test("a misspelled title is suggested, and only to those who may read it", { skip: !enabled }, async () => {
+  const col = await makeCollection(8);
+  // its own word: titles of the other tests must not compete for the three places
+  const own = "yv" + Math.random().toString(36).replace(/[^a-z]/g, "").slice(0, 8).padEnd(8, "k");
+  const typo = own.slice(0, 6) + own.slice(7);
+  const published = await makeDocument(11, { collectionId: col.id, title: `Panduan ${own} harian` });
+  const draft = await makeDocument(12, { collectionId: col.id, status: DocumentStatus.DRAFT, title: `Rahasia ${own} draf` });
+
+  assert.equal((await searchDocuments(typo, { viewer: READER, collectionId: col.id })).total, 0);
+
+  const forReader = await suggestDocumentTitles(typo, { viewer: READER });
+  assert.deepEqual(forReader.map((s) => s.slug), [published.slug]);
+
+  const forEditor = await suggestDocumentTitles(typo, { viewer: ADMIN, includeDrafts: true });
+  assert.deepEqual(forEditor.map((s) => s.slug).sort(), [published.slug, draft.slug].sort());
+
+  assert.deepEqual(await suggestDocumentTitles("ab", { viewer: READER }), []);
+  assert.deepEqual(await suggestDocumentTitles("!!!", { viewer: READER }), []);
 });
