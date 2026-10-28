@@ -15,7 +15,7 @@ export function MobileNav() {
   const closeSheet = () => setOpen(false);
 
   return (
-    <div className="md:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10 h-14">
+    <div className="md:hidden print:hidden flex items-center justify-between p-4 border-b border-border sticky top-0 bg-background z-10 h-14">
       <div className="flex items-center">
         <Mark className="h-5 w-5 mr-2.5 shrink-0" />
         <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>
