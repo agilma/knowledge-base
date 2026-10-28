@@ -7,12 +7,17 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { unsafeDiagramReason } from "./mermaid-safety";
 import { MERMAID_CONFIG, naturalWidth, withDefaultClasses } from "./mermaid-style";
 
-type State = { svg: string } | { error: string } | null;
+type State = { svg: string | null; error: string | null } | null;
 
 // mermaid keeps global state while it renders, so diagrams are drawn one at a time.
 let queue: Promise<unknown> = Promise.resolve();
 
-async function renderDiagram(id: string, chart: string): Promise<string> {
+// Each drawing gets its own id: mermaid removes whatever element has the id it is given when a
+// drawing fails, which would take the previous, good drawing (same id) off the page with it.
+let drawings = 0;
+
+async function renderDiagram(baseId: string, chart: string): Promise<string> {
+  const id = `${baseId}d${++drawings}`;
   const unsafe = unsafeDiagramReason(chart);
   if (unsafe) throw new Error(unsafe);
   const task = queue.then(async () => {
@@ -67,7 +72,7 @@ function DiagramViewer({ svg, open, onOpenChange }: { svg: string; open: boolean
  * was ever fetched), so the content is never lost. The card is always white:
  * the diagram draws dark text, which is unreadable on a dark page.
  */
-export function MermaidDiagram({ chart }: { chart: string }) {
+export function MermaidDiagram({ chart, quiet = false }: { chart: string; /** For the editor: a chart half-typed is normal, so keep the last good drawing and say so quietly. */ quiet?: boolean }) {
   const id = "mmd" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const [state, setState] = useState<State>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -75,27 +80,28 @@ export function MermaidDiagram({ chart }: { chart: string }) {
   useEffect(() => {
     let cancelled = false;
     renderDiagram(id, chart).then(
-      (svg) => !cancelled && setState({ svg }),
+      (svg) => !cancelled && setState({ svg, error: null }),
       (err) =>
         !cancelled &&
-        setState({
+        setState((prev) => ({
+          svg: quiet ? (prev?.svg ?? null) : null,
           error: `Diagram tidak bisa ditampilkan. Periksa penulisan diagramnya${
             unsafeDiagramReason(chart) ? ` (${err instanceof Error ? err.message : "ditolak"})` : ""
           }.`,
-        }),
+        })),
     );
     return () => {
       cancelled = true;
     };
-  }, [id, chart]);
+  }, [id, chart, quiet]);
 
-  if (state && "svg" in state) {
+  if (state?.svg) {
     return (
       <div className="not-prose relative my-6 break-inside-avoid">
         <div
           role="img"
           aria-label="Diagram alur"
-          className="overflow-x-auto rounded-xl border border-border bg-white p-4 shadow-sm [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full"
+          className={`overflow-x-auto rounded-xl border border-border bg-white p-4 shadow-sm [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full ${state.error ? "opacity-60" : ""}`}
           dangerouslySetInnerHTML={{ __html: state.svg }}
         />
         <Button
@@ -108,14 +114,24 @@ export function MermaidDiagram({ chart }: { chart: string }) {
           <Maximize2 className="mr-1.5 size-3.5" />
           Perbesar
         </Button>
+        {state.error && (
+          <p role="status" className="mt-1 text-xs text-muted-foreground">
+            Diagram belum valid; yang tampil adalah gambar terakhir yang benar.
+          </p>
+        )}
         <DiagramViewer svg={state.svg} open={viewerOpen} onOpenChange={setViewerOpen} />
       </div>
     );
   }
 
+  if (quiet) {
+    // In the editor the source is right above: no alert and no second copy of it.
+    return <p role="status" className="text-sm text-muted-foreground">{state?.error ? "Diagram belum valid." : "Menggambar…"}</p>;
+  }
+
   return (
     <div className="my-6">
-      {state && "error" in state && (
+      {state?.error && (
         <p role="alert" className="mb-2 text-sm text-destructive">
           {state.error}
         </p>

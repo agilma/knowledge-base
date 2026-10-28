@@ -27,7 +27,7 @@ const HINTS: Record<DrawnBlockLanguage, string> = {
 function Preview({ language, text }: { language: DrawnBlockLanguage; text: string }) {
   const settled = useSettled(text, 400);
   if (language === "mermaid") {
-    return settled.trim() ? <MermaidDiagram chart={settled} /> : <p className="kb-preview-hint">{HINTS.mermaid}</p>;
+    return settled.trim() ? <MermaidDiagram chart={settled} quiet /> : <p className="kb-preview-hint">{HINTS.mermaid}</p>;
   }
   if (language === "langkah") {
     const steps = parseSteps(text);
@@ -43,11 +43,12 @@ function Preview({ language, text }: { language: DrawnBlockLanguage; text: strin
  * The stored text is unchanged: this only adds a read-only view under the editable code.
  */
 function CodeBlockView({ node }: NodeViewProps) {
-  const language = node.attrs.language as string | null;
+  // The first word only, as the page reads it: "mermaid title=x" is still a diagram.
+  const language = ((node.attrs.language as string | null) ?? "").split(/\s+/)[0] || null;
   return (
     <NodeViewWrapper className="kb-codeblock">
       <pre spellCheck={false}>
-        <NodeViewContent />
+        <NodeViewContent<"code"> as="code" />
       </pre>
       {isDrawnBlockLanguage(language) && (
         <div contentEditable={false} className="kb-preview" data-kb-preview={language}>

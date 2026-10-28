@@ -4,7 +4,6 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MarkdownContent } from "@/components/document/MarkdownContent";
 
 export interface MarkdownEditorProps {
   value: string;
@@ -15,6 +14,12 @@ export interface MarkdownEditorProps {
   rows?: number;
   className?: string;
 }
+
+// Only authors who open the preview pay for the Markdown renderer.
+const DynamicMarkdownPreview = dynamic(() => import("@/components/document/MarkdownContent").then((m) => m.MarkdownContent), {
+  ssr: false,
+  loading: () => <p className="text-sm text-muted-foreground">Memuat pratinjau…</p>,
+});
 
 const DynamicRichTextEditor = dynamic(
   () => import("@/components/editor/RichTextEditor"),
@@ -140,7 +145,7 @@ export function MarkdownEditor({
         {showPreview && (
           <div className="rounded-lg border border-dashed border-border p-4" aria-label="Pratinjau dokumen">
             <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pratinjau</span>
-            {value.trim() ? <MarkdownContent content={value} /> : <p className="text-sm text-muted-foreground">Belum ada isi.</p>}
+            {value.trim() ? <DynamicMarkdownPreview content={value} /> : <p className="text-sm text-muted-foreground">Belum ada isi.</p>}
           </div>
         )}
       </div>

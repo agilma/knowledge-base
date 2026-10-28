@@ -67,6 +67,23 @@ test("layout differences alone are not loss", () => {
   assert.ok(isLosslessRoundTrip("_a_ __b__\n", "*a* **b**\n"));
 });
 
+test("the preview-drawing code block matches the plain one on code blocks in awkward places", () => {
+  const cases = [
+    "```ts title=x\nconst a = 1;\n```\n",
+    "~~~\ntilde fence\n~~~\n",
+    "```\n```\n",
+    "```\n\n```\n",
+    "- item\n\n  ```bash\n  echo hai\n  ```\n",
+    "> kutipan\n>\n> ```text\n> baris\n> ```\n",
+    "```Mermaid\nflowchart TD\n```\n",
+    "```langkah extra\nA | b\n```\n",
+    "````md\n```js\nx\n```\n````\n",
+  ];
+  for (const md of cases) {
+    assert.equal(previewManager.serialize(dropEmptyParagraphs(previewManager.parse(md) as JsonNode) as never), save(md), `differs for:\n${md}`);
+  }
+});
+
 test("the editor's preview-drawing code block reads and writes exactly the same Markdown", () => {
   const savePreview = (md: string) => previewManager.serialize(dropEmptyParagraphs(previewManager.parse(md) as JsonNode) as never);
   for (const md of [...Object.values(SAFE), ...Object.values(LOSSY)]) {
