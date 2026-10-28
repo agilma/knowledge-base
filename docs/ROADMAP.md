@@ -16,7 +16,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 
 ### Tahap 1 — Nilai tinggi, biaya rendah (berikutnya)
 
-1. **Pratinjau dan tombol sisip di editor** (S-M). Pratinjau langsung diagram Mermaid, langkah bergambar, dan kotak peringatan, plus tombol sisip di toolbar. Sekarang hasil baru terlihat setelah menyimpan. Tanpa migrasi.
+1. **[SELESAI 28 Okt 2026] Pratinjau dan tombol sisip di editor** (S-M; menu `/` sudah ada sebelumnya, ditambah tiga butir). Pratinjau langsung diagram Mermaid, langkah bergambar, dan kotak peringatan, plus tombol sisip di toolbar. Sekarang hasil baru terlihat setelah menyimpan. Tanpa migrasi.
 2. **Pemulihan versi dan perbandingan versi** (M). Tombol "Pulihkan versi ini" di riwayat dan tampilan beda antar versi. Data revisi sudah ada. Tanpa migrasi.
 3. **Ekspor zip `.md` (cadangan)** (S-M). Tombol admin; sudah dirancang di FEATURES. Tanpa migrasi.
 4. **Lampiran gambar** (L). Tempel screenshot di editor, penyimpanan (Vercel Blob direkomendasikan), cache offline. Butuh keputusan penyimpanan dari pemilik. Migrasi kecil (tabel lampiran). Membuka panduan berbasis screenshot yang sekarang tidak bisa.

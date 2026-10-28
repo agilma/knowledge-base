@@ -2,9 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { MarkdownManager } from "@tiptap/markdown";
 import { createContentExtensions } from "./editor-extensions";
+import { CodeBlockWithPreview } from "../components/editor/code-block-preview";
 import { dropEmptyParagraphs, isLosslessRoundTrip, type JsonNode } from "./editor-content";
 
 const manager = new MarkdownManager({ extensions: createContentExtensions() } as never);
+// What the browser actually runs: the same model with a preview drawn under some code blocks.
+const previewManager = new MarkdownManager({ extensions: createContentExtensions(CodeBlockWithPreview) } as never);
 
 /** What the editor would save after the document is opened and edited. */
 function save(markdown: string): string {
@@ -62,4 +65,28 @@ test("layout differences alone are not loss", () => {
   assert.ok(isLosslessRoundTrip("| A | B |\n| - | - |\n| 1 | 2 |\n", "| A   | B   |\n| --- | --- |\n| 1   | 2   |\n"));
   assert.ok(isLosslessRoundTrip("* a\n* b\n", "- a\n- b\n"));
   assert.ok(isLosslessRoundTrip("_a_ __b__\n", "*a* **b**\n"));
+});
+
+test("the preview-drawing code block matches the plain one on code blocks in awkward places", () => {
+  const cases = [
+    "```ts title=x\nconst a = 1;\n```\n",
+    "~~~\ntilde fence\n~~~\n",
+    "```\n```\n",
+    "```\n\n```\n",
+    "- item\n\n  ```bash\n  echo hai\n  ```\n",
+    "> kutipan\n>\n> ```text\n> baris\n> ```\n",
+    "```Mermaid\nflowchart TD\n```\n",
+    "```langkah extra\nA | b\n```\n",
+    "````md\n```js\nx\n```\n````\n",
+  ];
+  for (const md of cases) {
+    assert.equal(previewManager.serialize(dropEmptyParagraphs(previewManager.parse(md) as JsonNode) as never), save(md), `differs for:\n${md}`);
+  }
+});
+
+test("the editor's preview-drawing code block reads and writes exactly the same Markdown", () => {
+  const savePreview = (md: string) => previewManager.serialize(dropEmptyParagraphs(previewManager.parse(md) as JsonNode) as never);
+  for (const md of [...Object.values(SAFE), ...Object.values(LOSSY)]) {
+    assert.equal(savePreview(md), save(md), `differs for:\n${md}`);
+  }
 });

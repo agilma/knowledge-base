@@ -184,3 +184,27 @@
 .kb-editor-content li > p {
   margin: 0;
 }
+
+/* The preview under a drawn block (```langkah, ```peringatan, ```mermaid): read-only, set apart from the code. */
+.kb-codeblock .kb-preview {
+  margin: 0.25rem 0 1rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--muted) 40%, transparent);
+  user-select: none;
+}
+.kb-preview-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.kb-preview-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
