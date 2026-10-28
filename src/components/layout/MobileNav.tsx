@@ -1,7 +1,7 @@
 "use client";
 
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, Search, Star, Clock, FolderOpen, Users } from "lucide-react";
+import { Menu, Home, Search, Star, Clock, FolderOpen, Users, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -75,6 +75,10 @@ export function MobileNav() {
                 <Link onClick={closeSheet} href="/admin/users" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
                   <Users className="w-4 h-4 text-muted-foreground" />
                   Pengguna
+                </Link>
+                <Link onClick={closeSheet} href="/admin/ekspor" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+                  <Download className="w-4 h-4 text-muted-foreground" />
+                  Ekspor
                 </Link>
               </div>
             )}

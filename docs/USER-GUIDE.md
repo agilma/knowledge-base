@@ -130,6 +130,10 @@ flowchart TD
 
 Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label pendek dalam tanda kutip ganda. Pertanyaan memakai kotak membulat `C("Sudah disetujui?"):::decision` (hindari belah ketupat), awal dan akhir `A(["Mulai"]):::start` dan `Z(["Selesai"]):::done`, perbaikan `X["Lengkapi dulu"]:::stop`; warnanya sudah tersedia. Di halaman dokumen, tombol **Perbesar** membuka diagram dengan zoom. Tag HTML (selain `<br>`), `click`, `url(` dan `%%{...}%%` tidak diizinkan. Kalau penulisannya salah atau ditolak, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
 
+## Cadangan: mengekspor semua dokumen (ADMIN)
+
+Menu **Ekspor** (bagian Admin) mengunduh semua dokumen sebagai satu zip: satu folder per koleksi, satu berkas Markdown per dokumen. Ada juga tombol untuk satu koleksi. Zip memuat **semua** dokumen, termasuk draf, yang diarsipkan, dan yang terbatas, jadi simpan di tempat yang aman. Di dalamnya ada `README.txt` (penjelasan) dan `manifest.json` (daftar dokumen dan statusnya). Pengunduhan dibatasi tiga kali per sepuluh menit. Untuk memasukkan kembali: ekstrak zip ke folder di luar repositori (jangan ke `content/drafts/`, isinya tidak boleh masuk Git) lalu jalankan `npm run docs:import -- --dir <folder>`; yang alamatnya sudah ada dilewati dan yang baru masuk sebagai draf.
+
 ## Melihat, membandingkan, dan memulihkan versi lama (EDITOR dan ADMIN)
 
 Di halaman dokumen, **Riwayat** menampilkan setiap versi yang tersimpan. Buka satu versi untuk memilih tampilan: **Isi versi ini**, **Beda dengan versi sebelumnya** (apa yang berubah pada simpan itu), atau **Beda dengan sekarang** (apa yang berubah sejak versi itu). Baris hijau ditambahkan, merah dihapus, dan bagian yang tidak berubah dilipat.

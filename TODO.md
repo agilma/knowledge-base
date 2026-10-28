@@ -245,3 +245,10 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Hapus indeks ekspresi lama `documents_search_idx` di migrasi berikutnya setelah tidak ada versi lama yang berjalan; menghemat ruang (indeks kedua yang tidak dipakai lagi).
 - [x] Halaman koleksi (3,6 MB) dan pemilih dokumen terkait (500 pertama): selesai, daftar 50 per halaman dan pencarian di seluruh perpustakaan.
 - [ ] Cara mengulang pengukuran: Postgres lokal (skill `kb-local-env`), isi 20.000 dokumen dengan `generate_series` (judul, ringkasan, sekitar 900 kata isi, 5% terbatas, 20% draf), lalu panggil `searchDocuments`, `getDocumentsByCollection`, `getRecentlyUpdatedDocuments`, `searchRelationCandidates` dengan `performance.now()` lima kali dan ambil median. Skrip belum disimpan di repo; simpan di `scripts/` bila ingin diulang rutin (butir 42).
+
+## Dari ekspor
+
+- [ ] Ekspor tidak tercatat di log audit (butir roadmap 14); sekarang hanya baris `console.info` berisi id admin dan jumlah dokumen.
+- [ ] Zip tidak dienkripsi dan memuat dokumen terbatas; bila cadangan akan disimpan di luar, pertimbangkan enkripsi atau kata sandi.
+- [ ] Pembatas laju ekspor per instance serverless (lihat catatan pembatas laju AI).
+- [ ] Impor dari zip langsung di aplikasi belum ada (butir roadmap 30); hari ini lewat `content/drafts/` dan `npm run docs:import`.

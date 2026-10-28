@@ -17,7 +17,8 @@ export interface DraftFile {
 }
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
-const KEYS = ["title", "slug", "type", "collection", "excerpt"] as const;
+// The summary may be empty (an export of a document that has none must still be importable).
+const KEYS = ["title", "slug", "type", "collection"] as const;
 
 /** `name` is the file's name without `.md`; it must match the slug so files stay findable. */
 export function parseDraft(text: string, name: string): DraftFile {
@@ -49,7 +50,7 @@ export function parseDraft(text: string, name: string): DraftFile {
     title: fields.title,
     type: fields.type as DocumentType,
     collection: fields.collection,
-    excerpt: fields.excerpt,
+    excerpt: fields.excerpt ?? "",
     content: content + "\n",
   };
 }
