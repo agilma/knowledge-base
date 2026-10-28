@@ -28,8 +28,8 @@ Tips pencarian:
 
 Di bawah judul dokumen tertulis kapan dan oleh siapa dokumen terakhir diubah. Editor dan admin juga
 melihat tautan **Riwayat**: daftar setiap versi dengan penyuntingnya, waktunya, dan selisih karakter.
-Pilih sebuah versi untuk membaca isinya saat itu. Riwayat hanya untuk dibaca; kalau ingin memakai isi
-versi lama, salin dari sana ke editor. Hal yang perlu diketahui:
+Pilih sebuah versi untuk membaca isinya saat itu, membandingkannya, atau memulihkannya (lihat bagian
+berikutnya). Hal yang perlu diketahui:
 
 - Simpan yang mengubah judul, ringkasan, jenis, atau isi menjadi versi baru. Mengganti status (terbitkan, arsipkan, kembalikan ke draf) juga menjadi versi, dengan label seperti "Diterbitkan" atau "Diarsipkan" di daftar, jadi Anda bisa melihat siapa yang mengarsipkan dokumen dan kapan. Menyimpan tanpa mengubah apa pun, atau menetapkan status yang sudah berlaku, tidak membuat versi.
 - Maksimal 100 versi terakhir per dokumen yang disimpan.
