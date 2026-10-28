@@ -165,13 +165,13 @@ Satu dokumen bisa dibatasi seperti koleksi: `Document.restricted` dan tabel `doc
 
 ### 7. Asisten AI untuk admin: mengusulkan, tidak menulis
 
-`POST /api/ai/document-assistant` (SSE) memanggil Claude (`claude-opus-5-5`, `@anthropic-ai/sdk`) untuk membantu admin menyusun dokumen di form. Tanpa migrasi; riwayat chat hanya ada di peramban.
+`POST /api/ai/document-assistant` (SSE) memanggil Claude (`claude-opus-5-5`, `@anthropic-ai/sdk`) untuk membantu admin menyusun dokumen di form. Riwayat chat disimpan per pengguna (keputusan 11).
 
 - **AI tidak punya jalur tulis.** Alatnya `list_collections`, `search_documents`, `read_document` (baca-saja, memakai viewer admin) dan `propose_document`, yang **tidak dijalankan server**: usulan diteruskan ke klien sebagai kejadian SSE dan giliran berhenti. Admin menerapkannya ke form dan menyimpan lewat aksi yang sudah ada (validasi, revisi, aturan akses tetap berlaku). Karena itu injeksi prompt lewat bahan yang ditempel atau dokumen yang dibaca paling jauh menghasilkan teks usulan, yang dibaca admin; pemindai `src/lib/ai/sensitive.ts` menandai email, tautan, nomor panjang, kata kredensial, dan nama orang.
 - **Otorisasi di server** (`src/lib/ai/handler.ts`): sesi wajib dan `role === ADMIN` (prop `aiEnabled` di form hanya menyembunyikan tombol). `Origin` harus sama dengan host dan `Content-Type` JSON (cegah CSRF, karena tiap permintaan berbiaya). Batas ukuran **menolak** dengan pesan, tidak memotong. Pembatas laju di memori per admin (`rate-limit.ts`; per instance serverless, jadi rem kasar; batas pengeluaran di akun Anthropic yang menjadi batas keras). Isi percakapan tidak dicatat; galat penyedia diganti kalimat tetap.
 - **Pengaturan model** (`src/lib/ai/assistant.ts`): thinking bawaan model (tidak bisa dimatikan), `output_config.effort: "medium"` eksplisit, tanpa `tool_choice` paksa (ditolak 400 oleh model ini; prompt yang mengarahkan), `max_tokens` 32.000 dengan streaming, fallback server-side (`server-side-fallback-2026-07-01`), `stop_reason` `refusal` dan `max_tokens` ditangani sebelum alat dijalankan, giliran asisten dikembalikan utuh (blok thinking ikut) dalam putaran alat, maksimal 6 putaran. Prompt sistem beku (dengan `cache_control`); daftar koleksi dan isi form masuk di giliran pengguna agar prefiks cache tidak berubah.
 - Service worker: POST tidak pernah di-cache (`isNetworkOnlyRequest`), dan ada tes yang mengunci `/api/ai/*`.
-- **Yang tidak dilakukan**: menyimpan riwayat chat, memberi AI hak tulis, memakai AI untuk editor non-admin, lampiran berkas ke chat. Lihat `TODO.md`.
+- **Yang tidak dilakukan**: memberi AI hak tulis, memakai AI untuk editor non-admin, lampiran berkas ke chat. Lihat `TODO.md`.
 
 ### 8. Bagikan = tautan internal, PDF = cetak browser
 
@@ -190,3 +190,13 @@ Keputusan pemilik (28 Okt 2026). Diagram adalah blok berpagar ```` ```mermaid ``
 ### 10. Langkah bergambar: konvensi blok berpagar, bukan sintaks baru
 
 Keputusan pemilik (28 Okt 2026), setelah flowchart Mermaid dinilai terlalu rumit bagi pembaca awam dibanding lembar SOP Canva. Blok ```` ```langkah ```` dan ```` ```peringatan ```` adalah blok kode Markdown biasa, jadi tersimpan sebagai teks dan lolos editor (kasus di `editor-roundtrip.test.ts`), pencarian, riwayat. `parseSteps` dan `parseCallout` (`step-blocks.ts`, murni dan diuji) membaca isinya; `MarkdownContent` menggambarnya sebagai `StepCards` dan `CalloutBox` (komponen server, teks dipasang sebagai teks React, tanpa HTML mentah). Yang tidak terbaca (kosong, judul hilang, lebih dari 12 langkah) tidak pernah menghilang: ditampilkan sebagai blok kode. Tidak dipilih: sintaks khusus atau komponen MDX (merusak editor dan penyimpanan teks), dan gambar dari Canva (butuh penyimpanan gambar). Diagram Mermaid (keputusan 9) tetap untuk alur yang bercabang.
+
+### 11. Riwayat chat AI: disimpan per pengguna, milik pribadi, dihapus setelah 90 hari
+
+Keputusan pemilik (28 Okt 2026): riwayat hanya terlihat oleh pemiliknya (admin lain tidak), disimpan 90 hari, berbentuk daftar percakapan per pengguna dan per jenis AI. Migrasi `8_ai_conversations` (aditif): `ai_conversations` (`userId`, `assistant`, `title`, `documentId` opsional) dan `ai_messages` (`seq` unik per percakapan, `role`, `content`, `proposal`, `warnings`, `error`).
+
+- **Privasi di setiap kueri**: semua fungsi di `src/lib/services/ai-conversations.ts` menerima id pemilik dan memasukkannya ke `where`; tidak ada jalur admin. Percakapan orang lain sama dengan yang tidak ada ("tidak ditemukan"), untuk baca, buka lanjut, ganti nama, dan hapus. Akses basis data langsung (pemilik proyek, Neon) tentu tetap bisa membacanya; riwayat tidak dienkripsi.
+- **Server yang memegang riwayat**: browser hanya mengirim `conversationId` dan pesan baru. Server memuat riwayat dari basis data, menerapkan batas ukuran (30 giliran, 60.000 karakter; melebihi = "Mulai percakapan baru", tidak dipotong), menyimpan pertanyaan **sebelum** model dipanggil dan jawaban (termasuk yang terputus di tengah, dan galatnya) sesudahnya. Hanya usulan terbaru yang diulang utuh ke model.
+- **Retensi**: `RETENTION_DAYS = 90` (`src/lib/ai/retention.ts`, dipakai juga oleh layar). Dihapus saat percakapan baru dibuat (paling sering sekali per jam per instance) dengan `deleteMany` pada `updatedAt` yang berindeks; tanpa cron. Pengguna yang dihapus membawa percakapannya (CASCADE); dokumen yang dihapus hanya mengosongkan `documentId` (SET NULL).
+- **Per jenis AI**: kolom `assistant` dan `canUseAssistant` (`src/lib/ai/http.ts`) menentukan siapa boleh memakai tiap AI dan karenanya melihat riwayatnya, supaya "Tanya Knowledge Base" nanti memakai mesin yang sama.
+- **Yang tidak dilakukan**: ekspor riwayat, pencarian di dalam riwayat, berbagi percakapan, dan pembersihan terjadwal (lihat `TODO.md`).

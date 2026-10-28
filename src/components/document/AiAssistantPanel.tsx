@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, TriangleAlert } from "lucide-react";
+import { History, MessageSquarePlus, Sparkles, Trash2, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { LIMITS, TOO_LONG_MESSAGE, type FormContext, type Proposal } from "@/lib/ai/request";
+import { RETENTION_DAYS } from "@/lib/ai/retention";
+import { formatDate } from "@/lib/format";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -22,6 +24,8 @@ interface ChatMessage {
 interface AiAssistantPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The document being edited, if any; kept only as context in the history list. */
+  documentId?: string;
   /** The form as it is now, read when a message is sent. */
   getForm: () => FormContext;
   /** True when applying would overwrite something the author wrote. */
@@ -30,10 +34,16 @@ interface AiAssistantPanelProps {
   onApply: (proposal: Proposal) => string[];
 }
 
-/** What the model sees of an earlier turn: its words plus the proposal it made, so "perpendek" has something to work on. */
-function historyText(m: ChatMessage, withProposal: boolean): string {
-  if (!m.proposal || !withProposal) return m.text;
-  return `${m.text}\n\n[Usulan dokumen yang sudah dikirim]\n${JSON.stringify(m.proposal)}`.trim();
+interface HistoryItem {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+
+const API = "/api/ai/conversations";
+
+async function readError(res: Response, fallback: string): Promise<string> {
+  return ((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? fallback;
 }
 
 async function* readEvents(body: ReadableStream<Uint8Array>) {
@@ -55,12 +65,17 @@ async function* readEvents(body: ReadableStream<Uint8Array>) {
   }
 }
 
-export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, onApply }: AiAssistantPanelProps) {
+export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, formHasContent, onApply }: AiAssistantPanelProps) {
   const isOnline = useOnlineStatus();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState<number | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [view, setView] = useState<"chat" | "history">("chat");
+  const [history, setHistory] = useState<{ items: HistoryItem[] | null; error?: string }>({ items: null });
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -83,19 +98,7 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
     const text = input.trim();
     if (!text || busy) return;
     const form = getForm();
-    // Only the newest proposal goes back: older ones are superseded and would eat the size budget.
-    const history = messages
-      .map((m, i) => ({ m, withProposal: i === lastProposalIndex && !m.ignored }))
-      .filter(({ m, withProposal }) => m.role === "user" || m.text || (m.proposal && withProposal))
-      .map(({ m, withProposal }) => ({ role: m.role, content: historyText(m, withProposal) }));
-    const outgoing = [...history, { role: "user" as const, content: text }];
-    const total = outgoing.reduce((n, m) => n + m.content.length, 0);
-    if (
-      text.length > LIMITS.messageChars ||
-      total > LIMITS.totalChars ||
-      outgoing.length > LIMITS.turns ||
-      (form.content?.length ?? 0) > LIMITS.formContentChars
-    ) {
+    if (text.length > LIMITS.messageChars || (form.content?.length ?? 0) > LIMITS.formContentChars) {
       setMessages((prev) => [...prev, { role: "assistant", text: "", error: TOO_LONG_MESSAGE }]);
       return;
     }
@@ -109,7 +112,7 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
       const res = await fetch("/api/ai/document-assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: outgoing, form }),
+        body: JSON.stringify({ conversationId: conversationId ?? undefined, documentId, message: text, form }),
         signal: controller.signal,
       });
       if (!res.ok || !res.body) {
@@ -124,7 +127,8 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
       }
       let finished = false;
       for await (const { event, data } of readEvents(res.body)) {
-        if (event === "text") patchLast((m) => ({ ...m, text: m.text + String(data.text) }));
+        if (event === "conversation") setConversationId(String(data.id));
+        else if (event === "text") patchLast((m) => ({ ...m, text: m.text + String(data.text) }));
         else if (event === "proposal")
           patchLast((m) => ({ ...m, proposal: data.proposal as Proposal, warnings: data.warnings as string[], applied: null }));
         else if (event === "error") patchLast((m) => ({ ...m, error: String(data.message) }));
@@ -139,6 +143,71 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
       }
     } finally {
       setBusy(false);
+    }
+  }
+
+  function startNew() {
+    abortRef.current?.abort();
+    setMessages([]);
+    setConversationId(null);
+    setConfirming(null);
+    setNotice(null);
+    setView("chat");
+  }
+
+  async function showHistory() {
+    setView("history");
+    setHistory({ items: null });
+    try {
+      const res = await fetch(`${API}?assistant=document`);
+      if (!res.ok) return setHistory({ items: [], error: await readError(res, "Riwayat tidak bisa dimuat.") });
+      setHistory({ items: ((await res.json()) as { conversations: HistoryItem[] }).conversations });
+    } catch {
+      setHistory({ items: [], error: "Riwayat tidak bisa dimuat. Periksa koneksi Anda." });
+    }
+  }
+
+  async function openConversation(id: string) {
+    abortRef.current?.abort();
+    setNotice(null);
+    try {
+      const res = await fetch(`${API}/${encodeURIComponent(id)}`);
+      if (!res.ok) return setNotice(await readError(res, "Percakapan tidak bisa dibuka."));
+      const { conversation } = (await res.json()) as {
+        conversation: { id: string; messages: { role: "user" | "assistant"; content: string; proposal?: Proposal; warnings?: string[]; error?: string }[] };
+      };
+      setMessages(
+        conversation.messages.map((m) => ({
+          role: m.role,
+          text: m.content,
+          proposal: m.proposal ?? undefined,
+          warnings: m.warnings,
+          applied: m.proposal ? null : undefined,
+          error: m.error,
+        })),
+      );
+      setConversationId(conversation.id);
+      setConfirming(null);
+      setView("chat");
+    } catch {
+      setNotice("Percakapan tidak bisa dibuka. Periksa koneksi Anda.");
+    }
+  }
+
+  async function removeConversation(id: string) {
+    setNotice(null);
+    try {
+      const res = await fetch(`${API}/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) return setNotice(await readError(res, "Percakapan tidak bisa dihapus."));
+      setHistory((h) => ({ ...h, items: h.items?.filter((x) => x.id !== id) ?? null }));
+      if (id === conversationId) {
+        setMessages([]);
+        setConversationId(null);
+      }
+    } catch {
+      setNotice("Percakapan tidak bisa dihapus. Periksa koneksi Anda.");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -162,10 +231,63 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
           </SheetDescription>
         </SheetHeader>
 
+        <div className="flex items-center gap-2 border-b px-4 py-2">
+          <Button type="button" variant={view === "history" ? "default" : "outline"} size="sm" onClick={() => (view === "history" ? setView("chat") : showHistory())}>
+            <History className="mr-1.5 size-3.5" />
+            Riwayat
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={startNew} disabled={messages.length === 0 && view === "chat"}>
+            <MessageSquarePlus className="mr-1.5 size-3.5" />
+            Percakapan baru
+          </Button>
+        </div>
+        {notice && (
+          <p role="alert" className="px-4 pt-2 text-sm text-destructive">
+            {notice}
+          </p>
+        )}
+
+        {view === "history" ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Riwayat disimpan {RETENTION_DAYS} hari sejak pesan terakhir dan hanya terlihat oleh Anda.
+            </p>
+            {history.items === null && <p className="text-sm text-muted-foreground">Memuat…</p>}
+            {history.error && (
+              <p role="alert" className="text-sm text-destructive">
+                {history.error}
+              </p>
+            )}
+            {history.items?.length === 0 && !history.error && <p className="text-sm text-muted-foreground">Belum ada riwayat percakapan.</p>}
+            {history.items?.map((item) => (
+              <div key={item.id} className="flex items-stretch gap-2 rounded-lg border">
+                <button type="button" onClick={() => openConversation(item.id)} className="min-w-0 flex-1 rounded-l-lg p-3 text-left hover:bg-muted">
+                  <span className="block truncate text-sm font-medium">{item.title}</span>
+                  <span className="block text-xs text-muted-foreground">{formatDate(item.updatedAt)}</span>
+                </button>
+                {deleting === item.id ? (
+                  <div className="flex items-center gap-1 pr-2">
+                    <Button type="button" size="sm" variant="destructive" onClick={() => removeConversation(item.id)}>
+                      Hapus
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => setDeleting(null)}>
+                      Batal
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="button" size="icon-sm" variant="ghost" className="my-auto mr-2" aria-label={`Hapus percakapan ${item.title}`} onClick={() => setDeleting(item.id)}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4" aria-live="polite">
           {messages.length === 0 && (
             <p className="text-sm text-muted-foreground">
               Contoh: &ldquo;Buat panduan dari catatan ini&rdquo; lalu tempel catatannya. Teks yang dikirim diproses oleh Anthropic API.
+              Percakapan disimpan {RETENTION_DAYS} hari dan hanya terlihat oleh Anda; lihat lagi lewat Riwayat.
             </p>
           )}
           {messages.map((m, i) => (
@@ -247,7 +369,9 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
           ))}
           <div ref={endRef} />
         </div>
+        )}
 
+        {view === "chat" && (
         <div className="border-t p-3 space-y-2">
           {!isOnline && <p className="text-xs text-destructive">Anda sedang offline. Asisten AI butuh koneksi.</p>}
           <Textarea
@@ -258,11 +382,6 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
             className="min-h-[88px] max-h-48"
           />
           <div className="flex justify-end gap-2">
-            {!busy && messages.length > 0 && (
-              <Button type="button" variant="outline" size="sm" onClick={() => { setMessages([]); setConfirming(null); }}>
-                Percakapan baru
-              </Button>
-            )}
             {busy && (
               <Button type="button" variant="outline" size="sm" onClick={() => abortRef.current?.abort()}>
                 Berhenti
@@ -273,6 +392,7 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
             </Button>
           </div>
         </div>
+        )}
       </SheetContent>
     </Sheet>
   );

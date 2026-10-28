@@ -28,27 +28,33 @@ const formContextSchema = z.object({
   content: z.string().max(LIMITS.formContentChars).optional(),
 });
 
-export const requestSchema = z
-  .object({
-    messages: z
-      .array(
-        z.object({
-          role: z.enum(["user", "assistant"]),
-          content: z.string().min(1).max(LIMITS.messageChars),
-        }),
-      )
-      .min(1)
-      .max(LIMITS.turns),
-    form: formContextSchema,
-  })
-  .refine((v) => v.messages[0]?.role === "user" && v.messages.at(-1)?.role === "user", {
-    message: "Percakapan harus diawali dan diakhiri oleh pesan Anda",
-  })
-  .refine((v) => v.messages.reduce((n, m) => n + m.content.length, 0) <= LIMITS.totalChars, {
-    message: TOO_LONG_MESSAGE,
-  });
+/**
+ * One turn from the browser. The history is not sent: the server keeps it (a chat
+ * is stored per user), so the browser can neither rewrite what was said earlier
+ * nor skip the size limits by sending less.
+ */
+export const chatRequestSchema = z.object({
+  /** Absent on the first message of a new chat. */
+  conversationId: z.string().min(1).max(64).optional(),
+  /** The document being edited, kept only as context for the history list. */
+  documentId: z.string().min(1).max(64).optional(),
+  message: z.string().min(1).max(LIMITS.messageChars),
+  form: formContextSchema,
+});
 
-export type AssistantRequest = z.infer<typeof requestSchema>;
+export type ChatRequest = z.infer<typeof chatRequestSchema>;
+
+/** The stored history as the model should see it; null when it no longer fits and a new chat is needed. */
+export function checkHistorySize(messages: { content: string }[]): string | null {
+  if (messages.length > LIMITS.turns) return TOO_LONG_MESSAGE;
+  const total = messages.reduce((n, m) => n + m.content.length, 0);
+  return total > LIMITS.totalChars ? TOO_LONG_MESSAGE : null;
+}
+
+export interface AssistantRequest {
+  messages: { role: "user" | "assistant"; content: string }[];
+  form: FormContext;
+}
 export type FormContext = z.infer<typeof formContextSchema>;
 
 /** What the model may propose; checked again here because strict tool schemas cannot express lengths. */

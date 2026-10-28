@@ -205,7 +205,6 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 
 - [ ] **Belum diuji dengan kunci API asli.** Alur, kontrak SSE, dan penanganan galat diuji dengan klien palsu. Setelah `ANTHROPIC_API_KEY` diisi di Vercel (Production) dan redeploy, coba satu percakapan nyata: usulan muncul, "Terapkan ke form" mengisi form. Bila API menolak parameter (`output_config`, beta fallback), pesan galatnya generik di UI; lihat log fungsi Vercel.
 - [ ] Pembatas laju hanya di memori per instance serverless; bila perlu batas keras, pindahkan ke database atau Redis (lihat keputusan 1 di `docs/ARCHITECTURE.md`) dan pasang batas pengeluaran di akun Anthropic.
-- [ ] Riwayat chat tidak disimpan (hilang saat halaman dimuat ulang atau "Percakapan baru"). Simpan hanya bila dibutuhkan; pertimbangkan isi yang sensitif.
 - [ ] Belum ada lampiran berkas atau gambar ke chat (bahan hanya teks tempel) dan belum ada pembacaan tautan Google Sheet/Docs langsung.
 - [ ] Biaya: Opus dengan thinking dan dokumen panjang tidak murah; bila tagihan jadi masalah, pertimbangkan model lebih kecil untuk perubahan kecil.
 
@@ -228,3 +227,11 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Belum ada pratinjau langkah bergambar di editor; hasilnya terlihat di halaman dokumen setelah menyimpan. Belum ada tombol sisip di toolbar editor: blok ditulis sebagai blok kode berbahasa `langkah` atau `peringatan`, atau lewat Asisten AI.
 - [ ] Deskripsi langkah hanya teks polos (tanpa tebal, tautan, atau ikon). Tambahkan bila dibutuhkan.
 - [ ] Dokumen SOP 01 sampai 06 di aplikasi belum otomatis memakainya; minta Asisten AI mengubah bagian "Alur" ke langkah bergambar.
+
+## Dari riwayat chat AI
+
+- [ ] **Migrasi 8 perlu disetujui pemilik sebelum digabung** (dua tabel baru, aditif).
+- [ ] Pembersihan 90 hari hanya berjalan saat ada percakapan baru dibuat; bila tak ada yang memakai AI, riwayat lama menetap lebih lama. Bila perlu kepastian, tambahkan Vercel cron yang memanggil `purgeExpired(Date.now(), true)`.
+- [ ] Riwayat tidak dienkripsi di database dan bahan yang ditempel ikut tersimpan 90 hari; pertimbangkan penyaringan (peringatan sudah ada hanya untuk usulan, bukan untuk pesan pengguna).
+- [ ] Belum ada pencarian di dalam riwayat, ekspor, atau penggantian nama dari layar (API `PATCH` sudah ada). Daftar dibatasi 30 terbaru.
+- [ ] Status "sudah diterapkan" pada kartu usulan tidak ikut tersimpan; kartu usulan terbaru kembali menampilkan tombol Terapkan saat percakapan dibuka lagi.
