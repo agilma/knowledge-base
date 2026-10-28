@@ -130,6 +130,12 @@ flowchart TD
 
 Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label pendek dalam tanda kutip ganda. Pertanyaan memakai kotak membulat `C("Sudah disetujui?"):::decision` (hindari belah ketupat), awal dan akhir `A(["Mulai"]):::start` dan `Z(["Selesai"]):::done`, perbaikan `X["Lengkapi dulu"]:::stop`; warnanya sudah tersedia. Di halaman dokumen, tombol **Perbesar** membuka diagram dengan zoom. Tag HTML (selain `<br>`), `click`, `url(` dan `%%{...}%%` tidak diizinkan. Kalau penulisannya salah atau ditolak, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
 
+## Melihat, membandingkan, dan memulihkan versi lama (EDITOR dan ADMIN)
+
+Di halaman dokumen, **Riwayat** menampilkan setiap versi yang tersimpan. Buka satu versi untuk memilih tampilan: **Isi versi ini**, **Beda dengan versi sebelumnya** (apa yang berubah pada simpan itu), atau **Beda dengan sekarang** (apa yang berubah sejak versi itu). Baris hijau ditambahkan, merah dihapus, dan bagian yang tidak berubah dilipat.
+
+**Pulihkan versi ini** menaruh judul, ringkasan, jenis, dan isi versi itu kembali ke dokumen. Anda ditanya dulu. Hasilnya **versi baru** di riwayat, jadi tidak ada yang hilang: salah pulihkan? Pulihkan versi yang tadi. Alamat, koleksi, dan status terbit tidak berubah.
+
 ## Koleksi dengan banyak dokumen
 
 Halaman koleksi menampilkan 50 dokumen per halaman, terbaru dulu; pakai **Sebelumnya** dan **Berikutnya** di bawah daftar. Alamat `?halaman=2` bisa dibagikan. Untuk mencari dokumen tertentu di koleksi besar, pakai **Cari** dan pilih koleksinya.

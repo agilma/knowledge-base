@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { DocumentStatus, DocumentType, Role } from "@prisma/client";
 import { db } from "../db";
 import { createDocument, setDocumentStatus, updateDocument } from "./documents";
-import { getRevisionList } from "./revisions";
+import { getRevisionList, restoreRevision } from "./revisions";
 import { ADMIN } from "./test-viewers";
 import { REVISION_LIMIT } from "../revisions";
 
@@ -271,4 +271,38 @@ test("only the latest versions are kept", { skip: !enabled }, async () => {
   assert.equal(list.length, REVISION_LIMIT);
   assert.equal(list[0].version, total, "the newest version must be kept");
   assert.equal(list[list.length - 1].version, total - REVISION_LIMIT + 1, "the oldest kept version");
+});
+
+test("restoring a version puts its text back as a new version and keeps slug, collection and status", { skip: !enabled }, async () => {
+  const u = await user("restorer");
+  const col = await collection();
+  const doc = await createDocument({ ...input(col.id, 90, "## Satu\n\nisi awal", "Judul awal"), status: DocumentStatus.PUBLISHED }, actor(u));
+  created.documents.push(doc.id);
+  await updateDocument(doc.id, { ...input(col.id, 90, "## Dua\n\nisi baru", "Judul baru"), slug: doc.slug, status: DocumentStatus.PUBLISHED }, actor(u));
+  const before = await getRevisionList(doc.id, actor(u));
+  assert.ok(before.length >= 2);
+  const oldest = before[before.length - 1].version;
+
+  const result = await restoreRevision(doc.id, oldest, actor(u));
+  assert.equal(result.changed, true);
+  const now = await db.document.findUniqueOrThrow({ where: { id: doc.id } });
+  assert.equal(now.content, "## Satu\n\nisi awal");
+  assert.equal(now.title, "Judul awal");
+  assert.equal(now.slug, doc.slug);
+  assert.equal(now.status, DocumentStatus.PUBLISHED);
+  assert.equal(now.collectionId, col.id);
+  const after = await getRevisionList(doc.id, actor(u));
+  assert.equal(after.length, before.length + 1, "the restore is one more version, nothing removed");
+
+  assert.equal((await restoreRevision(doc.id, oldest, actor(u))).changed, false, "restoring what is already there changes nothing");
+  assert.equal((await getRevisionList(doc.id, actor(u))).length, after.length);
+});
+
+test("a version that does not exist, or a role that cannot edit, cannot be restored", { skip: !enabled }, async () => {
+  const u = await user("restorer2");
+  const col = await collection();
+  const doc = await createDocument(input(col.id, 91), actor(u));
+  created.documents.push(doc.id);
+  await assert.rejects(restoreRevision(doc.id, 999, actor(u)), /Versi tidak ditemukan/);
+  await assert.rejects(restoreRevision(doc.id, 1, { id: u.id, role: Role.VIEWER }), /Tidak berwenang/);
 });
