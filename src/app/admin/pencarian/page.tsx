@@ -16,12 +16,17 @@ export default async function SearchMissesPage() {
   const misses = await listSearchMisses({ limit: 50, sinceDays: 90 });
 
   // What readers could not find may already be written as a draft, which they cannot see.
-  const matches = await Promise.all(
-    misses.map(async (m) => {
-      const found = await searchDocuments(m.query, { viewer, includeDrafts: true });
-      return found.results[0] ?? null;
-    }),
-  );
+  // A few at a time: each is a full-text search and the page should not hold the whole connection pool.
+  const matches: Awaited<ReturnType<typeof searchDocuments>>["results"][number][] = [];
+  for (let i = 0; i < misses.length; i += 5) {
+    const chunk = await Promise.all(
+      misses.slice(i, i + 5).map(async (m) => {
+        const found = await searchDocuments(m.query, { viewer, includeDrafts: true });
+        return found.results[0] ?? null;
+      }),
+    );
+    matches.push(...(chunk as typeof matches));
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">

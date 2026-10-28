@@ -8,14 +8,15 @@ export const MISS_MAX_WORDS = 8;
 
 export function normalizeMissQuery(raw: string): string | null {
   if (typeof raw !== "string") return null;
-  if (raw.includes("@")) return null;
-  // six digits in a row: a phone, an invoice or account number, not a topic
-  if (/\d[\s.-]?\d[\s.-]?\d[\s.-]?\d[\s.-]?\d[\s.-]?\d/.test(raw)) return null;
-  const text = raw
+  let text = raw
     .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/[^\p{L}\p{N}@]+/gu, " ")
     .trim();
+  if (text.includes("@")) return null;
+  // six digits with any separators between: a phone, an invoice or account number, not a topic
+  if (/\d(?: ?\d){5}/.test(text)) return null;
+  text = text.replace(/@/g, " ");
   if (text.length < 2 || text.length > MISS_MAX_CHARS) return null;
   if (text.split(" ").length > MISS_MAX_WORDS) return null;
   return text;

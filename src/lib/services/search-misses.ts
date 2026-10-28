@@ -48,9 +48,8 @@ export async function listSearchMisses(options: { limit?: number; sinceDays?: nu
 }
 
 /** "Abaikan": the phrase leaves the list (it comes back if someone searches for it again). */
-export async function dismissSearchMiss(raw: string): Promise<boolean> {
-  const query = normalizeMissQuery(raw);
-  if (!query) return false;
+export async function dismissSearchMiss(query: string): Promise<boolean> {
+  if (typeof query !== "string" || !query) return false;
   const { count } = await db.searchMiss.deleteMany({ where: { query } });
   return count > 0;
 }
