@@ -10,6 +10,13 @@ test("steps: title and description split on the first bar, numbering ignored", (
   ]);
 });
 
+test("steps: only a numbering marker followed by a space is dropped", () => {
+  assert.equal(parseSteps("1.5x lebih cepat | hasil")?.[0].title, "1.5x lebih cepat");
+  assert.equal(parseSteps("1.000 pelanggan | x")?.[0].title, "1.000 pelanggan");
+  assert.equal(parseSteps("2FA aktif | x")?.[0].title, "2FA aktif");
+  assert.equal(parseSteps("3. 5 langkah")?.[0].title, "5 langkah");
+});
+
 test("steps: blank lines are skipped, empty or oversize input is not a step list", () => {
   assert.equal(parseSteps("\n  \n")?.length ?? 0, 0);
   assert.equal(parseSteps(""), null);

@@ -10,14 +10,14 @@ export function StepCards({ steps }: { steps: Step[] }) {
     <ol role="list" className="not-prose my-6 grid list-none gap-2 p-0 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
       {steps.map((step, i) => (
         <li key={i} className="break-inside-avoid">
-          <div className="flex gap-3 sm:h-full rounded-xl border-2 border-emerald-300 bg-emerald-50 p-3 text-emerald-950 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-50">
+          <div className="flex gap-3 sm:h-full rounded-xl border-2 [print-color-adjust:exact] border-emerald-300 bg-emerald-50 p-3 text-emerald-950 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-50">
             <span
               aria-hidden="true"
-              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold text-white"
+              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold text-white [print-color-adjust:exact]"
             >
               {i + 1}
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 break-words">
               <p className="font-semibold leading-snug">{step.title}</p>
               {step.description && (
                 <p className="mt-0.5 text-sm leading-snug text-emerald-900/80 dark:text-emerald-100/80">{step.description}</p>
@@ -40,12 +40,12 @@ export function CalloutBox({ callout }: { callout: Callout }) {
   return (
     <div
       role="note"
-      className="not-prose my-6 flex gap-3 break-inside-avoid rounded-xl border-2 border-rose-300 bg-rose-50 p-4 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-50"
+      className="not-prose my-6 flex gap-3 break-inside-avoid rounded-xl border-2 [print-color-adjust:exact] border-rose-300 bg-rose-50 p-4 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-50"
     >
-      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white">
+      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white [print-color-adjust:exact]">
         <AlertTriangle className="size-4" />
       </span>
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-1 break-words">
         <p className="font-semibold leading-snug">{callout.title}</p>
         {callout.body.map((line, i) => (
           <p key={i} className="text-sm leading-snug">

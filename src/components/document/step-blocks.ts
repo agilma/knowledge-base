@@ -21,7 +21,7 @@ export const MAX_STEPS = 12;
 export function parseSteps(text: string): Step[] | null {
   const steps: Step[] = [];
   for (const raw of text.split("\n")) {
-    const line = raw.trim().replace(/^\d+[.)]\s*/, "");
+    const line = raw.trim().replace(/^\d+[.)]\s+/, "");
     if (!line) continue;
     const bar = line.indexOf("|");
     const title = (bar === -1 ? line : line.slice(0, bar)).trim();
