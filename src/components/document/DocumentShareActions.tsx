@@ -13,9 +13,10 @@ type Feedback = { kind: "copied" } | { kind: "manual"; url: string } | null;
  * nothing here can widen who sees a document. The PDF is the browser's own
  * print of this page (see the `@media print` rules in globals.css).
  */
-export function DocumentShareActions({ slug, title, excerpt }: { slug: string; title: string; excerpt?: string | null }) {
+export function DocumentShareActions({ slug, title }: { slug: string; title: string }) {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const timer = useRef<number | undefined>(undefined);
+  const sharing = useRef(false);
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -26,10 +27,22 @@ export function DocumentShareActions({ slug, title, excerpt }: { slug: string; t
   };
 
   const share = async () => {
+    // A second tap while the share sheet is open would be rejected and mistaken for "no share support".
+    if (sharing.current) return;
+    sharing.current = true;
+    try {
+      await doShare();
+    } finally {
+      sharing.current = false;
+    }
+  };
+
+  const doShare = async () => {
     const url = documentUrl(window.location.origin, slug);
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title, text: excerpt || undefined, url });
+        // Title and link only: the excerpt is document content, and the person it is sent to may not have access to it.
+        await navigator.share({ title, url });
         return;
       } catch (err) {
         // Closing the share sheet is a choice, not a failure.
@@ -45,22 +58,8 @@ export function DocumentShareActions({ slug, title, excerpt }: { slug: string; t
     }
   };
 
-  const savePdf = () => {
-    // The page prints as it looks, so a dark theme would print light text on
-    // white paper. Switch to the light theme for the print and put it back after.
-    const root = document.documentElement;
-    const wasDark = root.classList.contains("dark");
-    const restore = () => {
-      window.removeEventListener("afterprint", restore);
-      if (wasDark) root.classList.add("dark");
-    };
-    window.addEventListener("afterprint", restore);
-    // Some mobile browsers return from print() before the dialog closes and
-    // never fire afterprint, so the theme must not depend on it alone.
-    window.setTimeout(restore, 60_000);
-    root.classList.remove("dark");
-    window.print();
-  };
+  // The print stylesheet makes the page light whatever the theme, so this is just the dialog.
+  const savePdf = () => window.print();
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">
@@ -70,9 +69,9 @@ export function DocumentShareActions({ slug, title, excerpt }: { slug: string; t
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={savePdf} title="Buka dialog cetak, lalu pilih Simpan sebagai PDF">
         <FileDown className="mr-2 h-4 w-4" />
-        PDF
+        Simpan PDF
       </Button>
-      <span role="status" className="text-xs text-muted-foreground">
+      <span role="status" className="text-xs text-muted-foreground empty:hidden">
         {feedback?.kind === "copied" && (
           <span className="inline-flex items-center gap-1">
             <Check className="size-3.5" /> Tautan disalin. Penerima harus masuk dan punya akses.
@@ -82,7 +81,8 @@ export function DocumentShareActions({ slug, title, excerpt }: { slug: string; t
       {feedback?.kind === "manual" && (
         <input
           readOnly
-          aria-label="Tautan dokumen"
+          autoFocus
+          aria-label="Salin tautan dokumen ini secara manual"
           value={feedback.url}
           onFocus={(e) => e.currentTarget.select()}
           className="w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm"

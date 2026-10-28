@@ -79,7 +79,7 @@ export default async function DocumentPage({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <DocumentShareActions slug={doc.slug} title={doc.title} excerpt={doc.excerpt} />
+            <DocumentShareActions slug={doc.slug} title={doc.title} />
             {user && (
               <DocumentActions
                 documentId={doc.id}

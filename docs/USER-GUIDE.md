@@ -103,10 +103,10 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 
 ## Membagikan dan menyimpan dokumen sebagai PDF
 
-Di halaman dokumen ada tombol **Bagikan** dan **PDF** untuk semua orang yang bisa membaca dokumen itu.
+Di halaman dokumen ada tombol **Bagikan** dan **Simpan PDF** untuk semua orang yang bisa membaca dokumen itu.
 
-- **Bagikan**: di HP terbuka menu bagikan bawaan (WhatsApp dan lainnya); di komputer tautan disalin. Penerima harus masuk dengan akunnya dan punya akses ke dokumen itu (koleksi atau dokumen terbatas tetap berlaku); orang di luar tim tidak bisa membukanya.
-- **PDF**: membuka dialog cetak browser. Pilih **Simpan sebagai PDF** (di HP: Bagikan atau Cetak, lalu simpan sebagai PDF). Hasilnya tanpa menu samping, selalu berlatar putih, dan memuat asal dokumen di atas judul. PDF adalah salinan pada saat dicetak; tidak ikut berubah bila dokumen diedit.
+- **Bagikan**: di HP terbuka menu bagikan bawaan (WhatsApp dan lainnya); di komputer tautan disalin. Yang dikirim hanya judul dan tautan, tidak ada isi atau ringkasan. Penerima harus masuk dengan akunnya dan punya akses ke dokumen itu (koleksi atau dokumen terbatas tetap berlaku); orang di luar tim tidak bisa membukanya.
+- **Simpan PDF**: membuka dialog cetak browser. Pilih **Simpan sebagai PDF** (di HP: Bagikan atau Cetak, lalu simpan sebagai PDF). Hasilnya tanpa menu samping, selalu berlatar putih, dan memuat asal dokumen di atas judul. PDF adalah salinan pada saat dicetak; tidak ikut berubah bila dokumen diedit.
 
 ## Asisten AI untuk menulis dokumen (ADMIN)
 
