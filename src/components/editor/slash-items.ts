@@ -1,4 +1,5 @@
 import type { Editor, Range } from "@tiptap/core";
+import { drawnBlockNode } from "../../lib/block-templates";
 
 export interface SlashItem {
   title: string;
@@ -23,6 +24,24 @@ export const SLASH_ITEMS: SlashItem[] = [
     hint: "3×3",
     keywords: "table tabel",
     run: (e, r) => at(e, r).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+  },
+  {
+    title: "Langkah bergambar",
+    hint: "kartu",
+    keywords: "langkah steps kartu sop alur urutan",
+    run: (e, r) => at(e, r).insertContent(drawnBlockNode("langkah")).run(),
+  },
+  {
+    title: "Kotak peringatan",
+    hint: "merah",
+    keywords: "peringatan warning perhatian jangan notice",
+    run: (e, r) => at(e, r).insertContent(drawnBlockNode("peringatan")).run(),
+  },
+  {
+    title: "Diagram alur",
+    hint: "diagram",
+    keywords: "diagram flow flowchart mermaid alur cabang",
+    run: (e, r) => at(e, r).insertContent(drawnBlockNode("mermaid")).run(),
   },
   { title: "Garis pemisah", hint: "---", keywords: "divider garis hr pemisah", run: (e, r) => at(e, r).setHorizontalRule().run() },
 ];

@@ -4,6 +4,7 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/document/MarkdownContent";
 
 export interface MarkdownEditorProps {
   value: string;
@@ -83,6 +84,8 @@ export function MarkdownEditor({
   // set when the visual editor reports it would change this document on save
   const [unsupported, setUnsupported] = useState(false);
   const useRawMode = mode === "raw" || unsupported;
+  // the rendered page, under the raw text, for checking diagrams and step cards before saving
+  const [showPreview, setShowPreview] = useState(false);
 
   const chooseMode = useCallback((raw: boolean) => {
     writeEditorMode(raw ? "raw" : "visual");
@@ -99,19 +102,31 @@ export function MarkdownEditor({
         )}
         <div className="flex items-center justify-between border-b pb-2">
           <span className="text-xs font-medium text-muted-foreground">Mode Markdown (Mentah)</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              // the editor checks the text again and comes straight back here if it still cannot hold it
-              setUnsupported(false);
-              chooseMode(false);
-            }}
-            className="text-xs h-7 px-2"
-          >
-            {unsupported ? "Coba Editor Visual" : "Beralih ke Editor Visual"}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-pressed={showPreview}
+              onClick={() => setShowPreview((v) => !v)}
+              className="text-xs h-7 px-2"
+            >
+              {showPreview ? "Sembunyikan pratinjau" : "Pratinjau"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // the editor checks the text again and comes straight back here if it still cannot hold it
+                setUnsupported(false);
+                chooseMode(false);
+              }}
+              className="text-xs h-7 px-2"
+            >
+              {unsupported ? "Coba Editor Visual" : "Beralih ke Editor Visual"}
+            </Button>
+          </div>
         </div>
         <Textarea
           id={id}
@@ -122,6 +137,12 @@ export function MarkdownEditor({
           rows={rows}
           className="font-mono text-sm leading-relaxed"
         />
+        {showPreview && (
+          <div className="rounded-lg border border-dashed border-border p-4" aria-label="Pratinjau dokumen">
+            <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pratinjau</span>
+            {value.trim() ? <MarkdownContent content={value} /> : <p className="text-sm text-muted-foreground">Belum ada isi.</p>}
+          </div>
+        )}
       </div>
     );
   }

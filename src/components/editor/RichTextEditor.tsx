@@ -18,13 +18,18 @@ import {
   Code,
   SquareCode,
   Table2,
+  Route,
+  TriangleAlert,
+  Workflow,
   Undo2,
   Redo2,
 } from "lucide-react";
 
+import { drawnBlockNode } from "@/lib/block-templates";
 import { PROSE_CLASSNAME } from "@/lib/prose";
 import { dropEmptyParagraphs, isLosslessRoundTrip } from "@/lib/editor-content";
 import { createContentExtensions } from "@/lib/editor-extensions";
+import { CodeBlockWithPreview } from "./code-block-preview";
 import { createSlashExtension, type SlashState } from "./slash-extension";
 import { createSlashStore } from "./slash-store";
 import { useKeyboardInset } from "./use-keyboard-inset";
@@ -138,6 +143,16 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolButton label="Tabel" onPress={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
         <Table2 />
       </ToolButton>
+      <span className="kb-tool-sep" />
+      <ToolButton label="Langkah bergambar" onPress={() => chain().insertContent(drawnBlockNode("langkah")).run()}>
+        <Route />
+      </ToolButton>
+      <ToolButton label="Kotak peringatan" onPress={() => chain().insertContent(drawnBlockNode("peringatan")).run()}>
+        <TriangleAlert />
+      </ToolButton>
+      <ToolButton label="Diagram alur" onPress={() => chain().insertContent(drawnBlockNode("mermaid")).run()}>
+        <Workflow />
+      </ToolButton>
     </div>
   );
 }
@@ -191,7 +206,7 @@ export default function RichTextEditor({ markdown, onChange, placeholder, onUnsu
   const [store] = useState(createSlashStore);
   const { state: slash, selected } = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const [extensions] = useState(() => [
-    ...createContentExtensions(),
+    ...createContentExtensions(CodeBlockWithPreview),
     Markdown,
     Placeholder.configure({ placeholder: placeholder ?? "Tulis di sini. Ketik / untuk menyisipkan blok." }),
     createSlashExtension(store.handlers),

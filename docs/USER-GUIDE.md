@@ -101,6 +101,10 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 - **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
 - Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
 
+## Menyisipkan dan melihat pratinjau langkah, peringatan, dan diagram
+
+Di editor, ketik `/` lalu pilih **Langkah bergambar**, **Kotak peringatan**, atau **Diagram alur** (atau pakai tiga tombol di ujung toolbar). Contoh yang valid disisipkan; ubah teksnya, dan **pratinjau** di bawah blok langsung berubah mengikuti (diagram menyusul sesaat setelah Anda berhenti mengetik). Di mode Markdown, tombol **Pratinjau** menampilkan seluruh halaman seperti yang akan dilihat pembaca.
+
 ## Langkah bergambar dan kotak peringatan
 
 Untuk SOP atau urutan kerja yang dibaca staf non-teknis, tampilannya seperti lembar SOP di Canva: kartu bernomor, bukan diagram. Tulis di dalam blok kode berbahasa `langkah`, satu langkah per baris, judul singkat lalu garis tegak `|` lalu satu kalimat penjelasan:
