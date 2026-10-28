@@ -257,3 +257,7 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Folder migrasi `10_` diurutkan sebelum `2_` oleh Prisma pada database baru; aman untuk migrasi 10 (tabel mandiri), tetapi migrasi 11 dan seterusnya yang bergantung pada tabel lama perlu penamaan berpadding atau pemeriksaan.
 - [ ] Saran salah ketik hanya membandingkan judul, bukan isi dokumen; salah ketik kata yang hanya ada di isi tidak ditolong. Daftar sinonim diubah lewat kode (belum ada layar admin).
 - [ ] `CREATE EXTENSION pg_trgm` butuh hak membuat ekstensi di database produksi (Neon: pemilik database punya); bila build gagal di migrasi 11, jalankan `CREATE EXTENSION pg_trgm` sekali dari konsol Neon lalu ulangi.
+- [ ] Tempat sampah dibersihkan hanya saat daftar dibuka atau dokumen dihapus (tidak ada penjadwal); entri lewat 30 hari bisa bertahan sampai salah satunya terjadi (tidak terlihat oleh siapa pun lain).
+- [ ] Menghapus dan memulihkan dokumen belum tercatat di log audit (butir roadmap 14); menghapus koleksi atau pengguna tidak melewati sampah.
+- [ ] Potret sampah memuat seluruh riwayat versi; dokumen dengan ratusan versi besar membuat baris besar. Pertimbangkan batas bila terlihat di data nyata.
+- [ ] Tempat sampah: tautan terkait antara dua dokumen yang sama-sama dihapus hilang bila dipulihkan satu per satu (potret hanya memuat tautan yang masih ada saat dihapus); `AiConversation.documentId` tidak dipulihkan; daftar sampah dibatasi 200 tanpa halaman; pesan galat di `?galat=` bisa dipalsukan lewat tautan buatan (hanya teks, dipotong 200 karakter).

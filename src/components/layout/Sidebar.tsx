@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine, Users, Download, SearchX } from "lucide-react";
+import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine, Users, Download, SearchX, Trash2 } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
 import { Mark } from "@/components/brand/Mark";
@@ -107,6 +107,10 @@ export async function Sidebar() {
             <Link href="/admin/ekspor" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
               <Download className="w-4 h-4 text-muted-foreground" />
               Ekspor
+            </Link>
+            <Link href="/admin/sampah" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+              <Trash2 className="w-4 h-4 text-muted-foreground" />
+              Tempat sampah
             </Link>
           </div>
         )}

@@ -1,6 +1,7 @@
 import { escapeLike } from "../like";
 import { DocumentStatus, DocumentType, Prisma, Role, type Document } from "@prisma/client";
 import { db } from "../db";
+import { trashDocument } from "./trash";
 import {
   HIGHLIGHT_MARKERS,
   HIGHLIGHT_START,
@@ -690,12 +691,9 @@ export async function setDocumentStatus(id: string, status: DocumentStatus, acto
   });
 }
 
+/** "Hapus": moves the document to the trash for 30 days (see trash.ts); nothing is destroyed yet. */
 export async function deleteDocument(id: string, actor: Viewer) {
-  const readable = await db.document.count({ where: { id, ...documentReadableWhere(actor) } });
-  if (readable === 0) throw new Error("Dokumen tidak ditemukan");
-  return db.document.delete({
-    where: { id },
-  });
+  return trashDocument(id, actor);
 }
 
 /**
