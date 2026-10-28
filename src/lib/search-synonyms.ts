@@ -15,8 +15,6 @@ const GROUPS: string[][] = [
   ["pelanggan", "customer", "konsumen"],
   ["cetak", "print"],
   ["hapus", "delete"],
-  ["masuk", "login"],
-  ["keluar", "logout"],
   ["gagal", "error"],
   ["lambat", "lemot", "slow"],
   ["toko", "store", "outlet", "cabang"],

@@ -91,9 +91,9 @@ export function parseSearchQuery(raw: string): SearchGroup[] {
  * is nothing to search for (empty input or only symbols).
  *
  * Plain words are ANDed and, from three letters up, match as prefixes
- * (`kupon:*`), so a half-typed word still finds something, and also match their synonyms
+ * (`kupon:*`), so a half-typed word still finds something, and also match their synonyms as whole words
  * (`kasir` or `cashier`, see search-synonyms.ts). Quoted phrases match
- * adjacent whole words (`'gagal' <-> 'closing'`).
+ * adjacent whole words (`'gagal' <-> 'closing'`); a single quoted word is still a plain word.
  */
 export function buildTsQuery(groups: SearchGroup[]): string {
   return groups
@@ -102,8 +102,10 @@ export function buildTsQuery(groups: SearchGroup[]): string {
         return `(${group.map((term) => `'${term}'`).join(" <-> ")})`;
       }
       const [term] = group;
-      const variants = synonymsOf(term).map((word) => (word.length >= MIN_PREFIX_LENGTH ? `'${word}':*` : `'${word}'`));
-      return variants.length > 1 ? `(${variants.join(" | ")})` : variants[0];
+      const [own, ...others] = synonymsOf(term);
+      const ownMatch = own.length >= MIN_PREFIX_LENGTH ? `'${own}':*` : `'${own}'`;
+      // Synonyms match as whole words: "nota":* would also find "notaris".
+      return others.length > 0 ? `(${[ownMatch, ...others.map((word) => `'${word}'`)].join(" | ")})` : ownMatch;
     })
     .join(" & ");
 }
