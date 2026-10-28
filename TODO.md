@@ -238,3 +238,9 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Tes basis data (`*.integration.test.ts`, termasuk riwayat chat) tidak dijalankan di CI karena CI tidak punya Postgres; tambahkan layanan Postgres di workflow agar privasi antar pengguna dan urutan pesan ikut dijaga otomatis.
 - [ ] Jawaban yang tersimpan setelah browser terputus bergantung pada fungsi serverless yang tetap berjalan; belum diverifikasi di Vercel dan belum memakai `waitUntil`.
 - [ ] Belum ada batas jumlah percakapan per pengguna (hanya pembatas laju dan umur 90 hari).
+
+## Dari pengukuran performa (28 Okt 2026)
+
+- [ ] **Pencarian kata umum sangat lambat pada banyak dokumen** (11,6 detik pada 20.000 dokumen; lihat `docs/ROADMAP.md` butir 37). Perbaikan: kolom `search_vector` tersimpan.
+- [ ] Halaman koleksi memuat isi seluruh dokumen tanpa halaman (3,6 MB pada 500 dokumen); pemilih dokumen terkait hanya menampilkan 500 dokumen pertama menurut abjad (butir 38 dan 39).
+- [ ] Cara mengulang pengukuran: Postgres lokal (skill `kb-local-env`), isi 20.000 dokumen dengan `generate_series` (judul, ringkasan, sekitar 900 kata isi, 5% terbatas, 20% draf), lalu panggil `searchDocuments`, `getDocumentsByCollection`, `getRecentlyUpdatedDocuments`, `getRelationCandidates` dengan `performance.now()` lima kali dan ambil median. Skrip belum disimpan di repo; simpan di `scripts/` bila ingin diulang rutin (butir 42).

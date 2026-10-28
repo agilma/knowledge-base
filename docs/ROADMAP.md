@@ -56,6 +56,91 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 - Multi-bahasa dan terjemahan otomatis.
 - Pengganti tampilan gambar dari Canva (impor halaman desain sebagai langkah bergambar).
 
-### Urutan yang disarankan
+### Tambahan dari perbandingan dengan Outline (28 Okt 2026)
 
-1 → 2 → 3 → 6 → 5 → 4 (menunggu keputusan penyimpanan) → 7 → 9 → 10 → 12 → 13 → 14 → sisanya menurut kebutuhan. Alasannya: dua yang pertama menghilangkan keluhan penulis sekarang (pratinjau, salah simpan), 3 dan 17-18 mengamankan data, 6 dan 9 memberi umpan balik nyata tentang isi sebelum membangun fitur AI pembaca (10).
+Dasar perbandingan ada di bagian "Perbandingan dengan Outline" di bawah. Nomor dilanjutkan dari butir 22.
+
+**Tahap 1 (nilai tinggi)**
+
+23. **Dokumen bersarang dan menu `/`** (L). Sub-halaman di bawah dokumen (SOP 01-06 di bawah satu induk, "Panduan Training" dengan bab-bab), pohon di sidebar dan halaman, seret untuk mengurutkan; plus menu `/` di editor untuk menyisipkan judul, tabel, langkah bergambar, peringatan, diagram. Migrasi aditif (`parentId`, `position`).
+24. **Grup pengguna** (M-L). Kelompok (Tim CS, Koordinator Toko, Tim QA) dipakai sebagai anggota koleksi dan dokumen terbatas alih-alih memilih orang satu per satu; menyelesaikan "grup" di TODO dokumen terbatas. Migrasi (tabel grup dan anggota).
+25. **Tempat sampah (hapus lunak) dengan pemulihan 30 hari** (M). "Hapus" memindahkan dokumen ke sampah, admin bisa memulihkan; dibersihkan otomatis. Mengurangi risiko salah hapus (hari ini hapus permanen). Migrasi aditif (`deletedAt`).
+26. **Tautan balik dan tautan antar dokumen** (M). Ketik `[[` untuk memilih dokumen; bagian "Dirujuk oleh" otomatis di halaman. Melengkapi "Pengetahuan Terkait" manual. Migrasi kecil (tabel tautan) atau dihitung saat membaca.
+
+**Tahap 2 (membuat dokumen dipakai)**
+
+27. **Komentar berutas dengan sebut orang** (L). Komentar pada dokumen, utas, tandai selesai, `@nama` memberi notifikasi; memperluas butir 9 (masukan pembaca) untuk editor. Migrasi (tabel komentar).
+28. **Templat tersimpan** (M). Admin atau editor menyimpan dokumen sebagai templat (SOP, Masalah, Training) dan memilihnya di Dokumen Baru, termasuk yang sudah berisi langkah bergambar dan bagian "Perlu dikonfirmasi". Migrasi kecil.
+29. **Sematan** (M). Tempel tautan Canva, YouTube, Google Slides, Figma; tampil sebagai bingkai dari daftar domain yang diizinkan saja (keamanan). Meniru lembar SOP Canva langsung di halaman.
+30. **Impor dari berkas di aplikasi** (M-L). Unggah `.md` atau `.docx` (dan zip dari Notion atau Confluence) oleh admin menjadi draf; perluas pipeline `docs:import`. Tanpa migrasi.
+31. **Pantau dokumen dan notifikasi** (L). Mengikuti dokumen atau koleksi; lonceng di aplikasi dan, kemudian, email atau WhatsApp saat terbit atau berubah berarti; menyatukan butir 15. Migrasi (langganan, notifikasi).
+34. **Statistik dokumen** (M). Admin melihat berapa kali dibaca, kontributor, dokumen terpopuler dan tidak pernah dibuka; melengkapi log pencarian (butir 6). Migrasi kecil.
+35. **Ikon dan warna** (S). Emoji atau ikon untuk koleksi dan dokumen agar mudah dikenali di HP. Migrasi aditif.
+
+**Tahap 3 (tata kelola dan integrasi)**
+
+36. **Kunci dokumen** (S-M). Dokumen SOP yang sudah disetujui dikunci; hanya admin atau pemberi persetujuan yang dapat membuka kunci; berpasangan dengan alur persetujuan (12). Migrasi aditif.
+32. **API dan token pribadi, webhook** (L). Token untuk membaca dan mencari; webhook "dokumen terbit" ke Slack atau WhatsApp. Butuh desain keamanan (cakupan token, pencabutan).
+33. **Server MCP bacaan-saja** (M-L). Agar Claude (desktop atau Code) bisa mencari dan membaca Knowledge Base atas nama pengguna, sesuai aturan akses; memakai token butir 32. Tidak boleh menulis.
+
+### Performa dan skala (diukur 28 Okt 2026)
+
+Diukur dengan data tiruan: **20.000 dokumen** (rata-rata sekitar 6 KB, 40 koleksi, 5% terbatas, 20% draf) di Postgres 16 lokal, memanggil fungsi layanan yang dipakai halaman. Angka server saja (belum termasuk jaringan ke Neon di Singapura, yang menambah puluhan milidetik per kueri). Skenario terburuk pencarian: kata yang ada di hampir semua dokumen.
+
+| Yang diukur | Hasil (median) | Penilaian |
+| --- | --- | --- |
+| Kueri akses di setiap halaman (koleksi terbatas, anggota, id dokumen terbatas) | 10 ms | baik; tumbuh seiring jumlah dokumen terbatas |
+| Sidebar, daftar koleksi | 2 ms | baik |
+| Beranda (terbaru) dan hitungan per koleksi | 14 ms dan 9 ms | baik pada 20 ribu; butuh indeks `updatedAt` di atas sekitar 100 ribu |
+| Halaman dokumen | 3 ms | baik |
+| Halaman koleksi (500 dokumen) | 55 ms, **3,6 MB** data | **boros**: memuat seluruh isi semua dokumen dan tanpa halaman |
+| Pencarian kata jarang (judul) | 1 ms | baik (memakai indeks) |
+| **Pencarian kata umum ("kasir closing", "kasir")** | **11,6 s dan 14,9 s**, 346 KB data | **parah**: indeks tidak dipakai, vektor pencarian dihitung ulang untuk puluhan ribu dokumen |
+| Pemilih dokumen terkait di form | 14 ms | cepat, tetapi **hanya 500 dokumen pertama menurut abjad** (kekurangan fungsi) |
+
+Temuan utama dan perbaikan (diurutkan menurut dampak). Butir 37 adalah yang paling mendesak **dan paling murah dikerjakan sekarang**, karena menambah kolom tersimpan memutar ulang seluruh tabel (sekitar 50 detik pada 20 ribu dokumen; hampir seketika pada ratusan dokumen sekarang):
+
+37. **Vektor pencarian tersimpan** (M, **segera**). Kolom `search_vector tsvector GENERATED ALWAYS ... STORED` dengan indeks GIN, lalu pencarian membaca kolom itu (bukan menghitung ulang). Terukur: pencarian terburuk **dari 11,6 detik menjadi 0,2 detik** (sekitar 60 kali) dan kata jarang tetap 0,2 ms. Biayanya ruang disk: tabel dokumen 58 MB menjadi 117 MB pada 20 ribu dokumen (indeks lama dapat dihapus untuk menghemat sebagian). Migrasi 9, aditif tetapi mengunci tabel selama menulis ulang; kerjakan selagi dokumennya masih sedikit. Sekalian: hasil pencarian hanya mengambil kolom yang ditampilkan (bukan seluruh isi), dan indeks `updatedAt`.
+38. **Daftar ringan dan berhalaman** (M). Halaman koleksi, hasil pencarian, dan beranda hanya mengambil kolom yang tampil (judul, ringkasan, status, tanggal), bukan `content`; halaman koleksi dibagi per 50 dengan "Muat lebih banyak". Memangkas muatan 3,6 MB menjadi puluhan KB. Tanpa migrasi.
+39. **Pemilih dokumen terkait dengan pencarian** (S-M). Ganti daftar 500 pertama dengan pencarian saat mengetik (memakai pencarian butir 37), supaya semua dokumen bisa dipilih. Tanpa migrasi.
+40. **Kueri akses di tiap halaman dibuat murah** (S-M). Daftar id dokumen terbatas diambil di setiap permintaan; simpan sementara beberapa detik di memori atau hitung hanya bila perlu, supaya tidak tumbuh bersama jumlah dokumen terbatas.
+41. **Batas cache offline** (S). Pastikan cache halaman service worker punya batas jumlah dan umur (puluhan ribu dokumen yang pernah dibuka tidak boleh memenuhi penyimpanan perangkat), dan jangan pra-cache potongan besar yang tidak dipakai (lihat catatan Mermaid di `TODO.md`).
+42. **Pantauan performa** (M). Ukur waktu kueri dan halaman di Production (log lambat, Vercel Observability) dan ulangi benchmark ini setiap kali jumlah dokumen berlipat; skrip pengukuran dan cara membuat data tiruan dicatat di `TODO.md`.
+
+### Urutan yang disarankan (diperbarui)
+
+**37 (vektor pencarian) lebih dulu, selagi dokumen masih sedikit**, lalu 38 dan 39. Setelah itu 1, 2, 3, 6, 5, **25 (tempat sampah)**, **23 (dokumen bersarang)**, **24 (grup)**, 4 (menunggu keputusan penyimpanan), 7, 9 dan 27, 28, 29, 10, 12 dan 36, 40-42 mengikuti pertumbuhan, sisanya menurut kebutuhan. Alasannya: pencarian adalah pintu utama pembaca dan satu-satunya yang melambat tajam; dua yang berikutnya menghilangkan keluhan penulis sekarang (pratinjau, salah simpan); tempat sampah murah dan mencegah kehilangan data; dokumen bersarang paling terasa untuk struktur SOP.
+
+## Perbandingan dengan Outline
+
+Outline adalah wiki tim yang menjadi acuan editor aplikasi ini. Sumber: changelog resmi dan ringkasan fitur dari pihak ketiga (situs resminya tidak terjangkau dari lingkungan kerja saat penelusuran, jadi daftar ini bisa tertinggal dari versi terbaru). Yang dicatat hanya yang relevan untuk tim ini: kasir dan staf toko membaca di HP, tim Thunderlab menulis.
+
+| Fitur Outline | Di sini | Catatan |
+| --- | --- | --- |
+| Koleksi dan pencarian full-text | sudah | Dengan sorotan dan filter jenis dan koleksi; perlu butir 37 agar tetap cepat |
+| Editor blok dengan menu `/` | sebagian | Editor Tiptap ada; menu `/` belum (butir 1 dan 23) |
+| Riwayat versi, pulihkan, beda versi | sebagian | Riwayat ada; pulihkan dan beda versi belum (butir 2) |
+| Favorit dan terakhir dibuka | sudah | |
+| Draf, terbit, arsip | sudah | |
+| Berbagi tautan | sudah (internal) | Tautan publik sengaja ditunda (butir 22) |
+| Ekspor (Markdown, PDF, zip) | sebagian | PDF lewat cetak; zip `.md` belum (butir 3) |
+| Izin per koleksi dan per dokumen | sudah | Hanya admin yang mengatur |
+| Grup pengguna | belum | Butir 24 |
+| Dokumen bersarang (sub-halaman) | belum | Butir 23 |
+| Tempat sampah dengan pemulihan | belum | Butir 25 |
+| Tautan balik dan tautan antar dokumen `[[...]]` | belum | Butir 26 |
+| Komentar inline, utas, selesai, sebut orang (@) | belum | Butir 9 dan 27 |
+| Templat buatan sendiri | sebagian | Hanya kerangka tetap per jenis; butir 28 |
+| Sematan (video, Figma, Canva, Slides) | belum | Butir 29; cocok untuk desain Canva SOP |
+| Impor dari Word, Markdown, Notion, Confluence | sebagian | Hanya lewat skrip `docs:import`; butir 30 |
+| Langganan dan notifikasi dokumen | belum | Butir 15 dan 31 |
+| API, token, webhook | belum | Butir 32 |
+| Server MCP (AI membaca dan mencari wiki) | belum | Butir 33 |
+| Jawaban AI atas pertanyaan | direncanakan | Butir 10 |
+| Statistik dokumen (dibaca, kontributor) | sebagian | Hanya "terakhir dibuka" pribadi; butir 34 |
+| Ikon dan warna koleksi dan dokumen | belum | Butir 35 |
+| Penyematan dokumen penting | direncanakan | Butir 8 |
+| Kunci dokumen | belum | Butir 36, selaras alur persetujuan (12) |
+| Kolaborasi real-time | ditunda | Butuh server WebSocket (ide jauh) |
+| Baca offline penuh (PWA) | **lebih unggul di sini** | Outline tidak menyediakan baca offline |
+| Diagram, langkah bergambar, kotak peringatan, asisten AI penyusun dokumen, riwayat chat AI | **di sini** | Tidak ada atau berbeda di Outline |
