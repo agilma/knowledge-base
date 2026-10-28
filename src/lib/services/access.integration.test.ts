@@ -11,7 +11,7 @@ import {
   getRecentlyUpdatedDocuments,
   getRelatedDocumentIds,
   getRelatedDocuments,
-  getRelationCandidates,
+  searchRelationCandidates,
   searchDocuments,
   setDocumentStatus,
   setRelatedDocuments,
@@ -152,7 +152,7 @@ test("a related document in a restricted collection does not show through an ope
 });
 
 test("the picker candidates leave out what the editor cannot read", T, async () => {
-  const titles = async (viewer: Viewer) => (await getRelationCandidates(viewer)).map((c) => c.id);
+  const titles = async (viewer: Viewer) => (await searchRelationCandidates(tag, viewer, undefined, 100)).map((c) => c.id);
   assert.ok(!(await titles(editorOut)).includes(secret.id));
   assert.ok(!(await titles(editorOut)).includes(secretDraft.id));
   assert.ok((await titles(editorIn)).includes(secret.id));

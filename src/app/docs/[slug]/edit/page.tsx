@@ -4,8 +4,7 @@ import { requireRole } from "@/lib/auth/session";
 import {
   getDocumentBySlug,
   getDocumentMemberIds,
-  getRelatedDocumentIds,
-  getRelationCandidates,
+  getRelatedCandidates,
 } from "@/lib/services/documents";
 import { getCollections, listAssignableUsers } from "@/lib/services/collections";
 import { DocumentForm } from "@/components/document/DocumentForm";
@@ -27,10 +26,9 @@ export default async function EditDocumentPage({
     notFound();
   }
 
-  const [collections, relatedCandidates, initialRelatedIds] = await Promise.all([
+  const [collections, initialRelated] = await Promise.all([
     getCollections(viewer),
-    getRelationCandidates(viewer, document.id),
-    getRelatedDocumentIds(document.id, viewer),
+    getRelatedCandidates(document.id, viewer),
   ]);
 
   // Only an admin may restrict a document, so only an admin's form carries the section.
@@ -50,8 +48,7 @@ export default async function EditDocumentPage({
 
       <DocumentForm
         collections={collections}
-        relatedCandidates={relatedCandidates}
-        initialRelatedIds={initialRelatedIds}
+        initialRelated={initialRelated}
         accessUsers={accessUsers}
         aiEnabled={user.role === Role.ADMIN}
         initialRestricted={document.restricted}

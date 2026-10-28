@@ -126,6 +126,12 @@ flowchart TD
 
 Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label pendek dalam tanda kutip ganda. Pertanyaan memakai kotak membulat `C("Sudah disetujui?"):::decision` (hindari belah ketupat), awal dan akhir `A(["Mulai"]):::start` dan `Z(["Selesai"]):::done`, perbaikan `X["Lengkapi dulu"]:::stop`; warnanya sudah tersedia. Di halaman dokumen, tombol **Perbesar** membuka diagram dengan zoom. Tag HTML (selain `<br>`), `click`, `url(` dan `%%{...}%%` tidak diizinkan. Kalau penulisannya salah atau ditolak, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Pratinjau diagram belum ada di editor: lihat hasilnya di halaman dokumen setelah menyimpan. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
 
+## Koleksi dengan banyak dokumen
+
+Halaman koleksi menampilkan 50 dokumen per halaman, terbaru dulu; pakai **Sebelumnya** dan **Berikutnya** di bawah daftar. Alamat `?halaman=2` bisa dibagikan. Untuk mencari dokumen tertentu di koleksi besar, pakai **Cari** dan pilih koleksinya.
+
+Di form dokumen, bagian **Pengetahuan Terkait** mencari di seluruh dokumen yang boleh Anda baca: ketik sedikitnya dua huruf dari judulnya.
+
 ## Membagikan dan menyimpan dokumen sebagai PDF
 
 Di halaman dokumen ada tombol **Bagikan** dan **Simpan PDF** untuk semua orang yang bisa membaca dokumen itu.

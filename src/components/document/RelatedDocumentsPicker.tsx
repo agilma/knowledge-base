@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MAX_RELATED } from "@/lib/related";
+import { searchRelatedAction } from "@/app/docs/related-actions";
 
 export interface RelatedCandidate {
   id: string;
@@ -13,7 +14,7 @@ export interface RelatedCandidate {
   collection: { name: string } | null;
 }
 
-const SUGGESTION_LIMIT = 8;
+const SEARCH_DELAY_MS = 250;
 
 /**
  * Chooses the documents shown under "Pengetahuan Terkait". The chosen ids are
@@ -21,25 +22,44 @@ const SUGGESTION_LIMIT = 8;
  * form the document editor already submits.
  */
 export function RelatedDocumentsPicker({
-  candidates,
-  initialIds,
+  initialRelated,
+  documentId,
 }: {
-  candidates: RelatedCandidate[];
-  initialIds: string[];
+  /** The documents already related, with their titles. */
+  initialRelated: RelatedCandidate[];
+  /** The document being edited, so it is never offered to itself. */
+  documentId?: string;
 }) {
-  const byId = useMemo(() => new Map(candidates.map((c) => [c.id, c])), [candidates]);
-  // An id can point at a document that is no longer listed (past the list's
-  // cap): keep it rather than silently dropping the relation on save.
-  const [selected, setSelected] = useState<string[]>(initialIds);
+  // Titles of everything chosen or seen, so a chip can be drawn for any id.
+  const [known, setKnown] = useState(() => new Map(initialRelated.map((c) => [c.id, c])));
+  const byId = known;
+  const [selected, setSelected] = useState<string[]>(() => initialRelated.map((c) => c.id));
   const [query, setQuery] = useState("");
+  // The answer is kept with the text it answers: while the next one is awaited, a reply for earlier text is not shown.
+  const [answer, setAnswer] = useState<{ q: string; rows: RelatedCandidate[]; failed: boolean } | null>(null);
+  const latest = useRef(0);
 
-  const needle = query.trim().toLowerCase();
-  const suggestions = useMemo(() => {
-    if (!needle) return [];
-    return candidates
-      .filter((c) => !selected.includes(c.id) && c.title.toLowerCase().includes(needle))
-      .slice(0, SUGGESTION_LIMIT);
-  }, [candidates, needle, selected]);
+  const needle = query.trim();
+  // The server searches the whole library; the answer for an earlier keystroke must not replace a newer one.
+  useEffect(() => {
+    const mine = ++latest.current;
+    if (needle.length < 2) return;
+    const timer = window.setTimeout(() => {
+      searchRelatedAction(needle, documentId).then(
+        (rows) => {
+          if (mine !== latest.current) return;
+          setAnswer({ q: needle, rows, failed: false });
+          setKnown((prev) => new Map([...prev, ...rows.map((r): [string, RelatedCandidate] => [r.id, r])]));
+        },
+        () => mine === latest.current && setAnswer({ q: needle, rows: [], failed: true }),
+      );
+    }, SEARCH_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [needle, documentId]);
+
+  // Results belong to the text they were found for; with less than two letters there is nothing to show.
+  const current = needle.length >= 2 && answer?.q === needle ? answer : null;
+  const suggestions = current ? current.rows.filter((c) => !selected.includes(c.id)) : [];
 
   const full = selected.length >= MAX_RELATED;
 
@@ -111,9 +131,13 @@ export function RelatedDocumentsPicker({
         autoComplete="off"
       />
 
-      {needle && !full && (
-        <ul className="rounded-lg border border-border bg-card">
-          {suggestions.length === 0 ? (
+      {needle.length >= 2 && !full && (
+        <ul className="rounded-lg border border-border bg-card" aria-live="polite">
+          {!current ? (
+            <li className="px-3 py-2 text-sm text-muted-foreground">Mencari…</li>
+          ) : current.failed ? (
+            <li className="px-3 py-2 text-sm text-destructive">Pencarian gagal. Periksa koneksi Anda.</li>
+          ) : suggestions.length === 0 ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">Tidak ada dokumen yang cocok.</li>
           ) : (
             suggestions.map((c) => (

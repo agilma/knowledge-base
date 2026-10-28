@@ -43,8 +43,8 @@ interface LocalDraft {
 
 interface DocumentFormProps {
   collections: CollectionOption[];
-  relatedCandidates?: RelatedCandidate[];
-  initialRelatedIds?: string[];
+  /** The documents already related, with their titles; the picker searches for more. */
+  initialRelated?: RelatedCandidate[];
   /**
    * Given only to admins, who alone may restrict a document: everyone who can be made a
    * member, and the current setting. Without `users` the section is not shown at all.
@@ -71,8 +71,7 @@ interface DocumentFormProps {
 
 export function DocumentForm({
   collections,
-  relatedCandidates = [],
-  initialRelatedIds = [],
+  initialRelated = [],
   accessUsers,
   initialRestricted = false,
   initialMemberIds = [],
@@ -551,10 +550,7 @@ export function DocumentForm({
         )}
       </div>
 
-      <RelatedDocumentsPicker
-        candidates={relatedCandidates}
-        initialIds={initialRelatedIds}
-      />
+      <RelatedDocumentsPicker initialRelated={initialRelated} documentId={initialData?.id} />
 
       {accessUsers && (
         <div className="space-y-3 rounded-lg border border-border p-4">

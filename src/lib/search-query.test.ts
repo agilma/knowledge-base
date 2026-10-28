@@ -124,6 +124,15 @@ test("the query uses exactly the expression the migration indexes", () => {
   );
 });
 
+test("the stored search column is generated from exactly the same expression", () => {
+  const migration = readFileSync(
+    new URL("../../prisma/migrations/9_search_vector/migration.sql", import.meta.url),
+    "utf8"
+  );
+  const code = migration.split("\n").filter((line) => !line.startsWith("--")).join(" ").replace(/\s+/g, " ");
+  assert.ok(code.includes(`GENERATED ALWAYS AS ( ${SEARCH_VECTOR_SQL} ) STORED`), "SEARCH_VECTOR_SQL and migration 9 have drifted apart");
+});
+
 test("the migration is a single, additive statement", () => {
   const migration = readFileSync(
     new URL("../../prisma/migrations/3_fulltext_search/migration.sql", import.meta.url),
