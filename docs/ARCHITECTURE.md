@@ -176,3 +176,13 @@ Satu dokumen bisa dibatasi seperti koleksi: `Document.restricted` dan tabel `doc
 ### 8. Bagikan = tautan internal, PDF = cetak browser
 
 Keputusan pemilik (28 Okt 2026). **Bagikan** hanya memberi tautan biasa ke `/docs/<slug>`: penerima tetap melewati login dan `getDocumentBySlug(viewer)`, sehingga aturan koleksi dan dokumen terbatas tidak bisa dilewati lewat berbagi. **PDF** adalah `window.print()` terhadap halaman yang sama dengan `@media print` (cangkang aplikasi yang tingginya tetap diratakan agar mengalir ke banyak lembar; token terang dipasang kembali di `@media print` sehingga mencetak dari tema gelap tetap terbaca, termasuk lewat Ctrl+P atau menu bagikan iOS; blok kode dibungkus dan tabel dipaksa selebar halaman). Tidak dipilih: tautan publik berbunyi rahasia (butuh tabel dan migrasi, menembus aturan akses, risiko bocor) dan PDF dari server (Chromium headless di Vercel berat dan rawan gagal). Tidak ada perubahan pada proxy atau service worker.
+
+### 9. Diagram alur memakai Mermaid, tersimpan sebagai teks Markdown
+
+Keputusan pemilik (28 Okt 2026). Diagram adalah blok berpagar ```` ```mermaid ```` di dalam isi dokumen, jadi tetap teks: ikut pencarian, riwayat revisi, ekspor, dan lolos bolak-balik editor (ada kasusnya di `editor-roundtrip.test.ts`). Penggambarnya `MermaidDiagram` (komponen klien) yang dipakai `MarkdownContent` untuk blok `language-mermaid`; blok kode lain tidak berubah.
+
+- **Keamanan**: teks dokumen adalah data. `securityLevel: "strict"` (tanpa HTML di label, tanpa click), dan SVG hasilnya dipasang dari keluaran mermaid yang sudah disaring.
+- **Beban**: `mermaid` diimpor dinamis hanya saat ada diagram, dan gambar dibuat satu per satu (mermaid menyimpan status global). Halaman tanpa diagram tidak memuatnya.
+- **Tampilan**: kartu putih tetap, karena tema bawaan menggambar teks gelap. Cetak PDF memakai kartu yang sama.
+- **Gagal tampil**: sintaks salah atau pustaka tak bisa dimuat (misalnya offline sebelum pernah dimuat) menampilkan pesan dan teks sumber, tidak pernah halaman kosong.
+- **Yang tidak dilakukan**: pratinjau di editor, gambar dari Canva (butuh penyimpanan gambar), tema gelap untuk diagram.

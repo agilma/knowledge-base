@@ -101,6 +101,19 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 - **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
 - Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
 
+## Diagram alur di dokumen
+
+Tulis diagram sebagai teks di dalam blok kode berbahasa `mermaid` (di editor teks/Markdown; di editor visual, buat blok kode lalu isi bahasanya). Contoh:
+
+```mermaid
+flowchart TD
+  A["SOW"] --> B{"Approval?"}
+  B -- Ya --> C["Development"]
+  B -- Belum --> A
+```
+
+Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label dalam tanda kutip ganda, keputusan pakai kurung kurawal `{"Pertanyaan?"}`. Kalau penulisannya salah, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Pratinjau diagram belum ada di editor: lihat hasilnya di halaman dokumen setelah menyimpan. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
+
 ## Membagikan dan menyimpan dokumen sebagai PDF
 
 Di halaman dokumen ada tombol **Bagikan** dan **Simpan PDF** untuk semua orang yang bisa membaca dokumen itu.
