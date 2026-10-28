@@ -168,7 +168,7 @@ Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakap
 
 ## Menghapus dan memulihkan dokumen (ADMIN)
 
-**Hapus** di halaman dokumen memindahkan dokumen ke **Tempat sampah** (menu di bawah Ekspor); belum hilang. Di sana tiap dokumen punya **Pulihkan** (kembali apa adanya, lengkap dengan riwayat versi dan anggota) dan **Hapus permanen**. Setelah 30 hari dokumen di sampah hilang sendiri. Kalau alamat dokumen sudah dipakai dokumen baru, yang dipulihkan memakai alamat berakhiran `-pulih`. Kalau koleksinya sudah dihapus, buat koleksinya lagi dulu. Favorit dan "terakhir dibuka" milik pengguna tidak ikut kembali.
+**Hapus** di halaman dokumen memindahkan dokumen ke **Tempat sampah** (menu di bawah Ekspor); belum hilang. Di sana tiap dokumen punya **Pulihkan** (kembali apa adanya, lengkap dengan riwayat versi dan anggota) dan **Hapus permanen**. Setelah 30 hari dokumen di sampah hilang sendiri. Kalau alamat dokumen sudah dipakai dokumen baru, yang dipulihkan memakai alamat berakhiran `-pulih`. Kalau koleksinya sudah dihapus, buat koleksinya lagi dulu. Dua dokumen yang saling terkait lalu sama-sama dihapus kehilangan tautannya bila dipulihkan satu per satu (tautkan lagi lewat "Pengetahuan Terkait"); riwayat chat AI tidak lagi menunjuk ke dokumennya. Tempat sampah menampilkan 200 yang terbaru.
 
 ## Pencarian: sinonim dan salah ketik
 

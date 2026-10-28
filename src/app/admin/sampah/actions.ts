@@ -16,7 +16,7 @@ export async function restoreTrashedAction(formData: FormData): Promise<void> {
   try {
     ({ slug } = await restoreTrashedDocument(id, { id: user.id, role: user.role }));
   } catch (err) {
-    redirect(`/admin/sampah?galat=${encodeURIComponent(userMessage(err, "Gagal memulihkan dokumen"))}`);
+    redirect(`/admin/sampah?galat=${encodeURIComponent(userMessage(err, "Gagal memulihkan dokumen").slice(0, 200))}`);
   }
   revalidatePath("/admin/sampah");
   revalidatePath("/collections");

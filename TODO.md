@@ -260,3 +260,4 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Tempat sampah dibersihkan hanya saat daftar dibuka atau dokumen dihapus (tidak ada penjadwal); entri lewat 30 hari bisa bertahan sampai salah satunya terjadi (tidak terlihat oleh siapa pun lain).
 - [ ] Menghapus dan memulihkan dokumen belum tercatat di log audit (butir roadmap 14); menghapus koleksi atau pengguna tidak melewati sampah.
 - [ ] Potret sampah memuat seluruh riwayat versi; dokumen dengan ratusan versi besar membuat baris besar. Pertimbangkan batas bila terlihat di data nyata.
+- [ ] Tempat sampah: tautan terkait antara dua dokumen yang sama-sama dihapus hilang bila dipulihkan satu per satu (potret hanya memuat tautan yang masih ada saat dihapus); `AiConversation.documentId` tidak dipulihkan; daftar sampah dibatasi 200 tanpa halaman; pesan galat di `?galat=` bisa dipalsukan lewat tautan buatan (hanya teks, dipotong 200 karakter).

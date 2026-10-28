@@ -69,8 +69,12 @@ export async function trashDocument(id: string, actor: Viewer) {
   assertAdmin(actor);
 
   const deleted = await db.$transaction(async (tx) => {
-    // The same lock every writer of the text holds, so a save cannot slip in between reading and deleting.
+    // The locks every writer of this document's text, members and links holds (in the order
+    // setDocumentAccess takes them), so none can slip in between reading and deleting and be
+    // wiped by the cascade without being in the snapshot.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`document_members:${id}`}))`;
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`revision:${id}`}))`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_relations'))`;
 
     const doc = await tx.document.findUnique({
       where: { id },
@@ -153,7 +157,7 @@ export async function listTrash(actor: Viewer, now = Date.now()): Promise<TrashI
   await purgeTrash(now, true);
   const rows = await db.trashedDocument.findMany({
     orderBy: { deletedAt: "desc" },
-    take: 200,
+    take: TRASH_LIST_LIMIT,
     select: { id: true, title: true, slug: true, collectionName: true, deletedByName: true, deletedAt: true },
   });
   return rows.map((row) => ({
@@ -161,6 +165,8 @@ export async function listTrash(actor: Viewer, now = Date.now()): Promise<TrashI
     daysLeft: Math.max(0, Math.ceil((row.deletedAt.getTime() + TRASH_RETENTION_DAYS * DAY_MS - now) / DAY_MS)),
   }));
 }
+
+export const TRASH_LIST_LIMIT = 200;
 
 export async function countTrash(actor: Viewer): Promise<number> {
   assertAdmin(actor);
@@ -251,7 +257,8 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
     }
     const otherIds = [...new Set(snap.relations.flatMap((r) => [r.fromId, r.toId]).filter((id) => id !== d.id))];
     const existing = new Set((await tx.document.findMany({ where: { id: { in: otherIds } }, select: { id: true } })).map((x) => x.id));
-    const links = snap.relations.filter((r) => (r.fromId === d.id ? existing.has(r.toId) : existing.has(r.fromId)));
+    const exists = (docId: string) => docId === d.id || existing.has(docId);
+    const links = snap.relations.filter((r) => exists(r.fromId) && exists(r.toId));
     if (links.length > 0) await tx.documentRelation.createMany({ data: links, skipDuplicates: true });
 
     return { slug };

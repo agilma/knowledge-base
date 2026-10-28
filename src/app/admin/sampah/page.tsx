@@ -3,8 +3,9 @@ import { ArrowLeft, RotateCcw, Trash2 } from "lucide-react";
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
-import { listTrash, TRASH_RETENTION_DAYS } from "@/lib/services/trash";
+import { countTrash, listTrash, TRASH_LIST_LIMIT, TRASH_RETENTION_DAYS } from "@/lib/services/trash";
 import { formatDate } from "@/lib/format";
+import { ConfirmForm } from "./ConfirmForm";
 import { deleteTrashedForeverAction, restoreTrashedAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,9 @@ export default async function TrashPage({ searchParams }: { searchParams: Promis
   const user = await requireRole(Role.ADMIN);
   const params = await searchParams;
   const error = Array.isArray(params.galat) ? params.galat[0] : params.galat;
-  const items = await listTrash({ id: user.id, role: user.role });
+  const viewer = { id: user.id, role: user.role };
+  const items = await listTrash(viewer);
+  const total = items.length >= TRASH_LIST_LIMIT ? await countTrash(viewer) : items.length;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
@@ -58,17 +61,20 @@ export default async function TrashPage({ searchParams }: { searchParams: Promis
                     Pulihkan
                   </Button>
                 </form>
-                <form action={deleteTrashedForeverAction}>
+                <ConfirmForm action={deleteTrashedForeverAction} message={`Hapus permanen "${item.title}"? Tidak bisa dibatalkan.`}>
                   <input type="hidden" name="id" value={item.id} />
                   <Button type="submit" variant="ghost" size="sm" aria-label={`Hapus permanen ${item.title}`} className="text-destructive">
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
                     Hapus permanen
                   </Button>
-                </form>
+                </ConfirmForm>
               </div>
             </li>
           ))}
         </ul>
+      )}
+      {total > items.length && (
+        <p className="text-sm text-muted-foreground">Menampilkan {items.length} terbaru dari {total}. Yang lebih lama muncul setelah ada yang dipulihkan atau dihapus.</p>
       )}
     </div>
   );
