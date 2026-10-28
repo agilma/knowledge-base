@@ -3,18 +3,20 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getCollectionBySlug } from "@/lib/services/collections";
-import { getDocumentsByCollection } from "@/lib/services/documents";
+import { COLLECTION_PAGE_SIZE, countDocumentsByCollection, getDocumentsByCollection } from "@/lib/services/documents";
 import { CollectionActions } from "@/components/collection/CollectionActions";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FolderOpen, Lock, ArrowLeft } from "lucide-react";
+import { FileText, FolderOpen, Lock, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ halaman?: string }>;
 }) {
   const user = await requireUser();
   const viewer = { id: user.id, role: user.role };
@@ -27,7 +29,18 @@ export default async function CollectionDetailPage({
     notFound();
   }
 
-  const docs = await getDocumentsByCollection(collection.id, { includeDrafts: canSeeDrafts, viewer });
+  const listOptions = { includeDrafts: canSeeDrafts, viewer };
+  const total = await countDocumentsByCollection(collection.id, listOptions);
+  const pages = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE));
+  const requested = Number.parseInt((await searchParams).halaman ?? "1", 10);
+  // A page number out of range (an old link, a typed one) shows the nearest real page, not an empty list.
+  const page = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), pages) : 1;
+  const docs = await getDocumentsByCollection(collection.id, {
+    ...listOptions,
+    skip: (page - 1) * COLLECTION_PAGE_SIZE,
+    take: COLLECTION_PAGE_SIZE,
+  });
+  const pageHref = (n: number) => (n <= 1 ? `/collections/${collection.slug}` : `/collections/${collection.slug}?halaman=${n}`);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
@@ -70,7 +83,12 @@ export default async function CollectionDetailPage({
 
       <section>
         <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
-          <h2 className="text-lg font-medium">{docs.length} Dokumen</h2>
+          <h2 className="text-lg font-medium">{total} Dokumen</h2>
+          {pages > 1 && (
+            <p className="text-sm text-muted-foreground">
+              Halaman {page} dari {pages}
+            </p>
+          )}
         </div>
 
         {docs.length > 0 ? (
@@ -110,6 +128,25 @@ export default async function CollectionDetailPage({
           <div className="py-12 text-center border rounded-xl border-dashed border-border bg-muted/20">
             <p className="text-muted-foreground">Koleksi ini belum memiliki dokumen.</p>
           </div>
+        )}
+
+        {pages > 1 && (
+          <nav aria-label="Halaman daftar dokumen" className="mt-8 flex items-center justify-between gap-4">
+            {page > 1 ? (
+              <Link href={pageHref(page - 1)} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                <ChevronLeft className="size-4" /> Sebelumnya
+              </Link>
+            ) : (
+              <span />
+            )}
+            {page < pages ? (
+              <Link href={pageHref(page + 1)} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                Berikutnya <ChevronRight className="size-4" />
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
         )}
       </section>
     </div>

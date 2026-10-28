@@ -1,7 +1,6 @@
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { getCollections, listAssignableUsers } from "@/lib/services/collections";
-import { getRelationCandidates } from "@/lib/services/documents";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +15,6 @@ export default async function NewDocumentPage({
 
   const { collection: collectionSlug, title: defaultTitle } = await searchParams;
   const collections = await getCollections(viewer);
-  const relatedCandidates = await getRelationCandidates(viewer);
   // Only an admin may restrict a document, so only an admin's form carries the section.
   const accessUsers = user.role === Role.ADMIN ? await listAssignableUsers(viewer) : undefined;
 
@@ -39,7 +37,6 @@ export default async function NewDocumentPage({
 
       <DocumentForm
         collections={collections}
-        relatedCandidates={relatedCandidates}
         accessUsers={accessUsers}
         aiEnabled={user.role === Role.ADMIN}
         defaultCollectionId={defaultCollectionId}

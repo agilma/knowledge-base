@@ -12,7 +12,7 @@ import {
   getMemberDocumentIds,
   getRecentlyUpdatedDocuments,
   getRelatedDocumentIds,
-  getRelationCandidates,
+  searchRelationCandidates,
   getRestrictedDocumentIds,
   searchDocuments,
   setDocumentAccess,
@@ -191,7 +191,7 @@ test("history and revisions of a restricted document are hidden too", T, async (
 test("related documents: hidden ones stay hidden, offered to nobody, and kept when someone else edits the list", T, async () => {
   assert.deepEqual(await getRelatedDocumentIds(plain.id, viewerOut), []);
   assert.deepEqual(await getRelatedDocumentIds(plain.id, viewerIn), [lock.id]);
-  const candidates = async (v: Viewer) => (await getRelationCandidates(v)).map((c) => c.id);
+  const candidates = async (v: Viewer) => (await searchRelationCandidates(tag, v, undefined, 100)).map((c) => c.id);
   assert.ok(!(await candidates(viewerOut)).includes(lock.id));
   assert.ok((await candidates(viewerIn)).includes(lock.id));
 

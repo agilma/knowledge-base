@@ -5,7 +5,6 @@ import {
   HIGHLIGHT_START,
   HIGHLIGHT_STOP,
   SEARCH_CONFIG,
-  SEARCH_VECTOR_SQL,
   cleanSnippet,
   toTsQuery,
 } from "../search-query";
@@ -41,22 +40,36 @@ async function assertCollectionAccess(client: Db, viewer: Viewer, collectionId: 
   if (count === 0) throw new Error("Koleksi tidak ditemukan");
 }
 
+/** How many documents a collection page lists at a time. */
+export const COLLECTION_PAGE_SIZE = 50;
+
+function collectionDocumentsWhere(collectionId: string, options: ReadOptions): Prisma.DocumentWhereInput {
+  return {
+    collectionId,
+    ...documentReadableWhere(options.viewer),
+    ...(options.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
+  };
+}
+
+/**
+ * A page of a collection's list, newest first. Only the columns the list shows: the
+ * whole row carries each document's full text, which was 3.6 MB for 500 documents.
+ */
 export async function getDocumentsByCollection(
   collectionId: string,
-  options: ReadOptions
+  options: ReadOptions & { skip?: number; take?: number }
 ) {
-  const whereStatus = options.includeDrafts
-    ? undefined
-    : DocumentStatus.PUBLISHED;
-
   return db.document.findMany({
-    where: {
-      collectionId,
-      ...documentReadableWhere(options.viewer),
-      ...(whereStatus ? { status: whereStatus } : {}),
-    },
-    orderBy: { updatedAt: "desc" },
+    where: collectionDocumentsWhere(collectionId, options),
+    select: { id: true, slug: true, title: true, excerpt: true, status: true, restricted: true, updatedAt: true },
+    orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+    skip: options.skip,
+    take: options.take,
   });
+}
+
+export async function countDocumentsByCollection(collectionId: string, options: ReadOptions) {
+  return db.document.count({ where: collectionDocumentsWhere(collectionId, options) });
 }
 
 export async function getDocumentBySlug(
@@ -136,18 +149,36 @@ export async function getRelatedDocuments(
   });
 }
 
-/** What an editor may pick from when relating a document: everything but itself. */
-export async function getRelationCandidates(viewer: Viewer, excludeId?: string) {
+export const RELATION_SEARCH_LIMIT = 8;
+
+/**
+ * What an editor may pick from when relating a document: titles containing `query`, never
+ * the document itself. It searches the whole library; the list this replaces was only the
+ * first 500 titles in alphabetical order, so later documents could not be chosen at all.
+ */
+export async function searchRelationCandidates(query: string, viewer: Viewer, excludeId?: string, limit = RELATION_SEARCH_LIMIT) {
+  const needle = query.trim().slice(0, 100);
+  if (needle.length < 2) return [];
   return db.document.findMany({
-    where: { ...(excludeId ? { id: { not: excludeId } } : {}), ...documentReadableWhere(viewer) },
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      collection: { select: { name: true } },
+    where: {
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+      ...documentReadableWhere(viewer),
+      title: { contains: needle, mode: "insensitive" },
     },
+    select: { id: true, title: true, status: true, collection: { select: { name: true } } },
+    orderBy: [{ title: "asc" }, { id: "asc" }],
+    take: limit,
+  });
+}
+
+/** The documents already related, with the titles the picker shows for them. */
+export async function getRelatedCandidates(documentId: string, viewer: Viewer) {
+  const ids = await getRelatedDocumentIds(documentId, viewer);
+  if (ids.length === 0) return [];
+  return db.document.findMany({
+    where: { id: { in: ids }, ...documentReadableWhere(viewer) },
+    select: { id: true, title: true, status: true, collection: { select: { name: true } } },
     orderBy: { title: "asc" },
-    take: 500,
   });
 }
 
@@ -245,7 +276,9 @@ export async function searchDocuments(query: string, options: SearchOptions) {
   const tsQuery = toTsQuery(query);
   if (!tsQuery) return { results: [], total: 0 };
 
-  const vector = Prisma.raw(SEARCH_VECTOR_SQL);
+  // The stored column (migration 9), which has the same expression the old index uses:
+  // recomputing it per row took 11.6 s for a common word on 20,000 documents.
+  const vector = Prisma.raw("d.search_vector");
   // translate() drops the marker characters from the text first, so content
   // that happens to contain them cannot masquerade as a match.
   const headline = (column: Prisma.Sql, extra: string) =>
@@ -278,9 +311,21 @@ export async function searchDocuments(query: string, options: SearchOptions) {
 
   if (rows.length === 0) return { results: [], total: 0 };
 
+  // Only what the result list shows: the whole row carries the document's full text.
   const documents = await db.document.findMany({
     where: { id: { in: rows.map((row) => row.id) }, ...documentReadableWhere(options.viewer) },
-    include: { collection: true },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      excerpt: true,
+      type: true,
+      status: true,
+      restricted: true,
+      updatedAt: true,
+      collectionId: true,
+      collection: { select: { id: true, slug: true, name: true } },
+    },
   });
   const byId = new Map(documents.map((doc) => [doc.id, doc]));
 
@@ -313,9 +358,8 @@ export async function getRecentlyUpdatedDocuments(
       ...documentReadableWhere(options.viewer),
       ...(whereStatus ? { status: whereStatus } : {}),
     },
-    include: {
-      collection: true,
-    },
+    // Only what the home list shows, not each document's full text.
+    select: { id: true, slug: true, title: true, excerpt: true, status: true, restricted: true, updatedAt: true },
     orderBy: { updatedAt: "desc" },
     take: limit,
   });
