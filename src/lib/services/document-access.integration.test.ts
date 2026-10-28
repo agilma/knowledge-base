@@ -23,7 +23,7 @@ import {
 import { getCollectionsWithDocumentCount } from "./collections";
 import { getFavoriteDocuments } from "./favorites";
 import { getRecentDocuments } from "./recent-views";
-import { getRevision, getRevisionList } from "./revisions";
+import { getRevision, getRevisionList, restoreRevision } from "./revisions";
 
 /**
  * Restricted documents, against a real database: every way of reading or writing a
@@ -320,4 +320,16 @@ test("deleting a restricted document removes its list", T, async () => {
   const doc4 = await doc("acc-del", open.id, true, [viewerIn.id]);
   await deleteDocument(doc4.id, admin);
   assert.equal(await db.documentMember.count({ where: { documentId: doc4.id } }), 0);
+});
+
+test("a version of a restricted document can be restored only by those who may read it", T, async () => {
+  // its own document: restoring rewrites the text, which other tests search for
+  const mine = await doc("restore-me", open.id, true, [editorIn.id]);
+  await db.documentRevision.create({
+    data: { documentId: mine.id, version: 77, title: "Judul lama", content: "isi lama", type: DocumentType.PANDUAN, status: DocumentStatus.PUBLISHED },
+  });
+  await assert.rejects(restoreRevision(mine.id, 77, editorOut), /Versi tidak ditemukan/);
+  assert.notEqual((await db.document.findUniqueOrThrow({ where: { id: mine.id } })).content, "isi lama");
+  assert.equal((await restoreRevision(mine.id, 77, editorIn)).changed, true);
+  assert.equal((await db.document.findUniqueOrThrow({ where: { id: mine.id } })).content, "isi lama");
 });

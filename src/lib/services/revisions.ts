@@ -1,6 +1,7 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { db } from "../db";
-import { sizeChanges, statusChangeLabel } from "../revisions";
+import { hasMeaningfulChange, sizeChanges, statusChangeLabel } from "../revisions";
+import { updateDocument } from "./documents";
 import { documentReadableSql, documentReadableWhere, type Viewer } from "../collection-access";
 
 export interface RevisionListItem {
@@ -60,4 +61,34 @@ export async function getRevision(documentId: string, version: number, viewer: V
     where: { documentId, version, document: documentReadableWhere(viewer) },
     include: { editedBy: { select: { name: true } } },
   });
+}
+
+/**
+ * Puts the text of an older version back as the document's text. It is an ordinary save:
+ * a new version is added to the history (nothing is rewritten or removed), and the document's
+ * slug, collection and status stay as they are now, since a version of the text is not a
+ * version of where the document lives or whether it is published.
+ */
+export async function restoreRevision(documentId: string, version: number, actor: Viewer): Promise<{ changed: boolean; slug: string }> {
+  if (actor.role !== Role.EDITOR && actor.role !== Role.ADMIN) throw new Error("Tidak berwenang");
+  const revision = await getRevision(documentId, version, actor);
+  if (!revision) throw new Error("Versi tidak ditemukan");
+  const current = await db.document.findFirst({ where: { id: documentId, ...documentReadableWhere(actor) } });
+  if (!current) throw new Error("Dokumen tidak ditemukan");
+  if (!hasMeaningfulChange(current, revision)) return { changed: false, slug: current.slug };
+
+  await updateDocument(
+    documentId,
+    {
+      title: revision.title,
+      slug: current.slug,
+      collectionId: current.collectionId,
+      type: revision.type,
+      excerpt: revision.excerpt ?? undefined,
+      content: revision.content,
+      status: current.status,
+    },
+    actor,
+  );
+  return { changed: true, slug: current.slug };
 }

@@ -17,7 +17,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 ### Tahap 1 — Nilai tinggi, biaya rendah (berikutnya)
 
 1. **[SELESAI 28 Okt 2026] Pratinjau dan tombol sisip di editor** (S-M; menu `/` sudah ada sebelumnya, ditambah tiga butir). Pratinjau langsung diagram Mermaid, langkah bergambar, dan kotak peringatan, plus tombol sisip di toolbar. Sekarang hasil baru terlihat setelah menyimpan. Tanpa migrasi.
-2. **Pemulihan versi dan perbandingan versi** (M). Tombol "Pulihkan versi ini" di riwayat dan tampilan beda antar versi. Data revisi sudah ada. Tanpa migrasi.
+2. **[SELESAI 29 Okt 2026] Pemulihan versi dan perbandingan versi** (M). Tombol "Pulihkan versi ini" di riwayat dan tampilan beda antar versi. Data revisi sudah ada. Tanpa migrasi.
 3. **Ekspor zip `.md` (cadangan)** (S-M). Tombol admin; sudah dirancang di FEATURES. Tanpa migrasi.
 4. **Lampiran gambar** (L). Tempel screenshot di editor, penyimpanan (Vercel Blob direkomendasikan), cache offline. Butuh keputusan penyimpanan dari pemilik. Migrasi kecil (tabel lampiran). Membuka panduan berbasis screenshot yang sekarang tidak bisa.
 5. **Pencarian lebih tahan salah ketik dan sinonim** (M). `pg_trgm` untuk salah ketik, daftar sinonim (kasir/cashier, retur/return), "mungkin maksud Anda". Migrasi aditif (ekstensi dan indeks).
@@ -119,7 +119,7 @@ Outline adalah wiki tim yang menjadi acuan editor aplikasi ini. Sumber: changelo
 | --- | --- | --- |
 | Koleksi dan pencarian full-text | sudah | Dengan sorotan dan filter jenis dan koleksi; perlu butir 37 agar tetap cepat |
 | Editor blok dengan menu `/` | sebagian | Editor Tiptap ada; menu `/` belum (butir 1 dan 23) |
-| Riwayat versi, pulihkan, beda versi | sebagian | Riwayat ada; pulihkan dan beda versi belum (butir 2) |
+| Riwayat versi, pulihkan, beda versi | sudah | Butir 2 |
 | Favorit dan terakhir dibuka | sudah | |
 | Draf, terbit, arsip | sudah | |
 | Berbagi tautan | sudah (internal) | Tautan publik sengaja ditunda (butir 22) |

@@ -28,8 +28,8 @@ Tips pencarian:
 
 Di bawah judul dokumen tertulis kapan dan oleh siapa dokumen terakhir diubah. Editor dan admin juga
 melihat tautan **Riwayat**: daftar setiap versi dengan penyuntingnya, waktunya, dan selisih karakter.
-Pilih sebuah versi untuk membaca isinya saat itu. Riwayat hanya untuk dibaca; kalau ingin memakai isi
-versi lama, salin dari sana ke editor. Hal yang perlu diketahui:
+Pilih sebuah versi untuk membaca isinya saat itu, membandingkannya, atau memulihkannya (lihat bagian
+berikutnya). Hal yang perlu diketahui:
 
 - Simpan yang mengubah judul, ringkasan, jenis, atau isi menjadi versi baru. Mengganti status (terbitkan, arsipkan, kembalikan ke draf) juga menjadi versi, dengan label seperti "Diterbitkan" atau "Diarsipkan" di daftar, jadi Anda bisa melihat siapa yang mengarsipkan dokumen dan kapan. Menyimpan tanpa mengubah apa pun, atau menetapkan status yang sudah berlaku, tidak membuat versi.
 - Maksimal 100 versi terakhir per dokumen yang disimpan.
@@ -129,6 +129,12 @@ flowchart TD
 ```
 
 Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label pendek dalam tanda kutip ganda. Pertanyaan memakai kotak membulat `C("Sudah disetujui?"):::decision` (hindari belah ketupat), awal dan akhir `A(["Mulai"]):::start` dan `Z(["Selesai"]):::done`, perbaikan `X["Lengkapi dulu"]:::stop`; warnanya sudah tersedia. Di halaman dokumen, tombol **Perbesar** membuka diagram dengan zoom. Tag HTML (selain `<br>`), `click`, `url(` dan `%%{...}%%` tidak diizinkan. Kalau penulisannya salah atau ditolak, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
+
+## Melihat, membandingkan, dan memulihkan versi lama (EDITOR dan ADMIN)
+
+Di halaman dokumen, **Riwayat** menampilkan setiap versi yang tersimpan. Buka satu versi untuk memilih tampilan: **Isi versi ini**, **Beda dengan versi sebelumnya** (apa yang berubah pada simpan itu), atau **Beda dengan sekarang** (apa yang berubah sejak versi itu). Baris hijau ditambahkan, merah dihapus, dan bagian yang tidak berubah dilipat.
+
+**Pulihkan versi ini** menaruh judul, ringkasan, jenis, dan isi versi itu kembali ke dokumen. Anda ditanya dulu. Hasilnya **versi baru** di riwayat, jadi tidak ada yang hilang: salah pulihkan? Pulihkan versi yang tadi. Alamat, koleksi, dan status terbit tidak berubah.
 
 ## Koleksi dengan banyak dokumen
 
