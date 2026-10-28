@@ -5,6 +5,7 @@ import { getDocumentBySlug, searchDocuments } from "@/lib/services/documents";
 import { createRateLimiter } from "@/lib/ai/rate-limit";
 import { handleAssistantRequest } from "@/lib/ai/handler";
 import type { AssistantClient } from "@/lib/ai/assistant";
+import { conversationStore } from "@/lib/ai/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
       return apiKey ? (new Anthropic({ apiKey }) as unknown as AssistantClient) : undefined;
     },
     rateLimit,
+    conversations: conversationStore,
     assistant: {
       getCollections: (viewer) => getCollections(viewer),
       searchDocuments: async (query, viewer) =>

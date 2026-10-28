@@ -47,6 +47,7 @@ model User {
   revisions        DocumentRevision[]
   collectionAccess CollectionMember[]
   documentAccess   DocumentMember[]
+  aiConversations  AiConversation[]
 
   @@map("users")
 }
@@ -140,13 +141,14 @@ model Document {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  collection   Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
-  author       User?              @relation("DocumentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
-  lastEditedBy User?              @relation("DocumentEditor", fields: [lastEditedById], references: [id], onDelete: SetNull)
-  relatedFrom  DocumentRelation[] @relation("RelatedFrom")
-  relatedTo    DocumentRelation[] @relation("RelatedTo")
-  revisions    DocumentRevision[]
-  members      DocumentMember[]
+  collection      Collection         @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  author          User?              @relation("DocumentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  lastEditedBy    User?              @relation("DocumentEditor", fields: [lastEditedById], references: [id], onDelete: SetNull)
+  relatedFrom     DocumentRelation[] @relation("RelatedFrom")
+  relatedTo       DocumentRelation[] @relation("RelatedTo")
+  revisions       DocumentRevision[]
+  members         DocumentMember[]
+  aiConversations AiConversation[]
 
   @@index([collectionId])
   @@index([status])
@@ -236,4 +238,47 @@ model Invitation {
   createdAt   DateTime @default(now())
 
   @@map("invitations")
+}
+
+/// A saved chat with one of the AI assistants. Private to its owner: every query
+/// carries the user id (src/lib/services/ai-conversations.ts) and nobody else,
+/// admins included, can open it. Rows older than the retention period are deleted.
+model AiConversation {
+  id         String   @id @default(cuid())
+  userId     String
+  /// Which AI it is a chat with ("document"); each assistant keeps its own list.
+  assistant  String
+  title      String
+  /// The document being edited when the chat began, only as context for the list.
+  documentId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document Document?   @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  messages AiMessage[]
+
+  @@index([userId, assistant, updatedAt])
+  @@index([updatedAt])
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  /// Position in the conversation, from 1; unique so two writers cannot both take the same slot.
+  seq            Int
+  /// "user" or "assistant".
+  role           String
+  content        String
+  /// A document the assistant proposed, as the card showed it.
+  proposal       Json?
+  warnings       Json?
+  error          String?
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, seq])
+  @@map("ai_messages")
 }

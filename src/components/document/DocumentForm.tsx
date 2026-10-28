@@ -413,6 +413,7 @@ export function DocumentForm({
           <AiAssistantPanel
             open={aiOpen}
             onOpenChange={setAiOpen}
+            documentId={initialData?.id}
             getForm={aiFormContext}
             formHasContent={() => !!aiFormContext().content || !!title.trim()}
             onApply={applyAiProposal}
