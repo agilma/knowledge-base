@@ -208,3 +208,10 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Riwayat chat tidak disimpan (hilang saat halaman dimuat ulang atau "Percakapan baru"). Simpan hanya bila dibutuhkan; pertimbangkan isi yang sensitif.
 - [ ] Belum ada lampiran berkas atau gambar ke chat (bahan hanya teks tempel) dan belum ada pembacaan tautan Google Sheet/Docs langsung.
 - [ ] Biaya: Opus dengan thinking dan dokumen panjang tidak murah; bila tagihan jadi masalah, pertimbangkan model lebih kecil untuk perubahan kecil.
+
+## Dari fitur bagikan dan PDF
+
+- [ ] Tautan publik berbunyi rahasia (bisa dibuka tanpa login, bisa dicabut) ditunda: butuh tabel baru, keputusan soal dokumen terbatas, dan perubahan proxy.
+- [ ] PDF dari server (satu klik langsung berkas .pdf) ditunda; hari ini lewat dialog cetak browser.
+- [ ] Belum diuji di perangkat asli: lembar bagikan HP dan "Simpan sebagai PDF" di Safari iOS.
+- [ ] PDF belum memuat daftar isi dan nomor halaman; ekspor banyak dokumen sekaligus belum ada.

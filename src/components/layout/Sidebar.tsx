@@ -27,7 +27,7 @@ export async function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
+    <aside className="hidden md:flex print:hidden flex-col w-64 border-r border-border h-screen bg-background sticky top-0 left-0">
       <div className="p-4 flex items-center h-14 border-b border-border/50 shrink-0">
         <Mark className="h-5 w-5 mr-2.5 shrink-0" />
         <span className="font-semibold text-lg tracking-tight">Knowledge Base</span>

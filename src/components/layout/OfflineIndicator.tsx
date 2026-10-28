@@ -24,7 +24,7 @@ export function OfflineIndicator() {
   }
 
   return (
-    <div className="bg-amber-500/10 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border-b border-amber-500/20 px-4 py-2 text-xs font-medium flex items-center justify-center gap-2 transition-all">
+    <div className="print:hidden bg-amber-500/10 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border-b border-amber-500/20 px-4 py-2 text-xs font-medium flex items-center justify-center gap-2 transition-all">
       <WifiOff className="h-3.5 w-3.5 shrink-0" />
       <span>Anda sedang offline — menampilkan versi tersimpan</span>
     </div>

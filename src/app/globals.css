@@ -131,3 +131,38 @@
     @apply font-sans;
   }
 }
+
+/* "Save as PDF" is the browser printing the page. The app shell is a fixed-height
+   flex row with its own scroll area, which would clip everything after the first
+   sheet, so the shell is flattened and the page flows. */
+@media print {
+  @page {
+    margin: 18mm;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    background: #fff !important;
+  }
+  main,
+  main > div,
+  body > div {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+  table,
+  pre,
+  img,
+  blockquote {
+    break-inside: avoid;
+  }
+}

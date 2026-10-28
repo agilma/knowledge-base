@@ -101,6 +101,13 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 - **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
 - Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
 
+## Membagikan dan menyimpan dokumen sebagai PDF
+
+Di halaman dokumen ada tombol **Bagikan** dan **PDF** untuk semua orang yang bisa membaca dokumen itu.
+
+- **Bagikan**: di HP terbuka menu bagikan bawaan (WhatsApp dan lainnya); di komputer tautan disalin. Penerima harus masuk dengan akunnya dan punya akses ke dokumen itu (koleksi atau dokumen terbatas tetap berlaku); orang di luar tim tidak bisa membukanya.
+- **PDF**: membuka dialog cetak browser. Pilih **Simpan sebagai PDF** (di HP: Bagikan atau Cetak, lalu simpan sebagai PDF). Hasilnya tanpa menu samping, selalu berlatar putih, dan memuat asal dokumen di atas judul. PDF adalah salinan pada saat dicetak; tidak ikut berubah bila dokumen diedit.
+
 ## Asisten AI untuk menulis dokumen (ADMIN)
 
 Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. Editor dan viewer tidak.
