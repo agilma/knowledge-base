@@ -41,6 +41,7 @@ export default async function NewDocumentPage({
         collections={collections}
         relatedCandidates={relatedCandidates}
         accessUsers={accessUsers}
+        aiEnabled={user.role === Role.ADMIN}
         defaultCollectionId={defaultCollectionId}
         defaultTitle={defaultTitle?.slice(0, 150)}
       />

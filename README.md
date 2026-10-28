@@ -41,6 +41,7 @@ Aplikasi menggunakan Auth.js v5 (`next-auth@5`) dengan login khusus Google OAuth
 - `AUTH_ALLOWED_DOMAIN`: Domain email yang diizinkan, tanpa `@` (contoh: `contoh.com`). Boleh dikosongkan.
 - `AUTH_ALLOWED_EMAILS`: Email di luar domain itu yang tetap diizinkan (dipisah koma).
 - `AUTH_ADMIN_EMAILS`: Email yang otomatis diberi role `ADMIN` saat login (dipisah koma).
+- `ANTHROPIC_API_KEY`: Kunci API Anthropic untuk Asisten AI di form dokumen (hanya admin). Opsional: tanpa ini panel menampilkan "AI belum dikonfigurasi". Atur batas pengeluaran di akun Anthropic; pembatas laju di aplikasi hanya rem kasar.
 
 Login ditolak kecuali email cocok dengan salah satu dari dua yang pertama, atau
 admin sudah mengundangnya di halaman **Pengguna** (`/admin/users`).

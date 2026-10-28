@@ -53,6 +53,7 @@ export default async function EditDocumentPage({
         relatedCandidates={relatedCandidates}
         initialRelatedIds={initialRelatedIds}
         accessUsers={accessUsers}
+        aiEnabled={user.role === Role.ADMIN}
         initialRestricted={document.restricted}
         initialMemberIds={initialMemberIds}
         initialData={document}

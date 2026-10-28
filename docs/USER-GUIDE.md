@@ -101,6 +101,19 @@ Buka **Pengguna** di menu samping (bagian Admin), atau alamat `/admin/users`.
 - **Cabut akses**: tombol Cabut menghapus undangan dan mengeluarkan orangnya dari semua perangkat. Akunnya dan tulisannya tetap. Kalau emailnya masih cocok dengan `AUTH_ALLOWED_DOMAIN` atau `AUTH_ALLOWED_EMAILS`, ia tetap bisa masuk lagi sebagai peran awalnya; hapus dari pengaturan itu juga bila perlu.
 - Admin dari `AUTH_ADMIN_EMAILS` dan akun Anda sendiri tidak bisa diubah di sini.
 
+## Asisten AI untuk menulis dokumen (ADMIN)
+
+Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. Editor dan viewer tidak.
+
+1. Buka panel, lalu tempel bahan (log tiket, catatan, teks dari sheet) dan tulis perintah, misalnya "buat panduan dari catatan ini".
+2. AI membalas dan, bila bahannya cukup, mengusulkan dokumen. Kartu usulan menampilkan judul, koleksi, jenis, ringkasan, dan isi (buka "Lihat isi").
+3. Bila ada kotak kuning, baca: usulan memuat sesuatu yang biasanya tidak boleh ada di dokumen (email, tautan, nomor panjang, kata sandi, nama orang). Perbaiki sebelum menyimpan.
+4. Tekan **Terapkan ke form** untuk mengisi form (judul, slug, koleksi, jenis, ringkasan, isi). Bila form sudah berisi tulisan, Anda ditanya dulu. Slug dokumen yang sudah terbit tidak diubah.
+5. Minta perubahan ("perpendek", "tambahkan Perlu dikonfirmasi") di panel yang sama; usulan baru menggantikan yang lama.
+6. Periksa form, lalu simpan seperti biasa. AI tidak menyimpan atau menerbitkan apa pun.
+
+Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; isi percakapan tidak disimpan di aplikasi: ia bertahan selama halaman form terbuka (menutup panel tidak menghapusnya) dan hilang saat halaman dimuat ulang atau tombol **Percakapan baru** ditekan. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
+
 ## Memasukkan draf dari berkas (ADMIN, perintah di komputer)
 
 Dokumen yang disiapkan sebagai berkas di folder `content/drafts/` dimasukkan sebagai **draf** dengan `npm run docs:import` (lihat `content/drafts/README.md`). Hanya editor dan admin yang melihat draf; tinjau isinya, lengkapi bagian "Perlu dikonfirmasi", lalu tekan **Publish**. Menjalankannya ulang tidak menimpa dokumen yang sudah ada.
