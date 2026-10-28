@@ -20,7 +20,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 2. **[SELESAI 29 Okt 2026] Pemulihan versi dan perbandingan versi** (M). Tombol "Pulihkan versi ini" di riwayat dan tampilan beda antar versi. Data revisi sudah ada. Tanpa migrasi.
 3. **[SELESAI 29 Okt 2026] Ekspor zip `.md` (cadangan)** (S-M). Tombol admin; sudah dirancang di FEATURES. Tanpa migrasi.
 4. **Lampiran gambar** (L). Tempel screenshot di editor, penyimpanan (Vercel Blob direkomendasikan), cache offline. Butuh keputusan penyimpanan dari pemilik. Migrasi kecil (tabel lampiran). Membuka panduan berbasis screenshot yang sekarang tidak bisa.
-5. **Pencarian lebih tahan salah ketik dan sinonim** (M). `pg_trgm` untuk salah ketik, daftar sinonim (kasir/cashier, retur/return), "mungkin maksud Anda". Migrasi aditif (ekstensi dan indeks).
+5. **[SELESAI 28 Okt 2026] Pencarian lebih tahan salah ketik dan sinonim** (M). `pg_trgm` untuk salah ketik, daftar sinonim (kasir/cashier, retur/return), "mungkin maksud Anda". Migrasi aditif (ekstensi dan indeks).
 6. **[SELESAI 28 Okt 2026] Log pencarian tanpa hasil** (S-M). Catat kata yang dicari tapi tidak ketemu (tanpa identitas), tampil ke admin sebagai "topik yang belum ditulis". Umpan balik paling murah untuk isi. Migrasi kecil.
 
 ### Tahap 2 — Membuat dokumen dipakai, bukan hanya dibaca

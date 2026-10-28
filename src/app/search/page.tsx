@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Search as SearchIcon, FileText, ChevronRight, Plus, Lock } from "lucide-react";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
-import { searchDocuments } from "@/lib/services/documents";
+import { searchDocuments, suggestDocumentTitles } from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
 import { recordSearchMiss } from "@/lib/services/search-misses";
 import { Input } from "@/components/ui/input";
@@ -57,6 +57,16 @@ export default async function SearchPage({
         viewer,
       })
     : { results: [], total: 0 };
+
+  // Nothing found: a title that looks like what was typed may be what they meant (a typo).
+  let suggestions: Awaited<ReturnType<typeof suggestDocumentTitles>> = [];
+  if (hasSearchableTerms && results.length === 0 && !selectedCollection && !selectedType) {
+    try {
+      suggestions = await suggestDocumentTitles(query, { viewer, includeDrafts: canSeeDrafts });
+    } catch {
+      // a suggestion is a courtesy; the page works without it
+    }
+  }
 
   // A search that finds nothing is a topic nobody has written (or named the way people ask for it).
   // Only counted without filters: with them, nothing found may just mean the filter was too narrow.
@@ -232,6 +242,20 @@ export default async function SearchPage({
                       ? "Coba sesuaikan filter atau kata kunci pencarian Anda."
                       : "Coba ketik kata lain, misalnya judul atau gejala masalahnya."}
                   </p>
+                  {suggestions.length > 0 && (
+                    <div className="mt-5 text-left max-w-md mx-auto">
+                      <p className="text-sm font-medium text-foreground">Mungkin maksud Anda:</p>
+                      <ul className="mt-2 space-y-1">
+                        {suggestions.map((item) => (
+                          <li key={item.slug}>
+                            <Link href={`/docs/${item.slug}`} className="text-primary hover:underline">
+                              {item.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   {/* Someone who searched and found nothing knows better than
                       anyone which document is missing, and will never be more
                       motivated to write it than right now. */}

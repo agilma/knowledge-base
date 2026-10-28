@@ -16,8 +16,15 @@ import {
 } from "./search-query";
 
 test("plain words are ANDed; from three letters they match as prefixes", () => {
-  assert.equal(toTsQuery("pos gagal"), "'pos':* & 'gagal':*");
+  assert.equal(toTsQuery("pos gagal"), "'pos':* & ('gagal':* | 'error')");
   assert.equal(toTsQuery("di pos"), "'di' & 'pos':*");
+});
+
+test("a word also matches its synonyms, in either direction; quoted phrases do not expand", () => {
+  assert.equal(toTsQuery("Kasir"), "('Kasir':* | 'cashier')");
+  assert.equal(toTsQuery("cashier"), "('cashier':* | 'kasir')");
+  assert.equal(toTsQuery("struk"), "('struk':* | 'receipt' | 'nota')");
+  assert.equal(toTsQuery('"gagal closing"'), "('gagal' <-> 'closing')");
 });
 
 test("case and surrounding whitespace do not matter", () => {
@@ -30,7 +37,7 @@ test("a quoted phrase must match adjacent words", () => {
 });
 
 test("an unbalanced quote is ignored, not an error", () => {
-  assert.equal(toTsQuery('pos "gagal closing'), "'pos':* & 'gagal':* & 'closing':*");
+  assert.equal(toTsQuery('pos "gagal closing'), "'pos':* & ('gagal':* | 'error') & 'closing':*");
   assert.equal(toTsQuery('"'), "");
 });
 
