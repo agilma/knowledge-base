@@ -18,7 +18,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 
 1. **[SELESAI 28 Okt 2026] Pratinjau dan tombol sisip di editor** (S-M; menu `/` sudah ada sebelumnya, ditambah tiga butir). Pratinjau langsung diagram Mermaid, langkah bergambar, dan kotak peringatan, plus tombol sisip di toolbar. Sekarang hasil baru terlihat setelah menyimpan. Tanpa migrasi.
 2. **[SELESAI 29 Okt 2026] Pemulihan versi dan perbandingan versi** (M). Tombol "Pulihkan versi ini" di riwayat dan tampilan beda antar versi. Data revisi sudah ada. Tanpa migrasi.
-3. **Ekspor zip `.md` (cadangan)** (S-M). Tombol admin; sudah dirancang di FEATURES. Tanpa migrasi.
+3. **[SELESAI 29 Okt 2026] Ekspor zip `.md` (cadangan)** (S-M). Tombol admin; sudah dirancang di FEATURES. Tanpa migrasi.
 4. **Lampiran gambar** (L). Tempel screenshot di editor, penyimpanan (Vercel Blob direkomendasikan), cache offline. Butuh keputusan penyimpanan dari pemilik. Migrasi kecil (tabel lampiran). Membuka panduan berbasis screenshot yang sekarang tidak bisa.
 5. **Pencarian lebih tahan salah ketik dan sinonim** (M). `pg_trgm` untuk salah ketik, daftar sinonim (kasir/cashier, retur/return), "mungkin maksud Anda". Migrasi aditif (ekstensi dan indeks).
 6. **Log pencarian tanpa hasil** (S-M). Catat kata yang dicari tapi tidak ketemu (tanpa identitas), tampil ke admin sebagai "topik yang belum ditulis". Umpan balik paling murah untuk isi. Migrasi kecil.
@@ -123,7 +123,7 @@ Outline adalah wiki tim yang menjadi acuan editor aplikasi ini. Sumber: changelo
 | Favorit dan terakhir dibuka | sudah | |
 | Draf, terbit, arsip | sudah | |
 | Berbagi tautan | sudah (internal) | Tautan publik sengaja ditunda (butir 22) |
-| Ekspor (Markdown, PDF, zip) | sebagian | PDF lewat cetak; zip `.md` belum (butir 3) |
+| Ekspor (Markdown, PDF, zip) | sudah | PDF lewat cetak; zip `.md` di halaman Ekspor (butir 3) |
 | Izin per koleksi dan per dokumen | sudah | Hanya admin yang mengatur |
 | Grup pengguna | belum | Butir 24 |
 | Dokumen bersarang (sub-halaman) | belum | Butir 23 |

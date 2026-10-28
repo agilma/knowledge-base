@@ -57,5 +57,7 @@ export function isNetworkOnlyRequest(method: string, pathname: string): boolean 
     return pathname !== "/api/auth/session";
   }
   if (pathname === "/login") return true;
+  // Admin downloads (the export) are generated per request and must never be stored.
+  if (pathname.startsWith("/api/admin/")) return true;
   return isEditorRoute(pathname) || isPersonalRoute(pathname);
 }

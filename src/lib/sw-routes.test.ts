@@ -37,6 +37,7 @@ test("only GET reads of the session may use the cache among auth endpoints", () 
 
 test("login, editors and every write go straight to the network", () => {
   assert.equal(isNetworkOnlyRequest("GET", "/login"), true);
+  assert.equal(isNetworkOnlyRequest("GET", "/api/admin/export"), true);
   // The assistant streams a paid, per-admin answer: never from or into a cache.
   assert.equal(isNetworkOnlyRequest("POST", "/api/ai/document-assistant"), true);
   assert.equal(isNetworkOnlyRequest("GET", "/docs/new"), true);
