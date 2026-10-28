@@ -222,3 +222,9 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Service worker men-precache semua potongan `_next/static`, termasuk ~22 potongan mermaid (sekitar 3 MB mentah) yang ikut terunduh di setiap perangkat saat service worker dipasang, walau tak pernah membuka diagram. Diagram jadi tampil offline, tetapi bila ukuran unduhan jadi masalah, kecualikan potongan mermaid dari precache (`exclude` di `@serwist/next`) dan cache saat dipakai; konsekuensinya diagram offline hanya bila pernah dibuka.
 - [ ] Diagram selalu di kartu putih; belum ada tema gelap. Belum ada jenis diagram selain yang dicoba (flowchart): urutan (sequence) dan lainnya belum diuji.
 - [ ] Dokumen "SOP 01: Workflow Produksi" di aplikasi belum tentu memuat diagram; minta Asisten AI membuatnya lalu periksa.
+
+## Dari langkah bergambar
+
+- [ ] Belum ada pratinjau langkah bergambar di editor; hasilnya terlihat di halaman dokumen setelah menyimpan. Belum ada tombol sisip di toolbar editor: blok ditulis sebagai blok kode berbahasa `langkah` atau `peringatan`, atau lewat Asisten AI.
+- [ ] Deskripsi langkah hanya teks polos (tanpa tebal, tautan, atau ikon). Tambahkan bila dibutuhkan.
+- [ ] Dokumen SOP 01 sampai 06 di aplikasi belum otomatis memakainya; minta Asisten AI mengubah bagian "Alur" ke langkah bergambar.

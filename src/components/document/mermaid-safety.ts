@@ -6,6 +6,10 @@
  * HTML tag other than `<br>` (`<-->` style arrows are not tags).
  */
 export function unsafeDiagramReason(chart: string): string | null {
+  // YAML frontmatter (`---` + `config:`) is a second way in for `themeCSS`, and a backslash
+  // lets CSS spell `url(` as `\75rl(`; neither is needed to write a flow.
+  if (/^\s*---/.test(chart)) return "pengaturan di awal diagram (---) tidak diizinkan";
+  if (chart.includes("\\")) return "karakter \\ tidak diizinkan";
   if (/%%\{/.test(chart)) return "pengaturan %%{...}%% tidak diizinkan";
   if (/^\s*click\s/im.test(chart)) return "perintah click (tautan) tidak diizinkan";
   if (/url\s*\(/i.test(chart)) return "url() tidak diizinkan";
