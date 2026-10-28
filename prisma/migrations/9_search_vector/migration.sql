@@ -12,7 +12,7 @@
 --
 -- Additive, with two costs worth knowing:
 --  * ADD COLUMN ... GENERATED STORED rewrites the whole table while holding an ACCESS
---    EXCLUSIVE lock (reads and writes of "documents" wait). It takes roughly 50 s for
+--    EXCLUSIVE lock (reads and writes of "documents" both wait). It takes roughly 50 s for
 --    20,000 documents and next to nothing for a few hundred, which is why it is done
 --    while the table is small.
 --  * The table roughly doubles in size (58 MB to 117 MB at 20,000 documents). The older
@@ -24,6 +24,11 @@
 -- safe to roll back to. Prisma wraps the file in a transaction; every statement can run
 -- inside one (the indexes are built without CONCURRENTLY for that reason, which is fine
 -- at this size).
+
+-- If something holds a lock on "documents" (a long transaction), the ALTER below would wait
+-- for it and every read and write behind it would queue up, stalling the whole app. Give up
+-- after 5 seconds instead: the build fails, nothing is changed, and it can be retried.
+SET LOCAL lock_timeout = '5s';
 
 -- AlterTable
 ALTER TABLE "documents" ADD COLUMN "search_vector" tsvector

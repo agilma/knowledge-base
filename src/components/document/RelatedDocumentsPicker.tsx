@@ -35,8 +35,8 @@ export function RelatedDocumentsPicker({
   const byId = known;
   const [selected, setSelected] = useState<string[]>(() => initialRelated.map((c) => c.id));
   const [query, setQuery] = useState("");
-  const [found, setFound] = useState<RelatedCandidate[]>([]);
-  const [state, setState] = useState<"idle" | "searching" | "error">("idle");
+  // The answer is kept with the text it answers: while the next one is awaited, a reply for earlier text is not shown.
+  const [answer, setAnswer] = useState<{ q: string; rows: RelatedCandidate[]; failed: boolean } | null>(null);
   const latest = useRef(0);
 
   const needle = query.trim();
@@ -45,22 +45,21 @@ export function RelatedDocumentsPicker({
     const mine = ++latest.current;
     if (needle.length < 2) return;
     const timer = window.setTimeout(() => {
-      setState("searching");
       searchRelatedAction(needle, documentId).then(
         (rows) => {
           if (mine !== latest.current) return;
-          setFound(rows);
+          setAnswer({ q: needle, rows, failed: false });
           setKnown((prev) => new Map([...prev, ...rows.map((r): [string, RelatedCandidate] => [r.id, r])]));
-          setState("idle");
         },
-        () => mine === latest.current && setState("error"),
+        () => mine === latest.current && setAnswer({ q: needle, rows: [], failed: true }),
       );
     }, SEARCH_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [needle, documentId]);
 
   // Results belong to the text they were found for; with less than two letters there is nothing to show.
-  const suggestions = needle.length >= 2 ? found.filter((c) => !selected.includes(c.id)) : [];
+  const current = needle.length >= 2 && answer?.q === needle ? answer : null;
+  const suggestions = current ? current.rows.filter((c) => !selected.includes(c.id)) : [];
 
   const full = selected.length >= MAX_RELATED;
 
@@ -134,9 +133,9 @@ export function RelatedDocumentsPicker({
 
       {needle.length >= 2 && !full && (
         <ul className="rounded-lg border border-border bg-card" aria-live="polite">
-          {state === "searching" && suggestions.length === 0 ? (
+          {!current ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">Mencari…</li>
-          ) : state === "error" ? (
+          ) : current.failed ? (
             <li className="px-3 py-2 text-sm text-destructive">Pencarian gagal. Periksa koneksi Anda.</li>
           ) : suggestions.length === 0 ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">Tidak ada dokumen yang cocok.</li>

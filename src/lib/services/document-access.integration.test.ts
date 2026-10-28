@@ -188,6 +188,16 @@ test("history and revisions of a restricted document are hidden too", T, async (
   assert.equal((await getRevisionList(lock.id, admin)).length, 1);
 });
 
+test("the picker search matches text literally: % and _ are not wildcards", T, async () => {
+  const odd = await db.document.create({
+    data: { slug: `${tag}-odd`, title: `Diskon 100% ${tag}`, content: "x", type: DocumentType.PANDUAN, status: DocumentStatus.PUBLISHED, collectionId: open.id },
+  });
+  const ids = async (q: string) => (await searchRelationCandidates(q, admin, undefined, 100)).map((c) => c.id);
+  assert.ok((await ids("100% ")).includes(odd.id));
+  assert.ok(!(await ids("%%")).includes(odd.id), "%% must not match everything");
+  assert.ok(!(await ids("__")).includes(odd.id), "__ must not match everything");
+});
+
 test("related documents: hidden ones stay hidden, offered to nobody, and kept when someone else edits the list", T, async () => {
   assert.deepEqual(await getRelatedDocumentIds(plain.id, viewerOut), []);
   assert.deepEqual(await getRelatedDocumentIds(plain.id, viewerIn), [lock.id]);

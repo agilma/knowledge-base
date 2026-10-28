@@ -1,3 +1,4 @@
+import { escapeLike } from "../like";
 import { DocumentStatus, DocumentType, Prisma, Role, type Document } from "@prisma/client";
 import { db } from "../db";
 import {
@@ -163,7 +164,8 @@ export async function searchRelationCandidates(query: string, viewer: Viewer, ex
     where: {
       ...(excludeId ? { id: { not: excludeId } } : {}),
       ...documentReadableWhere(viewer),
-      title: { contains: needle, mode: "insensitive" },
+      // The text is matched as written: `%` and `_` are not wildcards.
+      title: { contains: escapeLike(needle), mode: "insensitive" },
     },
     select: { id: true, title: true, status: true, collection: { select: { name: true } } },
     orderBy: [{ title: "asc" }, { id: "asc" }],

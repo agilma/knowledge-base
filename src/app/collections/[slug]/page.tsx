@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { getCollectionBySlug } from "@/lib/services/collections";
+import { clampPage } from "@/lib/pagination";
 import { COLLECTION_PAGE_SIZE, countDocumentsByCollection, getDocumentsByCollection } from "@/lib/services/documents";
 import { CollectionActions } from "@/components/collection/CollectionActions";
 import { Badge } from "@/components/ui/badge";
@@ -32,9 +33,8 @@ export default async function CollectionDetailPage({
   const listOptions = { includeDrafts: canSeeDrafts, viewer };
   const total = await countDocumentsByCollection(collection.id, listOptions);
   const pages = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE));
-  const requested = Number.parseInt((await searchParams).halaman ?? "1", 10);
   // A page number out of range (an old link, a typed one) shows the nearest real page, not an empty list.
-  const page = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), pages) : 1;
+  const page = clampPage((await searchParams).halaman, pages);
   const docs = await getDocumentsByCollection(collection.id, {
     ...listOptions,
     skip: (page - 1) * COLLECTION_PAGE_SIZE,
