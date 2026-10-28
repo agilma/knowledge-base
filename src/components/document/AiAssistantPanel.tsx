@@ -16,6 +16,7 @@ interface ChatMessage {
   /** What happened when the proposal was applied, or null while it has not been. */
   applied?: string[] | null;
   error?: string;
+  ignored?: boolean;
 }
 
 interface AiAssistantPanelProps {
@@ -30,8 +31,8 @@ interface AiAssistantPanelProps {
 }
 
 /** What the model sees of an earlier turn: its words plus the proposal it made, so "perpendek" has something to work on. */
-function historyText(m: ChatMessage): string {
-  if (!m.proposal) return m.text;
+function historyText(m: ChatMessage, withProposal: boolean): string {
+  if (!m.proposal || !withProposal) return m.text;
   return `${m.text}\n\n[Usulan dokumen yang sudah dikirim]\n${JSON.stringify(m.proposal)}`.trim();
 }
 
@@ -72,6 +73,9 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
     if (!open) abortRef.current?.abort();
   }, [open]);
 
+  // A newer proposal replaces older ones: applying a stale one by mistake would undo the revision.
+  const lastProposalIndex = messages.map((m) => !!m.proposal || !!m.ignored).lastIndexOf(true);
+
   const patchLast = (patch: (m: ChatMessage) => ChatMessage) =>
     setMessages((prev) => prev.map((m, i) => (i === prev.length - 1 ? patch(m) : m)));
 
@@ -79,9 +83,11 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
     const text = input.trim();
     if (!text || busy) return;
     const form = getForm();
+    // Only the newest proposal goes back: older ones are superseded and would eat the size budget.
     const history = messages
-      .filter((m) => m.role === "user" || m.text || m.proposal)
-      .map((m) => ({ role: m.role, content: historyText(m) }));
+      .map((m, i) => ({ m, withProposal: i === lastProposalIndex && !m.ignored }))
+      .filter(({ m, withProposal }) => m.role === "user" || m.text || (m.proposal && withProposal))
+      .map(({ m, withProposal }) => ({ role: m.role, content: historyText(m, withProposal) }));
     const outgoing = [...history, { role: "user" as const, content: text }];
     const total = outgoing.reduce((n, m) => n + m.content.length, 0);
     if (
@@ -111,11 +117,21 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
         patchLast((m) => ({ ...m, error: message ?? "Asisten AI tidak bisa dihubungi." }));
         return;
       }
+      // An expired session is redirected to the login page, which arrives as a 200 HTML page.
+      if (!res.headers.get("content-type")?.includes("text/event-stream")) {
+        patchLast((m) => ({ ...m, error: "Sesi Anda mungkin sudah berakhir. Muat ulang halaman dan masuk lagi." }));
+        return;
+      }
+      let finished = false;
       for await (const { event, data } of readEvents(res.body)) {
         if (event === "text") patchLast((m) => ({ ...m, text: m.text + String(data.text) }));
         else if (event === "proposal")
           patchLast((m) => ({ ...m, proposal: data.proposal as Proposal, warnings: data.warnings as string[], applied: null }));
         else if (event === "error") patchLast((m) => ({ ...m, error: String(data.message) }));
+        else if (event === "done") finished = true;
+      }
+      if (!finished && !controller.signal.aborted) {
+        patchLast((m) => ({ ...m, error: "Jawaban terputus sebelum selesai. Coba kirim lagi." }));
       }
     } catch {
       if (!controller.signal.aborted) {
@@ -133,9 +149,6 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
     setConfirming(null);
     setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, applied: notes } : m)));
   }
-
-  // A newer proposal replaces older ones: applying a stale one by mistake would undo the revision.
-  const lastProposalIndex = messages.map((m) => !!m.proposal).lastIndexOf(true);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -172,6 +185,7 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
                       {m.error}
                     </p>
                   )}
+                  {m.ignored && <p className="text-xs text-muted-foreground">Usulan diabaikan.</p>}
                   {m.proposal && (
                     <div className="rounded-lg border p-3 space-y-2 text-sm">
                       <p className="font-medium break-words">{m.proposal.title}</p>
@@ -219,7 +233,7 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
                             type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => setMessages((prev) => prev.map((x, j) => (j === i ? { ...x, proposal: undefined, warnings: undefined } : x)))}
+                            onClick={() => setMessages((prev) => prev.map((x, j) => (j === i ? { ...x, proposal: undefined, warnings: undefined, ignored: true } : x)))}
                           >
                             Abaikan
                           </Button>
@@ -244,6 +258,11 @@ export function AiAssistantPanel({ open, onOpenChange, getForm, formHasContent, 
             className="min-h-[88px] max-h-48"
           />
           <div className="flex justify-end gap-2">
+            {!busy && messages.length > 0 && (
+              <Button type="button" variant="outline" size="sm" onClick={() => { setMessages([]); setConfirming(null); }}>
+                Percakapan baru
+              </Button>
+            )}
             {busy && (
               <Button type="button" variant="outline" size="sm" onClick={() => abortRef.current?.abort()}>
                 Berhenti

@@ -1,6 +1,6 @@
 import { Role } from "@prisma/client";
 import type { Viewer } from "../collection-access";
-import { type AssistantClient, type AssistantDeps, type AssistantEvent, runAssistant } from "./assistant";
+import { type AssistantClient, type AssistantDeps, type AssistantEvent, logFailure, runAssistant } from "./assistant";
 import { requestSchema, TOO_LONG_MESSAGE } from "./request";
 
 export interface HandlerDeps {
@@ -83,7 +83,8 @@ export async function handleAssistantRequest(request: Request, deps: HandlerDeps
       };
       try {
         await runAssistant({ client, request: parsed.data, viewer, deps: deps.assistant, emit, signal: request.signal });
-      } catch {
+      } catch (err) {
+        logFailure("request", err);
         // The provider's error text can carry request details; the person gets a fixed sentence.
         if (!request.signal.aborted) {
           send("error", { message: "Asisten AI sedang tidak bisa dihubungi. Coba lagi sebentar." });

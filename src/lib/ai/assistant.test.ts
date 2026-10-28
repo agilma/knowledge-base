@@ -140,6 +140,12 @@ test("refusal and truncation end the turn with a message", async () => {
   }
 });
 
+test("a turn that produced nothing says so instead of leaving an empty bubble", async () => {
+  const { client } = fakeClient([{ stop_reason: "end_turn", content: [{ type: "thinking", thinking: "..", signature: "s" }] }]);
+  const events = await collect(client);
+  assert.deepEqual(events.map((e) => e.type), ["error"]);
+});
+
 test("a model that keeps calling tools is stopped", async () => {
   const loop: Msg = { stop_reason: "tool_use", content: [{ type: "tool_use", id: "l", name: "list_collections", input: {} }] };
   const { client, calls } = fakeClient([loop]);
@@ -184,6 +190,20 @@ test("handler: no session, non-admin, bad origin, wrong type never reach the mod
     assert.equal(res.status, status);
     assert.equal(calls.length, 0);
   }
+});
+
+test("handler: an empty or malformed message list is a 400, not a crash", async () => {
+  const { deps: d, calls } = handlerDeps();
+  for (const body of [{ ...request, messages: [] }, { ...request, messages: [{ role: "assistant", content: "x" }] }, {}]) {
+    assert.equal((await handleAssistantRequest(post(body), d)).status, 400);
+  }
+  const noOrigin = new Request("https://kb.test/api/ai/document-assistant", {
+    method: "POST",
+    headers: { host: "kb.test", "content-type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  assert.equal((await handleAssistantRequest(noOrigin, d)).status, 403);
+  assert.equal(calls.length, 0);
 });
 
 test("handler: missing key is a clear 503", async () => {

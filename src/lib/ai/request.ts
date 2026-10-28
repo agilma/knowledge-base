@@ -11,6 +11,8 @@ export const LIMITS = {
   messageChars: 20_000,
   totalChars: 60_000,
   formContentChars: 100_000,
+  /** Smaller than the form: a proposal is sent back with the next message, and must fit beside it. */
+  proposalContentChars: 40_000,
 } as const;
 
 export const TOO_LONG_MESSAGE =
@@ -39,7 +41,7 @@ export const requestSchema = z
       .max(LIMITS.turns),
     form: formContextSchema,
   })
-  .refine((v) => v.messages[0].role === "user" && v.messages[v.messages.length - 1].role === "user", {
+  .refine((v) => v.messages[0]?.role === "user" && v.messages.at(-1)?.role === "user", {
     message: "Percakapan harus diawali dan diakhiri oleh pesan Anda",
   })
   .refine((v) => v.messages.reduce((n, m) => n + m.content.length, 0) <= LIMITS.totalChars, {
@@ -60,7 +62,7 @@ export const proposalSchema = z.object({
   collection_slug: z.string().min(1).max(200),
   type: z.nativeEnum(DocumentType),
   excerpt: z.string().max(300),
-  content: z.string().min(1).max(LIMITS.formContentChars),
+  content: z.string().min(1).max(LIMITS.proposalContentChars),
 });
 
 export type Proposal = z.infer<typeof proposalSchema>;

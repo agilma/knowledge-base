@@ -20,7 +20,7 @@ const CHECKS: { label: string; test: (text: string) => boolean }[] = [
   },
   {
     label: "nama orang (gunakan peran, bukan nama)",
-    test: (t) => PERSON_NAMES.some((name) => new RegExp(`\\b${name}`, "i").test(t)),
+    test: (t) => PERSON_NAMES.some((name) => new RegExp(`\\b${name}\\b`, "i").test(t)),
   },
 ];
 

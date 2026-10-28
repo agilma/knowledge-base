@@ -112,7 +112,7 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 5. Minta perubahan ("perpendek", "tambahkan Perlu dikonfirmasi") di panel yang sama; usulan baru menggantikan yang lama.
 6. Periksa form, lalu simpan seperti biasa. AI tidak menyimpan atau menerbitkan apa pun.
 
-Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; isi percakapan tidak disimpan di aplikasi dan hilang saat panel ditutup atau halaman dimuat ulang. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
+Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; isi percakapan tidak disimpan di aplikasi: ia bertahan selama halaman form terbuka (menutup panel tidak menghapusnya) dan hilang saat halaman dimuat ulang atau tombol **Percakapan baru** ditekan. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
 ## Memasukkan draf dari berkas (ADMIN, perintah di komputer)
 
