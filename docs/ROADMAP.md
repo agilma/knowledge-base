@@ -64,7 +64,7 @@ Dasar perbandingan ada di bagian "Perbandingan dengan Outline" di bawah. Nomor d
 
 23. **Dokumen bersarang dan menu `/`** (L). Sub-halaman di bawah dokumen (SOP 01-06 di bawah satu induk, "Panduan Training" dengan bab-bab), pohon di sidebar dan halaman, seret untuk mengurutkan; plus menu `/` di editor untuk menyisipkan judul, tabel, langkah bergambar, peringatan, diagram. Migrasi aditif (`parentId`, `position`).
 24. **Grup pengguna** (M-L). Kelompok (Tim CS, Koordinator Toko, Tim QA) dipakai sebagai anggota koleksi dan dokumen terbatas alih-alih memilih orang satu per satu; menyelesaikan "grup" di TODO dokumen terbatas. Migrasi (tabel grup dan anggota).
-25. **Tempat sampah (hapus lunak) dengan pemulihan 30 hari** (M). "Hapus" memindahkan dokumen ke sampah, admin bisa memulihkan; dibersihkan otomatis. Mengurangi risiko salah hapus (hari ini hapus permanen). Migrasi aditif (`deletedAt`).
+25. **[SELESAI 28 Okt 2026] Tempat sampah (hapus lunak) dengan pemulihan 30 hari** (M). "Hapus" memindahkan dokumen ke sampah, admin bisa memulihkan; dibersihkan otomatis. Mengurangi risiko salah hapus (hari ini hapus permanen). Migrasi aditif (`deletedAt`).
 26. **Tautan balik dan tautan antar dokumen** (M). Ketik `[[` untuk memilih dokumen; bagian "Dirujuk oleh" otomatis di halaman. Melengkapi "Pengetahuan Terkait" manual. Migrasi kecil (tabel tautan) atau dihitung saat membaca.
 
 **Tahap 2 (membuat dokumen dipakai)**

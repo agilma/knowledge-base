@@ -166,6 +166,10 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 
 Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakapan disimpan di akun Anda selama 90 hari sejak pesan terakhir. Buka lagi lewat tombol **Riwayat** di panel (daftar percakapan Anda, buka untuk melanjutkan, ikon tempat sampah untuk menghapus), atau mulai yang baru dengan **Percakapan baru**. Riwayat hanya terlihat oleh Anda; admin lain tidak bisa membukanya. Jangan menempel kata sandi atau data pribadi pelanggan: yang ditempel ikut tersimpan sampai dihapus. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
+## Menghapus dan memulihkan dokumen (ADMIN)
+
+**Hapus** di halaman dokumen memindahkan dokumen ke **Tempat sampah** (menu di bawah Ekspor); belum hilang. Di sana tiap dokumen punya **Pulihkan** (kembali apa adanya, lengkap dengan riwayat versi dan anggota) dan **Hapus permanen**. Setelah 30 hari dokumen di sampah hilang sendiri. Kalau alamat dokumen sudah dipakai dokumen baru, yang dipulihkan memakai alamat berakhiran `-pulih`. Kalau koleksinya sudah dihapus, buat koleksinya lagi dulu. Favorit dan "terakhir dibuka" milik pengguna tidak ikut kembali.
+
 ## Pencarian: sinonim dan salah ketik
 
 Mencari "kasir" juga menemukan dokumen yang menulis "cashier", "retur" juga "return", dan seterusnya. Kalau tidak ada hasil sama sekali, pencarian menawarkan **Mungkin maksud Anda** berisi judul yang mirip dengan yang diketik, jadi salah ketik satu huruf tidak membuntu. Kata baru untuk daftar sinonim ditambahkan oleh pengembang (`src/lib/search-synonyms.ts`).

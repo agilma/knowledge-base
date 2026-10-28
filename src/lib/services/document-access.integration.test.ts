@@ -108,6 +108,8 @@ before(async () => {
 
 after(async () => {
   if (!enabled) return;
+  // "Delete" now moves documents to the trash; what these tests deleted must not stay there
+  await db.trashedDocument.deleteMany({ where: { collectionId: { in: ids.collections } } });
   await db.favorite.deleteMany({ where: { userId: { in: ids.users } } });
   await db.recentView.deleteMany({ where: { userId: { in: ids.users } } });
   const docs = await db.document.findMany({ where: { collectionId: { in: ids.collections } }, select: { id: true } });

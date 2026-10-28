@@ -117,7 +117,7 @@ export function DocumentActions({
             <DialogHeader>
               <DialogTitle>Hapus Dokumen</DialogTitle>
               <DialogDescription>
-                Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.
+                Dokumen dipindahkan ke tempat sampah dan bisa dipulihkan admin selama 30 hari. Setelah itu hilang untuk selamanya.
               </DialogDescription>
             </DialogHeader>
 
@@ -138,7 +138,7 @@ export function DocumentActions({
                 onClick={handleDelete}
                 disabled={isPending}
               >
-                {isPending ? "Menghapus..." : "Hapus Permanen"}
+                {isPending ? "Menghapus..." : "Pindahkan ke sampah"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -301,3 +301,21 @@ model SearchMiss {
   @@index([lastAt])
   @@map("search_misses")
 }
+
+/// A deleted document waiting in the trash (30 days): the whole document, with its versions,
+/// members and links, as one JSON snapshot. No relations on purpose: see migration 12.
+model TrashedDocument {
+  id             String   @id @default(cuid())
+  documentId     String   @unique
+  slug           String
+  title          String
+  collectionId   String
+  collectionName String
+  deletedById    String?
+  deletedByName  String?
+  deletedAt      DateTime @default(now())
+  snapshot       Json
+
+  @@index([deletedAt])
+  @@map("trashed_documents")
+}
