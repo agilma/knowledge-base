@@ -242,6 +242,6 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 ## Dari pengukuran performa (28 Okt 2026)
 
 - [x] Pencarian kata umum lambat pada banyak dokumen: selesai dengan migrasi 9 (11,6 s menjadi 0,25 s pada 20.000 dokumen).
-- [ ] Hapus indeks ekspresi lama `documents_search_idx` (dan `SEARCH_VECTOR_SQL` di `documents_search_idx` test) di migrasi berikutnya setelah tidak ada versi lama yang berjalan; menghemat ruang (indeks kedua yang tidak dipakai lagi).
+- [ ] Hapus indeks ekspresi lama `documents_search_idx` di migrasi berikutnya setelah tidak ada versi lama yang berjalan; menghemat ruang (indeks kedua yang tidak dipakai lagi).
 - [x] Halaman koleksi (3,6 MB) dan pemilih dokumen terkait (500 pertama): selesai, daftar 50 per halaman dan pencarian di seluruh perpustakaan.
 - [ ] Cara mengulang pengukuran: Postgres lokal (skill `kb-local-env`), isi 20.000 dokumen dengan `generate_series` (judul, ringkasan, sekitar 900 kata isi, 5% terbatas, 20% draf), lalu panggil `searchDocuments`, `getDocumentsByCollection`, `getRecentlyUpdatedDocuments`, `getRelationCandidates` dengan `performance.now()` lima kali dan ambil median. Skrip belum disimpan di repo; simpan di `scripts/` bila ingin diulang rutin (butir 42).
