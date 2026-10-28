@@ -6,6 +6,7 @@ bagaimana memakainya. Semuanya ditulis dalam bahasa Indonesia.
 | Dokumen | Untuk siapa | Isi |
 | --- | --- | --- |
 | [FEATURES.md](./FEATURES.md) | Semua orang | Katalog fitur: yang sudah jalan, yang direncanakan, dan di mana kodenya |
+| [ROADMAP.md](./ROADMAP.md) | Pemilik, pengembang | Peta jalan fitur jangka panjang: usulan, urutan, ukuran, dan kebutuhan keputusan |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Pengembang | Model data, alur, infrastruktur, dan keputusan arsitektur (ADR) |
 | [USER-GUIDE.md](./USER-GUIDE.md) | Pengguna (tim, CS) | Cara mencari, membaca, menulis, dan memakai offline |
 
