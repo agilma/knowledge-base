@@ -1,3 +1,4 @@
+import { hasMeaningfulChange } from "@/lib/revisions";
 import { collapseUnchanged, diffLines, diffStats } from "@/lib/text-diff";
 
 export interface Snapshot {
@@ -19,6 +20,15 @@ export function RevisionDiff({ before, after }: { before: Snapshot; after: Snaps
   if (before.title !== after.title) meta.push({ label: "Judul", from: before.title, to: after.title });
   if ((before.excerpt ?? "") !== (after.excerpt ?? "")) meta.push({ label: "Ringkasan", from: before.excerpt ?? "(kosong)", to: after.excerpt ?? "(kosong)" });
   if (before.type !== after.type) meta.push({ label: "Jenis", from: TYPE_NAMES[before.type] ?? before.type, to: TYPE_NAMES[after.type] ?? after.type });
+
+  // The visual editor rewrites Markdown ("_a_" to "*a*"); that is not a change worth showing, and the restore counts it as none too.
+  if (!hasMeaningfulChange(before, after)) {
+    return (
+      <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        Tidak ada perbedaan bermakna{added > 0 || removed > 0 ? " (hanya penulisan Markdown yang berbeda)" : ""}.
+      </p>
+    );
+  }
 
   if (meta.length === 0 && added === 0 && removed === 0) {
     return <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Tidak ada perbedaan.</p>;
@@ -47,7 +57,7 @@ export function RevisionDiff({ before, after }: { before: Snapshot; after: Snaps
         <span className="font-medium text-rose-700 dark:text-rose-300">{removed} baris dihapus</span>.
       </p>
 
-      <div className="overflow-x-auto rounded-lg border border-border font-mono text-xs leading-relaxed" aria-label="Perbedaan isi">
+      <div role="group" className="overflow-x-auto rounded-lg border border-border font-mono text-xs leading-relaxed" aria-label="Perbedaan isi">
         {items.map((item, i) =>
           item.type === "skip" ? (
             <div key={i} className="bg-muted/50 px-3 py-1 text-center text-muted-foreground">

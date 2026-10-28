@@ -8,6 +8,7 @@ import { getRevision } from "@/lib/services/revisions";
 import { MarkdownContent } from "@/components/document/MarkdownContent";
 import { RestoreRevisionButton } from "@/components/document/RestoreRevisionButton";
 import { RevisionDiff } from "@/components/document/RevisionDiff";
+import { hasMeaningfulChange } from "@/lib/revisions";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -32,13 +33,19 @@ export default async function RevisionPage({
   const doc = await getDocumentBySlug(slug, { includeDrafts: true, viewer });
   if (!doc) notFound();
 
-  const revision = await getRevision(doc.id, Number(version), viewer);
+  // "01", "1e0" and " 1" are not version numbers, though Number() would read them as 1.
+  const revision = /^[1-9]\d{0,8}$/.test(version) ? await getRevision(doc.id, Number(version), viewer) : null;
   if (!revision) notFound();
 
   // "isi" shows the version; the other two compare it, with the one before it or with the document as it is now.
   const requested = (await searchParams).tampilan;
   const previous = await getRevision(doc.id, revision.version - 1, viewer);
   const mode = requested === "sebelumnya" && previous ? "sebelumnya" : requested === "sekarang" ? "sekarang" : "isi";
+  // The same test the restore uses, so the screen never offers what the restore would refuse.
+  const sameAsCurrent = !hasMeaningfulChange(
+    { title: doc.title, excerpt: doc.excerpt, content: doc.content, type: doc.type },
+    { title: revision.title, excerpt: revision.excerpt, content: revision.content, type: revision.type },
+  );
   const tabs = [
     { key: "isi", label: "Isi versi ini", href: `/docs/${doc.slug}/history/${revision.version}` },
     ...(previous ? [{ key: "sebelumnya", label: `Beda dengan versi ${previous.version}`, href: `/docs/${doc.slug}/history/${revision.version}?tampilan=sebelumnya` }] : []),
@@ -88,7 +95,11 @@ export default async function RevisionPage({
             </Link>
           ))}
         </nav>
-        <RestoreRevisionButton slug={doc.slug} version={revision.version} />
+        {sameAsCurrent ? (
+          <p className="text-sm text-muted-foreground">Sama dengan dokumen sekarang.</p>
+        ) : (
+          <RestoreRevisionButton slug={doc.slug} version={revision.version} />
+        )}
       </div>
 
       {mode !== "isi" && (

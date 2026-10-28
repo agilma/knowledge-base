@@ -298,6 +298,37 @@ test("restoring a version puts its text back as a new version and keeps slug, co
   assert.equal((await getRevisionList(doc.id, actor(u))).length, after.length);
 });
 
+test("restoring keeps an archived or draft document as it is, and never uses another document's version", { skip: !enabled }, async () => {
+  const u = await user("restorer3");
+  const col = await collection();
+  const a = await createDocument(input(col.id, 92, "## A1\n\ntext a1"), actor(u));
+  const b = await createDocument(input(col.id, 93, "## B1\n\ntext b1"), actor(u));
+  created.documents.push(a.id, b.id);
+  await updateDocument(a.id, { ...input(col.id, 92, "## A2\n\ntext a2"), slug: a.slug }, actor(u));
+  await setDocumentStatus(a.id, DocumentStatus.ARCHIVED, actor(u));
+  // b has versions 1 and 2; a has more, so ask a for a version number only b could hold
+  await updateDocument(b.id, { ...input(col.id, 93, "## B2\n\ntext b2"), slug: b.slug }, actor(u));
+  const bOnly = (await getRevisionList(b.id, ADMIN)).length + 5;
+  await assert.rejects(restoreRevision(a.id, bOnly, actor(u)), /Versi tidak ditemukan/);
+
+  const result = await restoreRevision(a.id, 1, actor(u));
+  assert.equal(result.changed, true);
+  const now = await db.document.findUniqueOrThrow({ where: { id: a.id } });
+  assert.equal(now.content, "## A1\n\ntext a1");
+  assert.equal(now.status, DocumentStatus.ARCHIVED, "restoring text does not publish or unarchive");
+});
+
+test("restoring a version that only changed the status, with the same text, changes nothing", { skip: !enabled }, async () => {
+  const u = await user("restorer4");
+  const col = await collection();
+  const doc = await createDocument(input(col.id, 94, "## Sama\n\nisi"), actor(u));
+  created.documents.push(doc.id);
+  await setDocumentStatus(doc.id, DocumentStatus.PUBLISHED, actor(u));
+  const versions = await getRevisionList(doc.id, ADMIN);
+  const first = versions[versions.length - 1].version;
+  assert.equal((await restoreRevision(doc.id, first, actor(u))).changed, false);
+});
+
 test("a version that does not exist, or a role that cannot edit, cannot be restored", { skip: !enabled }, async () => {
   const u = await user("restorer2");
   const col = await collection();

@@ -3,6 +3,7 @@
 import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { ZodError } from "zod";
 import { requireRole } from "@/lib/auth/session";
 import { userMessage } from "@/lib/errors";
 import { getDocumentBySlug } from "@/lib/services/documents";
@@ -20,10 +21,12 @@ export async function restoreRevisionAction(slug: string, version: number): Prom
     const result = await restoreRevision(doc.id, version, viewer);
     if (!result.changed) return { error: "Isi versi ini sudah sama dengan dokumen sekarang." };
     revalidatePath(`/docs/${result.slug}`);
+    revalidatePath("/collections");
     revalidatePath(`/collections/${doc.collection.slug}`);
     revalidatePath("/search");
     revalidatePath("/");
   } catch (err) {
+    if (err instanceof ZodError) return { error: "Versi ini tidak bisa dipulihkan karena isinya tidak memenuhi aturan dokumen yang berlaku sekarang." };
     return { error: userMessage(err, "Gagal memulihkan versi") };
   }
   redirect(`/docs/${slug}/history`);
