@@ -200,3 +200,11 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Koleksi `thunderlab` harus sudah ada sebelum `npm run docs:import` (draf SOP memakai `collection: thunderlab`).
 - [ ] Desain Canva "6 SOP THUNDERLAB" masih memuat dua versi SOP 01 dan label versi yang tidak konsisten; bersihkan di sumbernya setelah dokumen di Knowledge Base dipublikasikan, agar satu sumber kebenaran.
 - [ ] Penyetuju proposal (SOP 03) ditulis dengan nama orang di sumber; tuliskan jabatannya.
+
+## Dari asisten AI admin
+
+- [ ] **Belum diuji dengan kunci API asli.** Alur, kontrak SSE, dan penanganan galat diuji dengan klien palsu. Setelah `ANTHROPIC_API_KEY` diisi di Vercel (Production) dan redeploy, coba satu percakapan nyata: usulan muncul, "Terapkan ke form" mengisi form. Bila API menolak parameter (`output_config`, beta fallback), pesan galatnya generik di UI; lihat log fungsi Vercel.
+- [ ] Pembatas laju hanya di memori per instance serverless; bila perlu batas keras, pindahkan ke database atau Redis (lihat keputusan 1 di `docs/ARCHITECTURE.md`) dan pasang batas pengeluaran di akun Anthropic.
+- [ ] Riwayat chat tidak disimpan (hilang saat panel ditutup atau halaman dimuat ulang). Simpan hanya bila dibutuhkan; pertimbangkan isi yang sensitif.
+- [ ] Belum ada lampiran berkas atau gambar ke chat (bahan hanya teks tempel) dan belum ada pembacaan tautan Google Sheet/Docs langsung.
+- [ ] Biaya: Opus dengan thinking dan dokumen panjang tidak murah; bila tagihan jadi masalah, pertimbangkan model lebih kecil untuk perubahan kecil.

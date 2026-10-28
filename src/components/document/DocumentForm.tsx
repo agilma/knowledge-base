@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
+import { AiAssistantPanel } from "@/components/document/AiAssistantPanel";
+import type { FormContext, Proposal } from "@/lib/ai/request";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
 import { RelatedDocumentsPicker, type RelatedCandidate } from "@/components/document/RelatedDocumentsPicker";
 import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
@@ -49,6 +52,8 @@ interface DocumentFormProps {
   accessUsers?: AssignableUser[];
   initialRestricted?: boolean;
   initialMemberIds?: string[];
+  /** Given only to admins; the server checks the role again on every request. */
+  aiEnabled?: boolean;
   defaultCollectionId?: string;
   defaultTitle?: string;
   initialData?: {
@@ -71,6 +76,7 @@ export function DocumentForm({
   accessUsers,
   initialRestricted = false,
   initialMemberIds = [],
+  aiEnabled = false,
   defaultCollectionId,
   defaultTitle,
   initialData,
@@ -79,6 +85,7 @@ export function DocumentForm({
   const isSlugLocked = isEditing && initialData.status !== DocumentStatus.DRAFT;
   const isOnline = useOnlineStatus();
   const [restricted, setRestricted] = useState(initialRestricted);
+  const [aiOpen, setAiOpen] = useState(false);
 
   // Storage key determination
   const draftKey = isEditing
@@ -296,6 +303,35 @@ export function DocumentForm({
     }
   };
 
+  const aiFormContext = (): FormContext => ({
+    title,
+    slug,
+    collectionSlug: collections.find((c) => c.id === collectionId)?.slug ?? "",
+    type,
+    excerpt,
+    // The untouched template says nothing about what the author wants.
+    content: isUntouchedTemplate(content) || !content.trim() ? undefined : content,
+  });
+
+  const applyAiProposal = (p: Proposal): string[] => {
+    const notes: string[] = [];
+    setTitle(p.title);
+    if (isSlugLocked) {
+      notes.push("Slug tidak diubah karena dokumen sudah terbit.");
+    } else {
+      setSlug(p.slug);
+      setIsSlugManuallyEdited(true);
+    }
+    const target = collections.find((c) => c.slug === p.collection_slug);
+    if (target) setCollectionId(target.id);
+    else notes.push(`Koleksi "${p.collection_slug}" tidak ditemukan, koleksi di form tidak diubah.`);
+    // Set directly: handleTypeChange would swap the content for a template first.
+    setType(p.type);
+    setExcerpt(p.excerpt);
+    setContent(p.content);
+    return notes;
+  };
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setTitle(val);
@@ -366,6 +402,22 @@ export function DocumentForm({
         <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
           {errorMessage}
         </div>
+      )}
+
+      {aiEnabled && (
+        <>
+          <Button type="button" variant="outline" size="sm" onClick={() => setAiOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Asisten AI
+          </Button>
+          <AiAssistantPanel
+            open={aiOpen}
+            onOpenChange={setAiOpen}
+            getForm={aiFormContext}
+            formHasContent={() => !!aiFormContext().content || !!title.trim()}
+            onApply={applyAiProposal}
+          />
+        </>
       )}
 
       {/* Hidden input for content since MarkdownEditor is a custom component */}
