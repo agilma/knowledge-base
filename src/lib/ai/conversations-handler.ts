@@ -47,7 +47,11 @@ export async function handleConversationRequest(
     if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
       return json(415, "Permintaan harus berformat JSON.");
     }
-    const body = (await request.json().catch(() => null)) as { title?: unknown } | null;
+    const body = (await request.json().catch(() => null)) as { title?: unknown; dropProposal?: unknown } | null;
+    if (body?.dropProposal === true) {
+      await deps.store.dropLastProposal(user.id, id);
+      return Response.json({ ok: true }, { headers: noStore });
+    }
     if (typeof body?.title !== "string" || !body.title.trim() || body.title.length > 200) {
       return json(400, "Judul tidak valid.");
     }

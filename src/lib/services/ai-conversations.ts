@@ -144,6 +144,22 @@ export async function appendMessage(userId: string, conversationId: string, mess
   });
 }
 
+/** "Abaikan" on a proposal: it is removed from the chat, so it is neither shown again nor sent to the model. */
+export async function dropLastProposal(userId: string, conversationId: string): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`ai_conversation:${conversationId}`}))`;
+    if ((await tx.aiConversation.count({ where: { id: conversationId, userId } })) === 0) return false;
+    const last = await tx.aiMessage.findFirst({
+      where: { conversationId, proposal: { not: Prisma.DbNull } },
+      orderBy: { seq: "desc" },
+      select: { id: true },
+    });
+    if (!last) return true;
+    await tx.aiMessage.update({ where: { id: last.id }, data: { proposal: Prisma.DbNull, warnings: Prisma.DbNull } });
+    return true;
+  });
+}
+
 export async function renameConversation(userId: string, id: string, title: string): Promise<boolean> {
   const clean = titleFrom(title);
   const { count } = await db.aiConversation.updateMany({ where: { id, userId }, data: { title: clean } });

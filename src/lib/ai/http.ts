@@ -38,5 +38,6 @@ export interface ConversationStore {
   create(userId: string, assistant: AiAssistantKey, firstMessage: string, documentId?: string): Promise<{ id: string; title: string }>;
   append(userId: string, conversationId: string, message: StoredMessage): Promise<boolean>;
   rename(userId: string, id: string, title: string): Promise<boolean>;
+  dropLastProposal(userId: string, id: string): Promise<boolean>;
   remove(userId: string, id: string): Promise<boolean>;
 }

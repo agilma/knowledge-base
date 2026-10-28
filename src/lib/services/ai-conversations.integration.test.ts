@@ -6,6 +6,7 @@ import {
   appendMessage,
   createConversation,
   deleteConversation,
+  dropLastProposal,
   getConversation,
   listConversations,
   purgeExpired,
@@ -73,6 +74,18 @@ test("a proposal and its warnings come back as they were saved", { skip: !enable
   assert.equal(loaded?.messages[1].error, undefined);
   assert.equal(loaded?.messages[2].error, "gagal");
   assert.equal(loaded?.messages[2].proposal, undefined);
+});
+
+test("dropping the last proposal clears only that one and only for the owner", { skip: !enabled }, async () => {
+  const chat = await createConversation(alice, "document", "Dua usulan");
+  await appendMessage(alice, chat.id, { role: "assistant", content: "satu", proposal: { n: 1 }, warnings: ["a"] });
+  await appendMessage(alice, chat.id, { role: "assistant", content: "dua", proposal: { n: 2 } });
+  assert.equal(await dropLastProposal(bob, chat.id), false);
+  assert.deepEqual((await getConversation(alice, chat.id))?.messages[2].proposal, { n: 2 });
+  assert.equal(await dropLastProposal(alice, chat.id), true);
+  const m = (await getConversation(alice, chat.id))!.messages;
+  assert.deepEqual(m[1].proposal, { n: 1 });
+  assert.equal(m[2].proposal, undefined);
 });
 
 test("the list is newest first and a chat moves up when it gets a message", { skip: !enabled }, async () => {

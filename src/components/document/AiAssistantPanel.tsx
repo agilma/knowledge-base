@@ -77,6 +77,8 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
   const [deleting, setDeleting] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Only the newest "open this chat" may show: a slow answer for an earlier click must not win.
+  const openSeq = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,6 +117,12 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
         body: JSON.stringify({ conversationId: conversationId ?? undefined, documentId, message: text, form }),
         signal: controller.signal,
       });
+      if (res.status === 404 && conversationId) {
+        // The chat was deleted elsewhere or has expired: carry on as a new one instead of failing every send.
+        setConversationId(null);
+        patchLast((m) => ({ ...m, error: "Percakapan ini sudah tidak ada. Pesan Anda belum terkirim; kirim lagi untuk memulai percakapan baru." }));
+        return;
+      }
       if (!res.ok || !res.body) {
         const message = ((await res.json().catch(() => null)) as { error?: string } | null)?.error;
         patchLast((m) => ({ ...m, error: message ?? "Asisten AI tidak bisa dihubungi." }));
@@ -147,6 +155,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
   }
 
   function startNew() {
+    openSeq.current++;
     abortRef.current?.abort();
     setMessages([]);
     setConversationId(null);
@@ -170,12 +179,15 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
   async function openConversation(id: string) {
     abortRef.current?.abort();
     setNotice(null);
+    const mine = ++openSeq.current;
     try {
       const res = await fetch(`${API}/${encodeURIComponent(id)}`);
+      if (mine !== openSeq.current) return;
       if (!res.ok) return setNotice(await readError(res, "Percakapan tidak bisa dibuka."));
       const { conversation } = (await res.json()) as {
         conversation: { id: string; messages: { role: "user" | "assistant"; content: string; proposal?: Proposal; warnings?: string[]; error?: string }[] };
       };
+      if (mine !== openSeq.current) return;
       setMessages(
         conversation.messages.map((m) => ({
           role: m.role,
@@ -201,6 +213,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
       if (!res.ok) return setNotice(await readError(res, "Percakapan tidak bisa dihapus."));
       setHistory((h) => ({ ...h, items: h.items?.filter((x) => x.id !== id) ?? null }));
       if (id === conversationId) {
+        abortRef.current?.abort();
         setMessages([]);
         setConversationId(null);
       }
@@ -208,6 +221,18 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
       setNotice("Percakapan tidak bisa dihapus. Periksa koneksi Anda.");
     } finally {
       setDeleting(null);
+    }
+  }
+
+  function ignoreProposal(index: number) {
+    setMessages((prev) => prev.map((x, j) => (j === index ? { ...x, proposal: undefined, warnings: undefined, ignored: true } : x)));
+    // Remembered on the server too, so the model is not sent it again and it does not come back from Riwayat.
+    if (conversationId) {
+      void fetch(`${API}/${encodeURIComponent(conversationId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dropProposal: true }),
+      }).catch(() => undefined);
     }
   }
 
@@ -232,7 +257,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
         </SheetHeader>
 
         <div className="flex items-center gap-2 border-b px-4 py-2">
-          <Button type="button" variant={view === "history" ? "default" : "outline"} size="sm" onClick={() => (view === "history" ? setView("chat") : showHistory())}>
+          <Button type="button" variant={view === "history" ? "default" : "outline"} size="sm" aria-pressed={view === "history"} onClick={() => (view === "history" ? setView("chat") : showHistory())}>
             <History className="mr-1.5 size-3.5" />
             Riwayat
           </Button>
@@ -248,7 +273,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
         )}
 
         {view === "history" ? (
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2" aria-live="polite">
             <p className="text-xs text-muted-foreground">
               Riwayat disimpan {RETENTION_DAYS} hari sejak pesan terakhir dan hanya terlihat oleh Anda.
             </p>
@@ -267,7 +292,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
                 </button>
                 {deleting === item.id ? (
                   <div className="flex items-center gap-1 pr-2">
-                    <Button type="button" size="sm" variant="destructive" onClick={() => removeConversation(item.id)}>
+                    <Button type="button" size="sm" variant="destructive" aria-label={`Hapus percakapan ${item.title} sekarang`} onClick={() => removeConversation(item.id)}>
                       Hapus
                     </Button>
                     <Button type="button" size="sm" variant="outline" onClick={() => setDeleting(null)}>
@@ -355,7 +380,7 @@ export function AiAssistantPanel({ open, onOpenChange, documentId, getForm, form
                             type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => setMessages((prev) => prev.map((x, j) => (j === i ? { ...x, proposal: undefined, warnings: undefined, ignored: true } : x)))}
+                            onClick={() => ignoreProposal(i)}
                           >
                             Abaikan
                           </Button>

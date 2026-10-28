@@ -8,5 +8,6 @@ export const conversationStore: ConversationStore = {
   create: conversations.createConversation,
   append: conversations.appendMessage,
   rename: conversations.renameConversation,
+  dropLastProposal: conversations.dropLastProposal,
   remove: conversations.deleteConversation,
 };

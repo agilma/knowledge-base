@@ -234,4 +234,7 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Pembersihan 90 hari hanya berjalan saat ada percakapan baru dibuat; bila tak ada yang memakai AI, riwayat lama menetap lebih lama. Bila perlu kepastian, tambahkan Vercel cron yang memanggil `purgeExpired(Date.now(), true)`.
 - [ ] Riwayat tidak dienkripsi di database dan bahan yang ditempel ikut tersimpan 90 hari; pertimbangkan penyaringan (peringatan sudah ada hanya untuk usulan, bukan untuk pesan pengguna).
 - [ ] Belum ada pencarian di dalam riwayat, ekspor, atau penggantian nama dari layar (API `PATCH` sudah ada). Daftar dibatasi 30 terbaru.
-- [ ] Status "sudah diterapkan" pada kartu usulan tidak ikut tersimpan; kartu usulan terbaru kembali menampilkan tombol Terapkan saat percakapan dibuka lagi.
+- [ ] Status "sudah diterapkan" pada kartu usulan tidak ikut tersimpan; kartu usulan terbaru kembali menampilkan tombol Terapkan saat percakapan dibuka lagi. ("Abaikan" sudah tersimpan: usulan dihapus dari percakapan.)
+- [ ] Tes basis data (`*.integration.test.ts`, termasuk riwayat chat) tidak dijalankan di CI karena CI tidak punya Postgres; tambahkan layanan Postgres di workflow agar privasi antar pengguna dan urutan pesan ikut dijaga otomatis.
+- [ ] Jawaban yang tersimpan setelah browser terputus bergantung pada fungsi serverless yang tetap berjalan; belum diverifikasi di Vercel dan belum memakai `waitUntil`.
+- [ ] Belum ada batas jumlah percakapan per pengguna (hanya pembatas laju dan umur 90 hari).

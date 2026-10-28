@@ -43,6 +43,16 @@ export function createTestStore() {
       if (r) r.title = titleFrom(title);
       return !!r;
     },
+    async dropLastProposal(userId, id) {
+      const r = rows.find((x) => x.id === id && x.userId === userId);
+      if (!r) return false;
+      const last = [...r.messages].reverse().find((m) => m.proposal !== undefined);
+      if (last) {
+        delete last.proposal;
+        delete last.warnings;
+      }
+      return true;
+    },
     async remove(userId, id) {
       const i = rows.findIndex((x) => x.id === id && x.userId === userId);
       if (i >= 0) rows.splice(i, 1);

@@ -366,6 +366,20 @@ test("conversations: list, open, rename and delete work for the owner only", asy
   assert.equal(await store.get("u-a", a.id), null);
 });
 
+test("conversations: ignoring a proposal removes it from the chat and from what the model is sent", async () => {
+  const { store } = createTestStore();
+  const c = await store.create("u-a", "document", "buat");
+  await store.append("u-a", c.id, { role: "assistant", content: "usulan", proposal: { slug: "a" }, warnings: ["tautan"] });
+  const admin = { getUser: async () => ({ id: "u-a", role: Role.ADMIN }), store };
+  assert.equal((await handleConversationRequest(api("PATCH", `/x/${c.id}`, { dropProposal: true }, { origin: "https://evil.test" }), c.id, admin)).status, 403);
+  assert.equal((await handleConversationRequest(api("PATCH", `/x/${c.id}`, { dropProposal: true }), c.id, { ...admin, getUser: async () => ({ id: "u-b", role: Role.ADMIN }) })).status, 404);
+  assert.ok((await store.get("u-a", c.id))?.messages[1].proposal);
+  assert.equal((await handleConversationRequest(api("PATCH", `/x/${c.id}`, { dropProposal: true }), c.id, admin)).status, 200);
+  const after = (await store.get("u-a", c.id))!.messages;
+  assert.equal(after[1].proposal, undefined);
+  assert.ok(!toModelMessages(after)[1].content.includes("Usulan dokumen"));
+});
+
 test("conversations: no session, non-admin, unknown assistant, cross-site changes are refused", async () => {
   const { store } = createTestStore();
   const c = await store.create("u-a", "document", "x");
