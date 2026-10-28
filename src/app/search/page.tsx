@@ -4,6 +4,7 @@ import { Role, DocumentStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth/session";
 import { searchDocuments } from "@/lib/services/documents";
 import { getCollections } from "@/lib/services/collections";
+import { recordSearchMiss } from "@/lib/services/search-misses";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,16 @@ export default async function SearchPage({
         viewer,
       })
     : { results: [], total: 0 };
+
+  // A search that finds nothing is a topic nobody has written (or named the way people ask for it).
+  // Only counted without filters: with them, nothing found may just mean the filter was too narrow.
+  if (hasSearchableTerms && results.length === 0 && !selectedCollection && !selectedType) {
+    try {
+      await recordSearchMiss(query);
+    } catch {
+      // the search itself must not fail because the list could not be updated
+    }
+  }
 
   const hrefWith = (filters: { collection?: string; type?: string }) =>
     buildSearchHref({

@@ -252,3 +252,4 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Zip tidak dienkripsi dan memuat dokumen terbatas; bila cadangan akan disimpan di luar, pertimbangkan enkripsi atau kata sandi.
 - [ ] Pembatas laju ekspor per instance serverless (lihat catatan pembatas laju AI).
 - [ ] Impor dari zip langsung di aplikasi belum ada (butir roadmap 30); hari ini lewat `content/drafts/` dan `npm run docs:import`.
+- [ ] Topik yang belum ada: memuat ulang hasil pencarian menaikkan hitungan (tanpa dedupe per pengguna, sengaja agar tanpa identitas); batas 2000 baris belum punya uji otomatis; pembatas pencatatan per instance tidak ada (pencarian sudah dibatasi login).

@@ -287,3 +287,16 @@ model AiMessage {
   @@unique([conversationId, seq])
   @@map("ai_messages")
 }
+
+/// What people searched for and found nothing, counted per normalised phrase. No user is
+/// recorded, only the phrase, so the list shows which topics are missing without showing who
+/// asked. Rows are removed when dismissed, after 180 days, or beyond a fixed number.
+model SearchMiss {
+  query   String   @id
+  count   Int      @default(1)
+  firstAt DateTime @default(now())
+  lastAt  DateTime @default(now())
+
+  @@index([lastAt])
+  @@map("search_misses")
+}
