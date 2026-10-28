@@ -27,8 +27,8 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
           // A ```mermaid fence is a diagram; every other code block is left as it was.
           pre: ({ children }) => {
             const code = Children.toArray(children)[0];
-            if (isValidElement<{ className?: string; children?: React.ReactNode }>(code) && /\blanguage-mermaid\b/.test(code.props.className ?? "")) {
-              return <MermaidDiagram chart={String(code.props.children ?? "").replace(/\n$/, "")} />;
+            if (isValidElement<{ className?: string; children?: React.ReactNode }>(code) && /(^|\s)language-mermaid(\s|$)/.test(code.props.className ?? "")) {
+              return <MermaidDiagram key={String(code.props.children ?? "")} chart={String(code.props.children ?? "").replace(/\n$/, "")} />;
             }
             return <pre>{children}</pre>;
           },

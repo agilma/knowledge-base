@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { unsafeDiagramReason } from "./mermaid-safety";
 
 type State = { svg: string } | { error: string } | null;
 
@@ -8,6 +9,8 @@ type State = { svg: string } | { error: string } | null;
 let queue: Promise<unknown> = Promise.resolve();
 
 async function renderDiagram(id: string, chart: string): Promise<string> {
+  const unsafe = unsafeDiagramReason(chart);
+  if (unsafe) throw new Error(unsafe);
   const task = queue.then(async () => {
     // Loaded on first use: most documents have no diagram and should not pay for the library.
     const mermaid = (await import("mermaid")).default;
@@ -38,7 +41,13 @@ export function MermaidDiagram({ chart }: { chart: string }) {
     let cancelled = false;
     renderDiagram(id, chart).then(
       (svg) => !cancelled && setState({ svg }),
-      () => !cancelled && setState({ error: "Diagram tidak bisa ditampilkan. Periksa penulisan diagramnya." }),
+      (err) =>
+        !cancelled &&
+        setState({
+          error: `Diagram tidak bisa ditampilkan. Periksa penulisan diagramnya${
+            unsafeDiagramReason(chart) ? ` (${err instanceof Error ? err.message : "ditolak"})` : ""
+          }.`,
+        }),
     );
     return () => {
       cancelled = true;

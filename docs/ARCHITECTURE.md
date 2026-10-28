@@ -181,8 +181,8 @@ Keputusan pemilik (28 Okt 2026). **Bagikan** hanya memberi tautan biasa ke `/doc
 
 Keputusan pemilik (28 Okt 2026). Diagram adalah blok berpagar ```` ```mermaid ```` di dalam isi dokumen, jadi tetap teks: ikut pencarian, riwayat revisi, ekspor, dan lolos bolak-balik editor (ada kasusnya di `editor-roundtrip.test.ts`). Penggambarnya `MermaidDiagram` (komponen klien) yang dipakai `MarkdownContent` untuk blok `language-mermaid`; blok kode lain tidak berubah.
 
-- **Keamanan**: teks dokumen adalah data. `securityLevel: "strict"` (tanpa HTML di label, tanpa click), dan SVG hasilnya dipasang dari keluaran mermaid yang sudah disaring.
-- **Beban**: `mermaid` diimpor dinamis hanya saat ada diagram, dan gambar dibuat satu per satu (mermaid menyimpan status global). Halaman tanpa diagram tidak memuatnya.
+- **Keamanan**: teks dokumen adalah data. `securityLevel: "strict"` menghapus skrip dan penangan event, tetapi **tidak** menghapus gambar, tautan, dan CSS `url()` (terbukti: gambar di label ikut diminta peramban). Karena itu `unsafeDiagramReason` menolak sebelum digambar: direktif `%%{...}%%`, baris `click`, `url(`, dan tag HTML selain `<br>`; yang ditolak tampil sebagai pesan dan teks sumber. Pengaturan `securityLevel` sendiri tidak bisa ditimpa direktif (mermaid menghapus kunci aman).
+- **Beban**: `mermaid` diimpor dinamis hanya saat ada diagram, dan gambar dibuat satu per satu (mermaid menyimpan status global). Halaman tanpa diagram tidak memuatnya saat dibuka; tetapi service worker men-precache semua potongan `_next/static`, termasuk potongan mermaid (sekitar 3 MB mentah) yang diunduh saat service worker dipasang.
 - **Tampilan**: kartu putih tetap, karena tema bawaan menggambar teks gelap. Cetak PDF memakai kartu yang sama.
 - **Gagal tampil**: sintaks salah atau pustaka tak bisa dimuat (misalnya offline sebelum pernah dimuat) menampilkan pesan dan teks sumber, tidak pernah halaman kosong.
 - **Yang tidak dilakukan**: pratinjau di editor, gambar dari Canva (butuh penyimpanan gambar), tema gelap untuk diagram.

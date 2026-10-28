@@ -112,7 +112,7 @@ flowchart TD
   B -- Belum --> A
 ```
 
-Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label dalam tanda kutip ganda, keputusan pakai kurung kurawal `{"Pertanyaan?"}`. Kalau penulisannya salah, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Pratinjau diagram belum ada di editor: lihat hasilnya di halaman dokumen setelah menyimpan. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
+Di halaman dokumen, blok itu tampil sebagai diagram dan ikut tercetak ke PDF. Aturan singkat: id simpul huruf dan angka saja, label dalam tanda kutip ganda, keputusan pakai kurung kurawal `{"Pertanyaan?"}`. Tag HTML (selain `<br>`), `click`, `url(` dan `%%{...}%%` tidak diizinkan. Kalau penulisannya salah atau ditolak, yang tampil adalah pesan dan teks aslinya, jadi tidak ada yang hilang. Pratinjau diagram belum ada di editor: lihat hasilnya di halaman dokumen setelah menyimpan. Admin bisa cukup meminta Asisten AI: "buat flow diagram dari langkah ini". Tulis juga langkahnya sebagai daftar bernomor di bawah diagram, untuk pencarian dan saat diagram tidak bisa tampil.
 
 ## Membagikan dan menyimpan dokumen sebagai PDF
 
