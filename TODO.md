@@ -215,3 +215,10 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] PDF dari server (satu klik langsung berkas .pdf) ditunda; hari ini lewat dialog cetak browser.
 - [ ] Belum diuji di perangkat asli: lembar bagikan HP dan "Simpan sebagai PDF" di Safari iOS.
 - [ ] PDF belum memuat daftar isi dan nomor halaman; ekspor banyak dokumen sekaligus belum ada.
+
+## Dari diagram Mermaid
+
+- [ ] Belum ada pratinjau diagram di editor; penulis melihat hasilnya setelah menyimpan. Pratinjau langsung (atau tombol "Lihat diagram") di `MarkdownEditor` akan banyak membantu.
+- [ ] Service worker men-precache semua potongan `_next/static`, termasuk ~22 potongan mermaid (sekitar 3 MB mentah) yang ikut terunduh di setiap perangkat saat service worker dipasang, walau tak pernah membuka diagram. Diagram jadi tampil offline, tetapi bila ukuran unduhan jadi masalah, kecualikan potongan mermaid dari precache (`exclude` di `@serwist/next`) dan cache saat dipakai; konsekuensinya diagram offline hanya bila pernah dibuka.
+- [ ] Diagram selalu di kartu putih; belum ada tema gelap. Belum ada jenis diagram selain yang dicoba (flowchart): urutan (sequence) dan lainnya belum diuji.
+- [ ] Dokumen "SOP 01: Workflow Produksi" di aplikasi belum tentu memuat diagram; minta Asisten AI membuatnya lalu periksa.

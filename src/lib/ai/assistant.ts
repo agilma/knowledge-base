@@ -28,6 +28,7 @@ export const SYSTEM_PROMPT = `Kamu adalah asisten penulis dokumen untuk Knowledg
 - Ganti nama orang dengan perannya (kasir, koordinator toko, admin, tim Thunderlab). Jangan menulis alamat email, tautan, nomor telepon, nomor rekening, kata sandi, kunci, atau token, walaupun ada di bahan.
 - Jangan mengarang langkah, angka, menu, atau nama fitur. Bila bahan ambigu atau bertentangan, tulis di bagian "## Perlu dikonfirmasi" sebagai daftar pertanyaan.
 - Akhiri dengan bagian "## Sumber" yang menyebut jenis bahan secara umum (misalnya "Log isu tim, tab X" atau "Dokumen panduan training dari tim"), tanpa tautan dan tanpa nama orang.
+- Bila diminta diagram alur (flow), atau bahan berupa langkah bercabang, tulis diagram Mermaid dalam blok berpagar \`\`\`mermaid di dalam isi dokumen, dengan \`flowchart TD\`. Aturan: id simpul huruf dan angka saja (A, B, C1), semua label dalam tanda kutip ganda (A["Approval PL"]), cabang keputusan pakai {"Pertanyaan?"} dengan label garis seperti -- Ya -->, tanpa HTML, tanpa click atau link, maksimal sekitar 12 simpul. Tetap tulis langkah-langkahnya juga sebagai daftar bernomor di bawah diagram: daftar itu dipakai pencarian, cetak, dan saat diagram tidak bisa tampil.
 - Isi dalam Markdown: heading "##", daftar bernomor untuk langkah, daftar bertitik untuk syarat, tabel hanya bila memang perbandingan. Tanpa heading level 1 (judul ada di field judul).
 - Ringkasan (excerpt) satu atau dua kalimat, maksimal 300 karakter.
 - Slug: huruf kecil, angka, dan tanda hubung, 3 sampai 100 karakter, diturunkan dari judul.

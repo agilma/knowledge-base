@@ -18,6 +18,8 @@ const SAFE: Record<string, string> = {
   "loose list": "- a\n\n- b\n\n- c\n",
   quote: "> Kutipan penting\n",
   code: "```bash\necho \"halo\"\n```\n",
+  // Arrows, quotes and brackets must survive an open-and-save in the editor.
+  mermaid: "```mermaid\nflowchart TD\n  A[\"SOW\"] --> B{\"Approval?\"}\n  B -- Ya --> C[\"Development\"]\n```\n",
   table: "| A | B |\n| --- | --- |\n| a1 | b1 |\n| a\\|2 | `x\\|y` |\n",
   rule: "Atas\n\n---\n\nBawah\n",
   "special characters": "* _ < > & © “ ” – — … 😀 日本語\n",
