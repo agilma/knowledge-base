@@ -1,7 +1,7 @@
 "use client";
 
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, Search, Star, Clock, FolderOpen, Users, Download, SearchX, Trash2, UsersRound } from "lucide-react";
+import { Menu, Home, Search, Star, Clock, FolderOpen, Users, Download, SearchX, Trash2, UsersRound, MessageSquare } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -76,6 +76,10 @@ export function MobileNav() {
                 <Link onClick={closeSheet} href="/admin/pencarian" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
                   <SearchX className="w-4 h-4 text-muted-foreground" />
                   Topik yang belum ada
+                </Link>
+                <Link onClick={closeSheet} href="/admin/masukan" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  Masukan pembaca
                 </Link>
               </div>
             )}

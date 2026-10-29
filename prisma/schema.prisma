@@ -48,6 +48,8 @@ model User {
   collectionAccess CollectionMember[]
   documentAccess   DocumentMember[]
   groups           GroupMember[]
+  comments         DocumentComment[]  @relation("CommentAuthor")
+  resolvedComments DocumentComment[]  @relation("CommentResolver")
   aiConversations  AiConversation[]
 
   @@map("users")
@@ -159,6 +161,7 @@ model Document {
   revisions       DocumentRevision[]
   members         DocumentMember[]
   groups          DocumentGroup[]
+  comments        DocumentComment[]
   aiConversations AiConversation[]
   parent          Document?          @relation("DocumentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children        Document[]         @relation("DocumentTree")
@@ -384,4 +387,33 @@ model DocumentGroup {
   @@id([documentId, groupId])
   @@index([groupId])
   @@map("document_groups")
+}
+
+/// A reader's note on a document ("Ada yang kurang jelas?"), and the replies to it (migration 15). A
+/// root has no `parentId` and is the thread: it is open or resolved. Visible to its author and to
+/// editors and admins who may read the document; never to other readers.
+model DocumentComment {
+  id           String    @id @default(cuid())
+  documentId   String
+  authorId     String?
+  /// Null for a reader's note; the note's id for a reply (threads are one level deep).
+  parentId     String?
+  body         String
+  /// Only meaningful on a root: an editor marked it dealt with.
+  resolved     Boolean   @default(false)
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime  @default(now())
+
+  document   Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  author     User?             @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  resolvedBy User?             @relation("CommentResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  parent     DocumentComment?  @relation("Thread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    DocumentComment[] @relation("Thread")
+
+  @@index([documentId, createdAt])
+  @@index([parentId])
+  @@index([authorId, createdAt])
+  @@index([resolved, createdAt])
+  @@map("document_comments")
 }
