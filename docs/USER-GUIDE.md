@@ -166,6 +166,12 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 
 Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakapan disimpan di akun Anda selama 90 hari sejak pesan terakhir. Buka lagi lewat tombol **Riwayat** di panel (daftar percakapan Anda, buka untuk melanjutkan, ikon tempat sampah untuk menghapus), atau mulai yang baru dengan **Percakapan baru**. Riwayat hanya terlihat oleh Anda; admin lain tidak bisa membukanya. Jangan menempel kata sandi atau data pribadi pelanggan: yang ditempel ikut tersimpan sampai dihapus. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
+## Masukan dari pembaca
+
+**Pembaca:** di bagian bawah dokumen ada **Kirim masukan**. Tulis bagian yang kurang jelas, salah, atau sudah berubah (sampai 1000 karakter; jangan menulis kata sandi atau data pelanggan). Masukan hanya dibaca penyunting dokumen itu; orang lain tidak melihatnya. Di halaman yang sama Anda melihat masukan Anda, balasan penyunting, dan apakah sudah **Selesai**; membalas utas yang sudah selesai membukanya lagi. Satu orang paling banyak mengirim 10 masukan per jam.
+
+**Penyunting dan admin:** **Masukan pembaca** di menu menampilkan semua masukan yang menunggu (tab **Selesai** untuk yang sudah ditangani), dengan nama penulisnya. Balas, lalu **Tandai selesai** setelah dokumennya diperbaiki; **Buka lagi** bila perlu. Di halaman dokumen, tombol **Masukan pembaca** menampilkan masukan khusus dokumen itu. Hapus bila isinya tidak pantas.
+
 ## Mode langkah: mengikuti langkah satu per satu
 
 Di dokumen yang punya langkah bergambar, tekan **Mode langkah** (di atas halaman). Layar menampilkan satu langkah dengan huruf besar; kerjakan, lalu tekan **Selesai, lanjut**. **Sebelumnya** kembali satu langkah, **Daftar langkah** menampilkan semuanya (ketuk untuk loncat, kotak di kanan untuk menandai atau membatalkan). Peringatan merah muncul sebagai layar sendiri di tempatnya. Tanda selesai tersimpan di HP atau komputer ini saja, jadi kalau halaman ditutup dan dibuka lagi Anda melanjutkan dari langkah yang belum selesai; **Mulai ulang** di akhir menghapus tandanya. Kalau isi langkah diubah penulis, tandanya mulai dari awal. Layar dijaga tetap menyala selama dipakai (bila HP mendukung). Tombol ini hanya muncul di dokumen yang memang berisi blok langkah.

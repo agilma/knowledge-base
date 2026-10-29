@@ -27,7 +27,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 
 7. **[SELESAI 29 Okt 2026] Mode langkah (checklist interaktif)** (M). Dokumen berisi langkah bergambar bisa dibuka satu langkah per layar dengan huruf besar dan tanda "selesai" per langkah (disimpan di perangkat). Cocok untuk kasir di depan mesin.
 8. **Beranda per peran dan dokumen sematan** (M). Admin menyematkan "Mulai di sini" per koleksi, dan beranda menampilkan yang sering dibuka. Migrasi aditif (kolom urutan sematan).
-9. **Saran dan masukan dari pembaca** (M). Tombol "Ada yang kurang jelas atau berubah?" di dokumen; masuk ke kotak masuk editor per dokumen. Menggantikan kebutuhan kolaborasi real-time. Migrasi (tabel masukan).
+9. **[SELESAI 29 Okt 2026] Saran dan masukan dari pembaca** (M). Tombol "Ada yang kurang jelas atau berubah?" di dokumen; masuk ke kotak masuk editor per dokumen. Menggantikan kebutuhan kolaborasi real-time. Migrasi (tabel masukan).
 10. **Tanya Knowledge Base (jawaban AI dengan sumber)** (L). Kotak tanya untuk semua pengguna: pencarian full-text lebih dulu, lalu Claude merangkum dari dokumen yang boleh dibaca orang itu, selalu dengan tautan sumber dan tanpa mengarang; aturan akses koleksi dan dokumen terbatas wajib berlaku di tahap pengambilan. Batas pemakaian per pengguna dan biaya terpantau. Pembuka: tombol "Tanya" di hasil pencarian. Embedding (pgvector) hanya bila pencarian biasa tidak cukup.
 11. **Kuis singkat dan tanda sudah dibaca untuk SOP** (L). Pelatihan kasir baru: checklist onboarding, kuis 3-5 soal per SOP, admin melihat siapa sudah lulus. Migrasi (tabel progres).
 
@@ -69,7 +69,7 @@ Dasar perbandingan ada di bagian "Perbandingan dengan Outline" di bawah. Nomor d
 
 **Tahap 2 (membuat dokumen dipakai)**
 
-27. **Komentar berutas dengan sebut orang** (L). Komentar pada dokumen, utas, tandai selesai, `@nama` memberi notifikasi; memperluas butir 9 (masukan pembaca) untuk editor. Migrasi (tabel komentar).
+27. **[SEBAGIAN 29 Okt 2026: utas dan tandai selesai ada lewat butir 9; `@nama` dan notifikasi menunggu butir 31] Komentar berutas dengan sebut orang** (L). Komentar pada dokumen, utas, tandai selesai, `@nama` memberi notifikasi; memperluas butir 9 (masukan pembaca) untuk editor. Migrasi (tabel komentar).
 28. **Templat tersimpan** (M). Admin atau editor menyimpan dokumen sebagai templat (SOP, Masalah, Training) dan memilihnya di Dokumen Baru, termasuk yang sudah berisi langkah bergambar dan bagian "Perlu dikonfirmasi". Migrasi kecil.
 29. **Sematan** (M). Tempel tautan Canva, YouTube, Google Slides, Figma; tampil sebagai bingkai dari daftar domain yang diizinkan saja (keamanan). Meniru lembar SOP Canva langsung di halaman.
 30. **Impor dari berkas di aplikasi** (M-L). Unggah `.md` atau `.docx` (dan zip dari Notion atau Confluence) oleh admin menjadi draf; perluas pipeline `docs:import`. Tanpa migrasi.

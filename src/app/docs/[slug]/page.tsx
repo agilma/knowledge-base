@@ -12,7 +12,7 @@ import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
 import { extractStepFlow } from "@/lib/step-mode";
-import { ListChecks } from "lucide-react";
+import { ListChecks, MessageSquare } from "lucide-react";
 import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
 import { moveDocumentAction } from "@/app/docs/tree-actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -178,6 +178,15 @@ export default async function DocumentPage({
 
         {/* Document Content Sections */}
         <MarkdownContent content={doc.content} />
+
+        {/* A reader's way to say something is unclear or has changed; read by the editors of this document */}
+        <div className="print:hidden mt-12 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border px-4 py-3 text-sm">
+          <span className="text-muted-foreground">Ada yang kurang jelas, salah, atau sudah berubah?</span>
+          <Link href={`/docs/${doc.slug}/masukan`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <MessageSquare className="mr-1.5 h-4 w-4" />
+            {canSeeDrafts ? "Masukan pembaca" : "Kirim masukan"}
+          </Link>
+        </div>
 
         {/* Pages under this one (chapters of a guide) */}
         {(children.length > 0 || canSeeDrafts) && (

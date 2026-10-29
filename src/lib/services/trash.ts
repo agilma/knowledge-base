@@ -32,6 +32,8 @@ interface TrashSnapshot {
   memberIds: string[];
   /** Groups listed on it (migration 14); a snapshot from before then has none. */
   groupIds?: string[];
+  /** Reader notes and replies on it (migration 15); a snapshot from before then has none. */
+  comments?: { id: string; parentId: string | null; authorId: string | null; body: string; resolved: boolean; resolvedAt: string | null; resolvedById: string | null; createdAt: string }[];
   relations: { fromId: string; toId: string }[];
   revisions: {
     version: number;
@@ -87,6 +89,7 @@ export async function trashDocument(id: string, actor: Viewer) {
         collection: { select: { name: true } },
         members: { select: { userId: true } },
         groups: { select: { groupId: true } },
+        comments: { orderBy: { createdAt: "asc" }, take: 1000 },
         relatedFrom: { select: { fromId: true, toId: true } },
         relatedTo: { select: { fromId: true, toId: true } },
         revisions: { orderBy: { version: "asc" } },
@@ -115,6 +118,16 @@ export async function trashDocument(id: string, actor: Viewer) {
       },
       memberIds: doc.members.map((m) => m.userId),
       groupIds: doc.groups.map((g) => g.groupId),
+      comments: doc.comments.map((c) => ({
+        id: c.id,
+        parentId: c.parentId,
+        authorId: c.authorId,
+        body: c.body,
+        resolved: c.resolved,
+        resolvedAt: c.resolvedAt?.toISOString() ?? null,
+        resolvedById: c.resolvedById,
+        createdAt: c.createdAt.toISOString(),
+      })),
       relations: [...doc.relatedFrom, ...doc.relatedTo],
       revisions: doc.revisions.map((r) => ({
         version: r.version,
@@ -220,7 +233,7 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
     const userIds = new Set(
       (
         await tx.user.findMany({
-          where: { id: { in: [...new Set([d.authorId, d.lastEditedById, ...snap.memberIds, ...snap.revisions.map((r) => r.editedById)].filter((x): x is string => !!x))] } },
+          where: { id: { in: [...new Set([d.authorId, d.lastEditedById, ...snap.memberIds, ...snap.revisions.map((r) => r.editedById), ...(snap.comments ?? []).flatMap((c) => [c.authorId, c.resolvedById])].filter((x): x is string => !!x))] } },
           select: { id: true },
         })
       ).map((u) => u.id),
@@ -272,6 +285,23 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
     const members = snap.memberIds.filter((id) => userIds.has(id));
     if (members.length > 0) {
       await tx.documentMember.createMany({ data: members.map((userId) => ({ documentId: d.id, userId })) });
+    }
+    // Reader notes come back with their authors (unknown ones become nameless), roots before their replies.
+    const comments = snap.comments ?? [];
+    if (comments.length > 0) {
+      const data = (c: (typeof comments)[number]) => ({
+        id: c.id,
+        documentId: d.id,
+        parentId: c.parentId,
+        authorId: known(c.authorId),
+        body: c.body,
+        resolved: c.resolved,
+        resolvedAt: c.resolvedAt ? new Date(c.resolvedAt) : null,
+        resolvedById: known(c.resolvedById),
+        createdAt: new Date(c.createdAt),
+      });
+      await tx.documentComment.createMany({ data: comments.filter((c) => !c.parentId).map(data) });
+      await tx.documentComment.createMany({ data: comments.filter((c) => c.parentId).map(data) });
     }
     const groupIds = snap.groupIds ?? [];
     if (groupIds.length > 0) {

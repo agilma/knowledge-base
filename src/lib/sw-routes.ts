@@ -8,7 +8,7 @@
 
 /**
  * Pages that open an editor, or show what only editors may see (a document's
- * revision history). They must always reach the network.
+ * revision history) or what people wrote (reader notes). They must always reach the network.
  */
 export function isEditorRoute(pathname: string): boolean {
   return (
@@ -16,6 +16,8 @@ export function isEditorRoute(pathname: string): boolean {
     pathname === "/collections/new" ||
     /^\/docs\/[^/]+\/edit$/.test(pathname) ||
     /^\/docs\/[^/]+\/history(\/.*)?$/.test(pathname) ||
+    // what readers wrote about a document: personal, and never worth showing stale
+    /^\/docs\/[^/]+\/masukan$/.test(pathname) ||
     /^\/collections\/[^/]+\/edit$/.test(pathname)
   );
 }
