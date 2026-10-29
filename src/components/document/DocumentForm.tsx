@@ -63,6 +63,8 @@ interface DocumentFormProps {
   aiEnabled?: boolean;
   defaultCollectionId?: string;
   defaultTitle?: string;
+  /** A saved template this new document starts from: its text and type replace the built-in skeleton. */
+  defaultTemplate?: { id: string; type: DocumentType; content: string };
   initialData?: {
     id: string;
     title: string;
@@ -88,6 +90,7 @@ export function DocumentForm({
   aiEnabled = false,
   defaultCollectionId,
   defaultTitle,
+  defaultTemplate,
   initialData,
 }: DocumentFormProps) {
   const isEditing = !!initialData;
@@ -99,7 +102,7 @@ export function DocumentForm({
   // Storage key determination
   const draftKey = isEditing
     ? `kb:draft:doc:${initialData.id}`
-    : `kb:draft:doc:new:${defaultCollectionId ? collections.find(c => c.id === defaultCollectionId)?.slug || "none" : "none"}`;
+    : `kb:draft:doc:new:${defaultCollectionId ? collections.find(c => c.id === defaultCollectionId)?.slug || "none" : "none"}${defaultTemplate ? `:t:${defaultTemplate.id}` : ""}`;
 
   const [title, setTitle] = useState(initialData?.title ?? defaultTitle ?? "");
   const [slug, setSlug] = useState(
@@ -108,10 +111,10 @@ export function DocumentForm({
   const [collectionId, setCollectionId] = useState(
     initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? ""
   );
-  const [type, setType] = useState<DocumentType>(initialData?.type ?? DocumentType.PANDUAN);
+  const [type, setType] = useState<DocumentType>(initialData?.type ?? defaultTemplate?.type ?? DocumentType.PANDUAN);
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "");
   const [content, setContent] = useState(
-    initialData?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN]
+    initialData?.content ?? defaultTemplate?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN]
   );
   const [status, setStatus] = useState<DocumentStatus>(initialData?.status ?? DocumentStatus.DRAFT);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
@@ -130,9 +133,9 @@ export function DocumentForm({
     slug: initialData?.slug ?? (defaultTitle ? slugify(defaultTitle) : ""),
     collectionId:
       initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? "",
-    type: initialData?.type ?? DocumentType.PANDUAN,
+    type: initialData?.type ?? defaultTemplate?.type ?? DocumentType.PANDUAN,
     excerpt: initialData?.excerpt ?? "",
-    content: initialData?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN],
+    content: initialData?.content ?? defaultTemplate?.content ?? DOCUMENT_TEMPLATES[DocumentType.PANDUAN],
     status: initialData?.status ?? DocumentStatus.DRAFT,
   }));
 

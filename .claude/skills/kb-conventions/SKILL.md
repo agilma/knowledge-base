@@ -44,6 +44,12 @@ paling sering terlewat.
   sedang membuat `3_`; periksa `origin/main` dan PR terbuka sebelum memilih nomor).
 - Build Vercel menjalankan `prisma migrate deploy` di setiap PR dan database Preview kemungkinan sama
   dengan production: migrasi harus **aditif dan aman di data yang ada**, dan dijelaskan di deskripsi PR.
+- Prisma menjalankan folder menurut **urutan abjad** (`10_` sebelum `2_`). Pada database yang dibuat dari
+  nol, migrasi 10 ke atas berjalan sebelum 2 sampai 9, jadi tabel baru tidak boleh bergantung pada enum atau
+  kolom yang dibuat atau diubah migrasi 2 sampai 9 (contoh: kolom bertipe `DocumentType` membuat migrasi 2
+  gagal; pakai teks). Buktikan dengan database kosong:
+  `prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url <db kosong> --exit-code`
+  (harus "No difference detected").
 
 ## Verifikasi sebelum push
 

@@ -12,7 +12,8 @@ import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
 import { extractStepFlow } from "@/lib/step-mode";
-import { ListChecks, MessageSquare } from "lucide-react";
+import { FileStack, ListChecks, MessageSquare } from "lucide-react";
+import { createTemplateAction } from "@/app/admin/templat/actions";
 import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
 import { moveDocumentAction } from "@/app/docs/tree-actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -103,6 +104,14 @@ export default async function DocumentPage({
                 <ListChecks className="mr-1.5 h-4 w-4" />
                 Mode langkah
               </Link>
+            )}
+            {canSeeDrafts && !doc.restricted && !doc.collection?.restricted && (
+              <form action={createTemplateAction.bind(null, doc.id, doc.slug)}>
+                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <FileStack className="mr-1.5 h-4 w-4" />
+                  Jadikan templat
+                </button>
+              </form>
             )}
             <DocumentShareActions slug={doc.slug} title={doc.title} />
             {user && (

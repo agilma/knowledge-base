@@ -3,6 +3,8 @@ import { requireRole } from "@/lib/auth/session";
 import { getCollections, listAssignableUsers } from "@/lib/services/collections";
 import { getDocumentBySlug } from "@/lib/services/documents";
 import { listGroups } from "@/lib/services/groups";
+import Link from "next/link";
+import { getTemplate, listTemplates } from "@/lib/services/templates";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -10,12 +12,13 @@ export const dynamic = "force-dynamic";
 export default async function NewDocumentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ collection?: string; title?: string; parent?: string }>;
+  searchParams: Promise<{ collection?: string; title?: string; parent?: string; templat?: string | string[] }>;
 }) {
   const user = await requireRole([Role.EDITOR, Role.ADMIN]);
   const viewer = { id: user.id, role: user.role };
 
-  const { collection: collectionSlug, title: defaultTitle, parent: parentSlug } = await searchParams;
+  const { collection: collectionSlug, title: defaultTitle, parent: parentSlug, templat: templatParam } = await searchParams;
+  const templateId = Array.isArray(templatParam) ? templatParam[0] : templatParam;
   const collections = await getCollections(viewer);
   // Only an admin may restrict a document, so only an admin's form carries the section.
   const [accessUsers, accessGroups] =
@@ -39,6 +42,9 @@ export default async function NewDocumentPage({
     }
   }
 
+  // A saved template: its text and type fill the form; the list of the others is offered above it.
+  const [templates, chosen] = await Promise.all([listTemplates(viewer), templateId ? getTemplate(templateId, viewer) : null]);
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <div>
@@ -48,7 +54,36 @@ export default async function NewDocumentPage({
         </p>
       </div>
 
+      {templates.length > 0 && (
+        <section aria-label="Mulai dari templat" className="space-y-2">
+          <h2 className="text-sm font-medium">Mulai dari templat</h2>
+          <ul className="flex flex-wrap gap-2">
+            <li>
+              <Link
+                href={{ pathname: "/docs/new", query: { ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}) } }}
+                className={`inline-flex min-h-9 items-center rounded-full border px-3 text-sm ${!chosen ? "bg-foreground text-background" : "hover:bg-muted"}`}
+              >
+                Kosong (bawaan)
+              </Link>
+            </li>
+            {templates.map((template) => (
+              <li key={template.id}>
+                <Link
+                  href={{ pathname: "/docs/new", query: { templat: template.id, ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}) } }}
+                  className={`inline-flex min-h-9 items-center rounded-full border px-3 text-sm ${chosen?.id === template.id ? "bg-foreground text-background" : "hover:bg-muted"}`}
+                >
+                  {template.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {chosen && <p className="text-xs text-muted-foreground">Isi dan jenis diambil dari templat &ldquo;{chosen.name}&rdquo;; ubah sesuka Anda sebelum menyimpan.</p>}
+        </section>
+      )}
+
       <DocumentForm
+        key={chosen?.id ?? "kosong"}
+        defaultTemplate={chosen ? { id: chosen.id, type: chosen.type, content: chosen.content } : undefined}
         collections={collections}
         accessUsers={accessUsers}
         accessGroups={accessGroups}
