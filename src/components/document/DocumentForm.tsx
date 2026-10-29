@@ -11,6 +11,7 @@ import { Sparkles } from "lucide-react";
 import { AiAssistantPanel } from "@/components/document/AiAssistantPanel";
 import type { FormContext, Proposal } from "@/lib/ai/request";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
+import { ParentSelect, type ParentOption } from "@/components/document/ParentSelect";
 import { RelatedDocumentsPicker, type RelatedCandidate } from "@/components/document/RelatedDocumentsPicker";
 import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
@@ -45,6 +46,8 @@ interface DocumentFormProps {
   collections: CollectionOption[];
   /** The documents already related, with their titles; the picker searches for more. */
   initialRelated?: RelatedCandidate[];
+  /** The page this document sits under now (editing) or should be created under (a new sub-page). */
+  initialParent?: ParentOption | null;
   /**
    * Given only to admins, who alone may restrict a document: everyone who can be made a
    * member, and the current setting. Without `users` the section is not shown at all.
@@ -72,6 +75,7 @@ interface DocumentFormProps {
 export function DocumentForm({
   collections,
   initialRelated = [],
+  initialParent = null,
   accessUsers,
   initialRestricted = false,
   initialMemberIds = [],
@@ -549,6 +553,13 @@ export function DocumentForm({
           <p className="text-xs text-destructive">{state.fieldErrors.content}</p>
         )}
       </div>
+
+      <ParentSelect
+        collectionId={collectionId}
+        documentId={initialData?.id}
+        initialCollectionId={initialData?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? ""}
+        initialParent={initialParent}
+      />
 
       <RelatedDocumentsPicker initialRelated={initialRelated} documentId={initialData?.id} />
 

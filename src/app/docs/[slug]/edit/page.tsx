@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
+import { db } from "@/lib/db";
+import { documentReadableWhere } from "@/lib/collection-access";
 import {
   getDocumentBySlug,
   getDocumentMemberIds,
@@ -30,6 +32,9 @@ export default async function EditDocumentPage({
     getCollections(viewer),
     getRelatedCandidates(document.id, viewer),
   ]);
+  const parent = document.parentId
+    ? await db.document.findFirst({ where: { id: document.parentId, ...documentReadableWhere(viewer) }, select: { id: true, title: true } })
+    : null;
 
   // Only an admin may restrict a document, so only an admin's form carries the section.
   const [accessUsers, initialMemberIds] =
@@ -49,6 +54,7 @@ export default async function EditDocumentPage({
       <DocumentForm
         collections={collections}
         initialRelated={initialRelated}
+        initialParent={parent}
         accessUsers={accessUsers}
         aiEnabled={user.role === Role.ADMIN}
         initialRestricted={document.restricted}

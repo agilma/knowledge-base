@@ -23,6 +23,9 @@ interface TrashSnapshot {
     authorId: string | null;
     lastEditedById: string | null;
     restricted: boolean;
+    /** The page it sat under (migration 13); a snapshot written before then has neither. */
+    parentId?: string | null;
+    position?: number;
     createdAt: string;
     updatedAt: string;
   };
@@ -102,6 +105,8 @@ export async function trashDocument(id: string, actor: Viewer) {
         authorId: doc.authorId,
         lastEditedById: doc.lastEditedById,
         restricted: doc.restricted,
+        parentId: doc.parentId,
+        position: doc.position,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString(),
       },
@@ -218,6 +223,12 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
     );
     const known = (userId: string | null) => (userId && userIds.has(userId) ? userId : null);
 
+    // Back under its parent only when that page is still there, in the same collection; the pages
+    // that were under this one became top-level when it was deleted and stay so.
+    const parent = d.parentId
+      ? await tx.document.findFirst({ where: { id: d.parentId, collectionId: d.collectionId }, select: { id: true } })
+      : null;
+
     const slug = await freeSlug(tx, d.slug);
     await tx.document.create({
       data: {
@@ -232,6 +243,8 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
         authorId: known(d.authorId),
         lastEditedById: known(d.lastEditedById),
         restricted: d.restricted,
+        parentId: parent?.id ?? null,
+        position: parent ? (d.position ?? 0) : 0,
         createdAt: new Date(d.createdAt),
         updatedAt: new Date(d.updatedAt),
       },

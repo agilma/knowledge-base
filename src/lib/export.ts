@@ -12,6 +12,8 @@ export interface ExportedDocument {
   createdAt: Date;
   updatedAt: Date;
   collection: { slug: string; name: string };
+  /** The page it sits under, when it sits under one (roadmap 23). */
+  parent?: { slug: string } | null;
   author: { name: string | null } | null;
   lastEditedBy: { name: string | null } | null;
 }
@@ -37,6 +39,7 @@ export function documentToMarkdown(doc: ExportedDocument): string {
     `excerpt: ${oneLine(doc.excerpt ?? "")}`,
     `status: ${doc.status}`,
     `restricted: ${doc.restricted}`,
+    ...(doc.parent ? [`parent: ${doc.parent.slug}`] : []),
     `created: ${doc.createdAt.toISOString()}`,
     `updated: ${doc.updatedAt.toISOString()}`,
     ...(doc.author?.name ? [`author: ${oneLine(doc.author.name)}`] : []),

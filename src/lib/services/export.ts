@@ -43,6 +43,7 @@ export async function exportBatch(actor: Viewer, options: { afterId?: string; ta
       createdAt: true,
       updatedAt: true,
       collection: { select: { slug: true, name: true } },
+      parent: { select: { slug: true } },
       author: { select: { name: true } },
       lastEditedBy: { select: { name: true } },
     },

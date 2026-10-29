@@ -30,7 +30,7 @@ export default async function CollectionDetailPage({
     notFound();
   }
 
-  const listOptions = { includeDrafts: canSeeDrafts, viewer };
+  const listOptions = { includeDrafts: canSeeDrafts, viewer, topLevelOnly: true };
   const total = await countDocumentsByCollection(collection.id, listOptions);
   const pages = Math.max(1, Math.ceil(total / COLLECTION_PAGE_SIZE));
   // A page number out of range (an old link, a typed one) shows the nearest real page, not an empty list.

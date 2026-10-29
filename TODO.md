@@ -261,3 +261,7 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Menghapus dan memulihkan dokumen belum tercatat di log audit (butir roadmap 14); menghapus koleksi atau pengguna tidak melewati sampah.
 - [ ] Potret sampah memuat seluruh riwayat versi; dokumen dengan ratusan versi besar membuat baris besar. Pertimbangkan batas bila terlihat di data nyata.
 - [ ] Tempat sampah: tautan terkait antara dua dokumen yang sama-sama dihapus hilang bila dipulihkan satu per satu (potret hanya memuat tautan yang masih ada saat dihapus); `AiConversation.documentId` tidak dipulihkan; daftar sampah dibatasi 200 tanpa halaman; pesan galat di `?galat=` bisa dipalsukan lewat tautan buatan (hanya teks, dipotong 200 karakter).
+- [ ] Dokumen bersarang: tidak ada pohon di sidebar dan tidak ada seret-urut (hanya tombol naik/turun); pencarian dan hasilnya tidak menampilkan jalur induk; halaman koleksi tidak menunjukkan jumlah bab (hitungan akan membocorkan bab yang tidak boleh dilihat).
+- [ ] Menghapus induk membuat bab-babnya tingkat atas, dan memulihkan induk tidak mengembalikan mereka ke bawahnya.
+- [ ] Daftar pilihan induk di form dibatasi 300 judul per koleksi (urut judul); koleksi yang lebih besar perlu pencarian seperti pemilih dokumen terkait.
+- [ ] Pembaca yang mencetak halaman induk tidak mendapat daftar bab (disembunyikan saat cetak, seperti dokumen terkait).
