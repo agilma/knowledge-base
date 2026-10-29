@@ -6,6 +6,7 @@ import {
   getCollectionMemberIds,
   listAssignableUsers,
 } from "@/lib/services/collections";
+import { getCollectionGroupIds, listGroups } from "@/lib/services/groups";
 import { CollectionForm } from "@/components/collection/CollectionForm";
 
 export const dynamic = "force-dynamic";
@@ -24,9 +25,12 @@ export default async function EditCollectionPage({
     notFound();
   }
 
-  const [users, memberIds] = await Promise.all([
-    listAssignableUsers({ id: admin.id, role: admin.role }),
-    getCollectionMemberIds(collection.id, { id: admin.id, role: admin.role }),
+  const adminViewer = { id: admin.id, role: admin.role };
+  const [users, memberIds, groups, groupIds] = await Promise.all([
+    listAssignableUsers(adminViewer),
+    getCollectionMemberIds(collection.id, adminViewer),
+    listGroups(adminViewer),
+    getCollectionGroupIds(collection.id, adminViewer),
   ]);
 
   return (
@@ -38,7 +42,7 @@ export default async function EditCollectionPage({
         </p>
       </div>
 
-      <CollectionForm initialData={collection} users={users} initialMemberIds={memberIds} />
+      <CollectionForm initialData={collection} users={users} initialMemberIds={memberIds} groups={groups} initialGroupIds={groupIds} />
     </div>
   );
 }

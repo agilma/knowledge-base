@@ -14,6 +14,7 @@ import {
   setCollectionMembers,
 } from "@/lib/services/collections";
 import { collectionSchema, CollectionInput } from "@/lib/validation/collection";
+import { setCollectionGroups } from "@/lib/services/groups";
 import { MAX_COLLECTION_MEMBERS } from "@/lib/collection-access";
 
 export type ActionState = {
@@ -22,6 +23,11 @@ export type ActionState = {
 };
 
 /** Ids chosen in the member picker; anything that is not a string is dropped. */
+/** Ids ticked in the group list; anything that is not a string is dropped. */
+function groupIds(formData: FormData): string[] {
+  return formData.getAll("groupIds").filter((id): id is string => typeof id === "string");
+}
+
 function memberIds(formData: FormData): string[] {
   return formData.getAll("memberIds").filter((id): id is string => typeof id === "string");
 }
@@ -71,6 +77,9 @@ export async function createCollectionAction(
     const newCollection = await createCollection(parsed.data);
     if (formData.get("membersTouched") === "1") {
       await setCollectionMembers(newCollection.id, memberIds(formData), { id: admin.id, role: admin.role });
+    }
+    if (formData.get("groupsTouched") === "1") {
+      await setCollectionGroups(newCollection.id, groupIds(formData), { id: admin.id, role: admin.role });
     }
     revalidatePath("/collections");
     revalidatePath(`/collections/${newCollection.slug}`);
@@ -132,6 +141,9 @@ export async function updateCollectionAction(
     const updatedCollection = await updateCollection(id, parsed.data);
     if (formData.get("membersTouched") === "1") {
       await setCollectionMembers(id, memberIds(formData), viewer);
+    }
+    if (formData.get("groupsTouched") === "1") {
+      await setCollectionGroups(id, groupIds(formData), viewer);
     }
     revalidatePath("/collections");
     revalidatePath(`/collections/${oldCollection.slug}`);

@@ -27,13 +27,13 @@ export async function getRestrictedCollections() {
   });
 }
 
-/** Ids of the restricted collections this user was added to. */
+/** Ids of the restricted collections this user was added to, by name or through a group. */
 export async function getMemberCollectionIds(userId: string): Promise<string[]> {
-  const rows = await db.collectionMember.findMany({
-    where: { userId },
-    select: { collectionId: true },
-  });
-  return rows.map((row) => row.collectionId);
+  const [direct, viaGroup] = await Promise.all([
+    db.collectionMember.findMany({ where: { userId }, select: { collectionId: true } }),
+    db.collectionGroup.findMany({ where: { group: { members: { some: { userId } } } }, select: { collectionId: true } }),
+  ]);
+  return [...new Set([...direct, ...viaGroup].map((row) => row.collectionId))];
 }
 
 export async function getCollectionBySlug(slug: string, viewer: Viewer) {

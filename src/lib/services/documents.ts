@@ -766,8 +766,11 @@ export async function getRestrictedDocumentIds(): Promise<string[]> {
   return rows.map((r) => r.id);
 }
 
-/** The restricted documents a user is listed on. */
+/** The restricted documents a user is listed on, by name or through a group. */
 export async function getMemberDocumentIds(userId: string): Promise<string[]> {
-  const rows = await db.documentMember.findMany({ where: { userId }, select: { documentId: true } });
-  return rows.map((r) => r.documentId);
+  const [direct, viaGroup] = await Promise.all([
+    db.documentMember.findMany({ where: { userId }, select: { documentId: true } }),
+    db.documentGroup.findMany({ where: { group: { members: { some: { userId } } } }, select: { documentId: true } }),
+  ]);
+  return [...new Set([...direct, ...viaGroup].map((r) => r.documentId))];
 }
