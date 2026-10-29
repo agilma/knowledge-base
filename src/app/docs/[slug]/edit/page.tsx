@@ -10,6 +10,7 @@ import {
 } from "@/lib/services/documents";
 import { getCollections, listAssignableUsers } from "@/lib/services/collections";
 import { getDocumentGroupIds, listGroups } from "@/lib/services/groups";
+import { saveMode } from "@/lib/services/reviews";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function EditDocumentPage({
     getCollections(viewer),
     getRelatedCandidates(document.id, viewer),
   ]);
+  const reviewMode = (await saveMode(document.id, viewer)) === "review";
   const parent = document.parentId
     ? await db.document.findFirst({ where: { id: document.parentId, ...documentReadableWhere(viewer) }, select: { id: true, title: true } })
     : null;
@@ -61,6 +63,7 @@ export default async function EditDocumentPage({
         collections={collections}
         initialRelated={initialRelated}
         initialParent={parent}
+        reviewMode={reviewMode}
         accessUsers={accessUsers}
         aiEnabled={user.role === Role.ADMIN}
         initialRestricted={document.restricted}

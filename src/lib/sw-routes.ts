@@ -18,6 +18,8 @@ export function isEditorRoute(pathname: string): boolean {
     /^\/docs\/[^/]+\/history(\/.*)?$/.test(pathname) ||
     // what readers wrote about a document: personal, and never worth showing stale
     /^\/docs\/[^/]+\/masukan$/.test(pathname) ||
+    // approval requests and the lock: for editors and admins, and never worth showing stale
+    /^\/docs\/[^/]+\/tinjau$/.test(pathname) ||
     /^\/collections\/[^/]+\/edit$/.test(pathname)
   );
 }

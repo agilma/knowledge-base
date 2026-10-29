@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Role, DocumentStatus } from "@prisma/client";
-import { Edit, Archive, CheckCircle, Trash2 } from "lucide-react";
+import { Edit, Archive, CheckCircle, Lock, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,10 @@ interface DocumentActionsProps {
   documentSlug: string;
   status: DocumentStatus;
   userRole: Role;
+  /** The collection requires an admin's approval to publish or change a published document. */
+  requiresApproval?: boolean;
+  /** Only an admin may change this document. */
+  locked?: boolean;
 }
 
 export function DocumentActions({
@@ -27,15 +31,27 @@ export function DocumentActions({
   documentSlug,
   status,
   userRole,
+  requiresApproval = false,
+  locked = false,
 }: DocumentActionsProps) {
   const isEditorOrAdmin = userRole === Role.EDITOR || userRole === Role.ADMIN;
   const isAdmin = userRole === Role.ADMIN;
+  // An editor asks instead of publishing, and cannot touch a locked document at all
+  const mustAsk = requiresApproval && !isAdmin;
+  const blocked = locked && !isAdmin;
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   if (!isEditorOrAdmin) return null;
+  if (blocked) {
+    return (
+      <p className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground">
+        <Lock className="size-3.5" /> Dokumen terkunci: hanya admin yang boleh mengubahnya
+      </p>
+    );
+  }
 
   const handleTogglePublish = async () => {
     setIsPending(true);
@@ -78,15 +94,22 @@ export function DocumentActions({
           Edit
         </Link>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleTogglePublish}
-          disabled={isPending}
-        >
-          <CheckCircle className="w-4 h-4 mr-1.5" />
-          {status === DocumentStatus.PUBLISHED ? "Jadikan Draf" : "Publish"}
-        </Button>
+        {mustAsk && status !== DocumentStatus.PUBLISHED ? (
+          <Link href={`/docs/${documentSlug}/tinjau`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <CheckCircle className="w-4 h-4 mr-1.5" />
+            Ajukan terbit
+          </Link>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTogglePublish}
+            disabled={isPending}
+          >
+            <CheckCircle className="w-4 h-4 mr-1.5" />
+            {status === DocumentStatus.PUBLISHED ? "Jadikan Draf" : "Publish"}
+          </Button>
+        )}
 
         <Button
           variant="outline"

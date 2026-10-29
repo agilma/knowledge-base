@@ -23,6 +23,8 @@ interface TrashSnapshot {
     authorId: string | null;
     lastEditedById: string | null;
     restricted: boolean;
+    /** Locked for admins only (migration 18); a snapshot from before then has none. */
+    locked?: boolean;
     /** The page it sat under (migration 13); a snapshot written before then has neither. */
     parentId?: string | null;
     position?: number;
@@ -111,6 +113,7 @@ export async function trashDocument(id: string, actor: Viewer) {
         authorId: doc.authorId,
         lastEditedById: doc.lastEditedById,
         restricted: doc.restricted,
+        locked: doc.locked,
         parentId: doc.parentId,
         position: doc.position,
         createdAt: doc.createdAt.toISOString(),
@@ -261,6 +264,7 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
         authorId: known(d.authorId),
         lastEditedById: known(d.lastEditedById),
         restricted: d.restricted,
+        locked: d.locked ?? false,
         parentId: parent?.id ?? null,
         position: parent ? (d.position ?? 0) : 0,
         createdAt: new Date(d.createdAt),

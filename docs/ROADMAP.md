@@ -33,7 +33,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 
 ### Tahap 3 — Tata kelola dan kepercayaan
 
-12. **Alur persetujuan sebelum terbit** (L). Draf, minta tinjau, disetujui, terbit; meniru SOP Thunderlab (Project Leader lalu Project Controller). Dokumen tertentu atau koleksi tertentu wajib disetujui. Migrasi (status dan tabel persetujuan).
+12. **[SELESAI 29 Okt 2026, satu tingkat: admin menyetujui; bertingkat dan penyetuju per grup ada di TODO] Alur persetujuan sebelum terbit** (L). Draf, minta tinjau, disetujui, terbit; meniru SOP Thunderlab (Project Leader lalu Project Controller). Dokumen tertentu atau koleksi tertentu wajib disetujui. Migrasi (status dan tabel persetujuan).
 13. **Berlaku sejak dan arsip versi resmi** (M). Kolom "berlaku sejak" dan "menggantikan dokumen", supaya SOP 21 Oktober dan versi sebelumnya tidak membingungkan. Migrasi aditif.
 14. **Log audit** (M). Siapa mengubah akses, peran, status terbit, penghapusan; halaman admin. Migrasi (tabel audit).
 15. **Apa yang baru** (S-M). Halaman perubahan penting (dokumen terbit atau berubah berarti) per koleksi dan, kemudian, ringkasan mingguan.
@@ -79,7 +79,7 @@ Dasar perbandingan ada di bagian "Perbandingan dengan Outline" di bawah. Nomor d
 
 **Tahap 3 (tata kelola dan integrasi)**
 
-36. **Kunci dokumen** (S-M). Dokumen SOP yang sudah disetujui dikunci; hanya admin atau pemberi persetujuan yang dapat membuka kunci; berpasangan dengan alur persetujuan (12). Migrasi aditif.
+36. **[SELESAI 29 Okt 2026] Kunci dokumen** (S-M). Dokumen SOP yang sudah disetujui dikunci; hanya admin atau pemberi persetujuan yang dapat membuka kunci; berpasangan dengan alur persetujuan (12). Migrasi aditif.
 32. **API dan token pribadi, webhook** (L). Token untuk membaca dan mencari; webhook "dokumen terbit" ke Slack atau WhatsApp. Butuh desain keamanan (cakupan token, pencabutan).
 33. **Server MCP bacaan-saja** (M-L). Agar Claude (desktop atau Code) bisa mencari dan membaca Knowledge Base atas nama pengguna, sesuai aturan akses; memakai token butir 32. Tidak boleh menulis.
 

@@ -17,6 +17,7 @@ import {
   type DocumentAccessInput,
 } from "@/lib/services/documents";
 import { MAX_GROUPS_PER_ITEM, setDocumentGroups } from "@/lib/services/groups";
+import { saveMode, submitChange } from "@/lib/services/reviews";
 import { assertParentAllowed, setDocumentParent } from "@/lib/services/document-tree";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
@@ -178,6 +179,14 @@ export async function updateDocumentAction(
 
   try {
     const oldDoc = await getDocumentForRevalidate(id);
+    // A published document of a collection that requires approval is not written: the change is asked of an admin
+    // and the live text stays as it is until it is approved (only title, summary, type and text are proposed).
+    if ((await saveMode(id, { id: user.id, role: user.role })) === "review") {
+      await submitChange(id, parsed.data, formData.get("reviewNote"), { id: user.id, role: user.role });
+      revalidatePath(`/docs/${oldDoc?.slug}/tinjau`);
+      revalidatePath("/admin/persetujuan");
+      redirect(`/docs/${oldDoc?.slug}/tinjau?diajukan=1`);
+    }
     await checkParentFromForm(id, parsed.data.collectionId, formData, { id: user.id, role: user.role });
     const updatedDoc = await updateDocument(id, parsed.data, { id: user.id, role: user.role });
     if (formData.get("relatedTouched") === "1") {

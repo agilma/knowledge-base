@@ -19,6 +19,8 @@ export const collectionSchema = z.object({
   icon: z.string().optional().or(z.literal("")),
   // Only admins and the people listed as members can read a restricted collection.
   restricted: z.boolean().default(false),
+  // When true an editor needs an admin's approval to publish or change a published document here.
+  requiresApproval: z.boolean().default(false),
   status: z.nativeEnum(CollectionStatus, {
     message: "Status koleksi tidak valid",
   }).default(CollectionStatus.ACTIVE),
