@@ -71,7 +71,7 @@ Dasar perbandingan ada di bagian "Perbandingan dengan Outline" di bawah. Nomor d
 
 27. **[SEBAGIAN 29 Okt 2026: utas dan tandai selesai ada lewat butir 9; `@nama` dan notifikasi menunggu butir 31] Komentar berutas dengan sebut orang** (L). Komentar pada dokumen, utas, tandai selesai, `@nama` memberi notifikasi; memperluas butir 9 (masukan pembaca) untuk editor. Migrasi (tabel komentar).
 28. **[SELESAI 29 Okt 2026] Templat tersimpan** (M). Admin atau editor menyimpan dokumen sebagai templat (SOP, Masalah, Training) dan memilihnya di Dokumen Baru, termasuk yang sudah berisi langkah bergambar dan bagian "Perlu dikonfirmasi". Migrasi kecil.
-29. **Sematan** (M). Tempel tautan Canva, YouTube, Google Slides, Figma; tampil sebagai bingkai dari daftar domain yang diizinkan saja (keamanan). Meniru lembar SOP Canva langsung di halaman.
+29. **[SELESAI 29 Okt 2026] Sematan** (M). Tempel tautan Canva, YouTube, Google Slides, Figma; tampil sebagai bingkai dari daftar domain yang diizinkan saja (keamanan). Meniru lembar SOP Canva langsung di halaman.
 30. **Impor dari berkas di aplikasi** (M-L). Unggah `.md` atau `.docx` (dan zip dari Notion atau Confluence) oleh admin menjadi draf; perluas pipeline `docs:import`. Tanpa migrasi.
 31. **Pantau dokumen dan notifikasi** (L). Mengikuti dokumen atau koleksi; lonceng di aplikasi dan, kemudian, email atau WhatsApp saat terbit atau berubah berarti; menyatukan butir 15. Migrasi (langganan, notifikasi).
 34. **Statistik dokumen** (M). Admin melihat berapa kali dibaca, kontributor, dokumen terpopuler dan tidak pernah dibuka; melengkapi log pencarian (butir 6). Migrasi kecil.

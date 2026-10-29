@@ -43,6 +43,12 @@ export const SLASH_ITEMS: SlashItem[] = [
     keywords: "diagram flow flowchart mermaid alur cabang",
     run: (e, r) => at(e, r).insertContent(drawnBlockNode("mermaid")).run(),
   },
+  {
+    title: "Sematan",
+    hint: "Canva",
+    keywords: "sematan embed canva youtube video slides figma desain tautan",
+    run: (e, r) => at(e, r).insertContent(drawnBlockNode("sematan")).run(),
+  },
   { title: "Garis pemisah", hint: "---", keywords: "divider garis hr pemisah", run: (e, r) => at(e, r).setHorizontalRule().run() },
 ];
 
