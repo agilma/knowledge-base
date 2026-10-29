@@ -21,6 +21,7 @@ interface CollectionFormProps {
     description?: string | null;
     status: CollectionStatus;
     restricted?: boolean;
+    requiresApproval?: boolean;
   };
   /** Everyone who can be made a member; given only to admins, who are the only ones here. */
   users?: AssignableUser[];
@@ -38,6 +39,7 @@ export function CollectionForm({ initialData, users = [], initialMemberIds = [],
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(isEditing);
   const [clientError, setClientError] = useState<string | null>(null);
   const [restricted, setRestricted] = useState(initialData?.restricted ?? false);
+  const [requiresApproval, setRequiresApproval] = useState(initialData?.requiresApproval ?? false);
 
   const action = isEditing
     ? updateCollectionAction.bind(null, initialData.id)
@@ -197,6 +199,27 @@ export function CollectionForm({ initialData, users = [], initialMemberIds = [],
           <CollectionMembersPicker users={users} initialIds={initialMemberIds} />
           <GroupsPicker groups={groups} initialIds={initialGroupIds} />
         </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <input type="hidden" name="requiresApprovalTouched" value="1" />
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="requiresApproval"
+            checked={requiresApproval}
+            onChange={(e) => setRequiresApproval(e.target.checked)}
+            className="mt-1 size-4"
+          />
+          <span>
+            <span className="font-medium">Wajib persetujuan admin</span>
+            <span className="block text-xs text-muted-foreground">
+              Penyunting tidak bisa menerbitkan dokumen di koleksi ini atau mengubah dokumen yang sudah terbit secara langsung:
+              mereka mengajukan lewat halaman Tinjau dan admin menyetujui atau menolak. Dokumen yang sudah terbit tetap tampil seperti
+              biasa sampai perubahan disetujui. Admin tidak ditahan.
+            </span>
+          </span>
+        </label>
       </div>
 
       {!isOnline && (

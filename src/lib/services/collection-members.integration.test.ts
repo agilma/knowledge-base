@@ -44,6 +44,7 @@ before(async () => {
     slug: `${tag}-col`,
     status: "ACTIVE",
     restricted: true,
+    requiresApproval: false,
   });
   collectionId = col.id;
   created.collections.push(col.id);
@@ -127,11 +128,11 @@ test("restricting a collection takes effect for readers at once, and the members
   assert.equal(await listed(member), true);
   assert.equal(await listed(admin), true);
 
-  await updateCollection(collectionId, { name: `Koleksi ${tag}`, slug: `${tag}-col`, status: "ACTIVE", restricted: false });
+  await updateCollection(collectionId, { name: `Koleksi ${tag}`, slug: `${tag}-col`, status: "ACTIVE", restricted: false, requiresApproval: false });
   assert.equal(await listed(reader), true);
   assert.deepEqual(await members(), [ana], "members are kept while the collection is open");
 
-  await updateCollection(collectionId, { name: `Koleksi ${tag}`, slug: `${tag}-col`, status: "ACTIVE", restricted: true });
+  await updateCollection(collectionId, { name: `Koleksi ${tag}`, slug: `${tag}-col`, status: "ACTIVE", restricted: true, requiresApproval: false });
   assert.equal(await listed(reader), false);
   assert.equal(await listed(member), true);
 });

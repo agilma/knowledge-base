@@ -63,6 +63,8 @@ interface DocumentFormProps {
   aiEnabled?: boolean;
   defaultCollectionId?: string;
   defaultTitle?: string;
+  /** A published document of a collection that requires approval: saving asks an admin, the live text stays. */
+  reviewMode?: boolean;
   /** A saved template this new document starts from: its text and type replace the built-in skeleton. */
   defaultTemplate?: { id: string; type: DocumentType; content: string };
   initialData?: {
@@ -91,6 +93,7 @@ export function DocumentForm({
   defaultCollectionId,
   defaultTitle,
   defaultTemplate,
+  reviewMode = false,
   initialData,
 }: DocumentFormProps) {
   const isEditing = !!initialData;
@@ -615,22 +618,42 @@ export function DocumentForm({
         </div>
       )}
 
-      <div className="space-y-2 max-w-xs">
-        <Label htmlFor="status">Status Dokumen</Label>
-        <Select
-          id="status"
-          name="status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as DocumentStatus)}
-        >
-          <option value={DocumentStatus.DRAFT}>Draf</option>
-          <option value={DocumentStatus.PUBLISHED}>Terbit (Published)</option>
-          <option value={DocumentStatus.ARCHIVED}>Diarsipkan</option>
-        </Select>
-        {state?.fieldErrors?.status && (
-          <p className="text-xs text-destructive">{state.fieldErrors.status}</p>
-        )}
-      </div>
+      {reviewMode ? (
+        <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50/60 p-4 dark:border-amber-700 dark:bg-amber-950/20">
+          <input type="hidden" name="status" value={status} />
+          <p className="text-sm font-medium">Dokumen ini terbit di koleksi yang butuh persetujuan</p>
+          <p className="text-xs text-muted-foreground">
+            Perubahan Anda tidak langsung tampil: dikirim ke admin, dan dokumen yang terbit baru berubah setelah admin menyetujui.
+            Yang diajukan hanya judul, ringkasan, jenis, dan isi; perubahan koleksi, alamat (slug), induk, dokumen terkait, dan akses tidak ikut.
+          </p>
+          <Label htmlFor="reviewNote">Catatan untuk admin (opsional)</Label>
+          <textarea
+            id="reviewNote"
+            name="reviewNote"
+            rows={2}
+            maxLength={500}
+            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+            placeholder="Apa yang diubah dan kenapa"
+          />
+        </div>
+      ) : (
+        <div className="space-y-2 max-w-xs">
+          <Label htmlFor="status">Status Dokumen</Label>
+          <Select
+            id="status"
+            name="status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as DocumentStatus)}
+          >
+            <option value={DocumentStatus.DRAFT}>Draf</option>
+            <option value={DocumentStatus.PUBLISHED}>Terbit (Published)</option>
+            <option value={DocumentStatus.ARCHIVED}>Diarsipkan</option>
+          </Select>
+          {state?.fieldErrors?.status && (
+            <p className="text-xs text-destructive">{state.fieldErrors.status}</p>
+          )}
+        </div>
+      )}
 
       {!isOnline && (
         <div className="p-3 text-xs text-amber-800 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg">
@@ -642,6 +665,8 @@ export function DocumentForm({
         <Button type="submit" disabled={isPending || !isOnline}>
           {isPending
             ? "Menyimpan..."
+            : reviewMode
+            ? "Ajukan perubahan"
             : isEditing
             ? "Simpan Perubahan"
             : "Buat Dokumen"}

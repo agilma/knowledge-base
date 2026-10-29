@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine, Users, Download, SearchX, Trash2, UsersRound, MessageSquare, FileStack } from "lucide-react";
+import { Home, Search, Star, Clock, FolderOpen, Lock, PenLine, Users, Download, SearchX, Trash2, UsersRound, MessageSquare, FileStack, ClipboardCheck } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { getCollections } from "@/lib/services/collections";
 import { Mark } from "@/components/brand/Mark";
@@ -58,6 +58,12 @@ export async function Sidebar() {
           <Link href="/admin/masukan" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
             <MessageSquare className="w-4 h-4 text-muted-foreground" />
             Masukan pembaca
+          </Link>
+        )}
+        {canWrite && (
+          <Link href="/admin/persetujuan" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium transition-colors text-foreground">
+            <ClipboardCheck className="w-4 h-4 text-muted-foreground" />
+            Persetujuan
           </Link>
         )}
         {canWrite && (

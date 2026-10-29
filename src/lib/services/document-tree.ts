@@ -153,8 +153,9 @@ export async function setDocumentParent(id: string, parentId: string | null, act
     if (parentId) await tx.$queryRaw`SELECT id FROM documents WHERE id = ${parentId} FOR SHARE`;
     await tx.$queryRaw`SELECT id FROM documents WHERE id = ${id} FOR SHARE`;
 
-    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) }, select: { parentId: true, collectionId: true } });
+    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) }, select: { parentId: true, collectionId: true, locked: true } });
     if (!doc) throw new Error("Dokumen tidak ditemukan");
+    if (doc.locked && actor.role !== Role.ADMIN) throw new Error("Dokumen ini dikunci; hanya admin yang boleh mengubahnya");
     if ((doc.parentId ?? null) === parentId) return;
 
     if (parentId === null) {
@@ -180,8 +181,9 @@ export async function moveDocumentInParent(id: string, direction: "up" | "down",
 
   await db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_tree'))`;
-    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) }, select: { id: true, parentId: true } });
+    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) }, select: { id: true, parentId: true, locked: true } });
     if (!doc) throw new Error("Dokumen tidak ditemukan");
+    if (doc.locked && actor.role !== Role.ADMIN) throw new Error("Dokumen ini dikunci; hanya admin yang boleh mengubahnya");
     if (!doc.parentId) throw new Error("Hanya halaman di bawah induk yang bisa diurutkan");
 
     const siblings = await tx.document.findMany({

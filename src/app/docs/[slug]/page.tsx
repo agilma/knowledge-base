@@ -14,6 +14,8 @@ import { RecordView } from "@/components/document/RecordView";
 import { extractStepFlow } from "@/lib/step-mode";
 import { FileStack, ListChecks, MessageSquare } from "lucide-react";
 import { createTemplateAction } from "@/app/admin/templat/actions";
+import { listReviewsForDocument } from "@/lib/services/reviews";
+import { ClipboardCheck } from "lucide-react";
 import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
 import { moveDocumentAction } from "@/app/docs/tree-actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -45,11 +47,14 @@ export default async function DocumentPage({
     notFound();
   }
 
-  const [relatedDocs, ancestors, children] = await Promise.all([
+  const [relatedDocs, ancestors, children, reviews] = await Promise.all([
     getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts, viewer }),
     getAncestors(doc.id, { includeDrafts: canSeeDrafts, viewer }),
     getChildren(doc.id, { includeDrafts: canSeeDrafts, viewer }),
+    canSeeDrafts ? listReviewsForDocument(doc.id, viewer) : Promise.resolve([]),
   ]);
+  const pendingReview = reviews.find((r) => r.status === "PENDING");
+  const requiresApproval = doc.collection?.requiresApproval ?? false;
   const headings = extractHeadings(doc.content);
   const hasSteps = extractStepFlow(doc.content).length > 0;
   const favorite = user ? await isFavorite(user.id, doc.id) : false;
@@ -68,6 +73,26 @@ export default async function DocumentPage({
                 ? "Dokumen ini masih draf"
                 : "Dokumen ini diarsipkan"}
             </span>
+          </div>
+        )}
+
+        {/* Approval and lock, for those who edit */}
+        {canSeeDrafts && (pendingReview || doc.locked || requiresApproval) && (
+          <div className="print:hidden flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+            {doc.locked && (
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <Lock className="size-4" /> Terkunci
+              </span>
+            )}
+            {pendingReview && (
+              <span>
+                {pendingReview.kind === "PUBLISH" ? "Pengajuan terbit" : "Pengajuan perubahan"} dari {pendingReview.requestedByName ?? "penyunting"} menunggu persetujuan admin.
+              </span>
+            )}
+            <Link href={`/docs/${doc.slug}/tinjau`} className="ml-auto inline-flex items-center gap-1 font-medium underline underline-offset-2">
+              <ClipboardCheck className="size-4" />
+              Persetujuan
+            </Link>
           </div>
         )}
 
@@ -120,6 +145,8 @@ export default async function DocumentPage({
                 documentSlug={doc.slug}
                 status={doc.status}
                 userRole={user.role}
+                requiresApproval={requiresApproval}
+                locked={doc.locked}
               />
             )}
           </div>

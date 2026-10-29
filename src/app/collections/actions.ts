@@ -65,6 +65,7 @@ export async function createCollectionAction(
     icon: (formData.get("icon") as string) || undefined,
     status: (formData.get("status") as CollectionStatus) || CollectionStatus.ACTIVE,
     restricted: formData.get("restricted") === "on",
+    requiresApproval: formData.get("requiresApproval") === "on",
   };
 
   const parsed = collectionSchema.safeParse(rawData);
@@ -122,6 +123,10 @@ export async function updateCollectionAction(
       ? formData.get("restricted") === "on"
       : oldCollection.restricted;
 
+  // Same for the approval switch: a form that does not carry it leaves it as it was.
+  const requiresApproval =
+    formData.get("requiresApprovalTouched") === "1" ? formData.get("requiresApproval") === "on" : oldCollection.requiresApproval;
+
   const rawData: CollectionInput = {
     name: formData.get("name") as string,
     slug: formData.get("slug") as string,
@@ -129,6 +134,7 @@ export async function updateCollectionAction(
     icon: (formData.get("icon") as string) || undefined,
     status: (formData.get("status") as CollectionStatus) || CollectionStatus.ACTIVE,
     restricted,
+    requiresApproval,
   };
 
   const parsed = collectionSchema.safeParse(rawData);

@@ -99,6 +99,7 @@ export async function createCollection(data: CollectionInput) {
       icon: validated.icon || null,
       status: validated.status,
       restricted: validated.restricted,
+      requiresApproval: validated.requiresApproval,
     },
   });
 }
@@ -119,6 +120,7 @@ export async function updateCollection(id: string, data: CollectionInput) {
       icon: validated.icon || null,
       status: validated.status,
       restricted: validated.restricted,
+      requiresApproval: validated.requiresApproval,
     },
   });
 }

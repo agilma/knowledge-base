@@ -50,6 +50,8 @@ model User {
   groups           GroupMember[]
   comments         DocumentComment[]  @relation("CommentAuthor")
   templates        DocumentTemplate[]
+  reviewsRequested DocumentReview[]   @relation("ReviewRequester")
+  reviewsDecided   DocumentReview[]   @relation("ReviewDecider")
   resolvedComments DocumentComment[]  @relation("CommentResolver")
   aiConversations  AiConversation[]
 
@@ -105,6 +107,9 @@ model Collection {
   status      CollectionStatus @default(ACTIVE)
   // When true only admins and the users in `members` can read it.
   restricted  Boolean          @default(false)
+  // When true an editor cannot publish or change a published document here without an admin's
+  // approval (migration 18): they ask, an admin approves or rejects.
+  requiresApproval Boolean     @default(false)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -143,6 +148,8 @@ model Document {
   lastEditedById String?
   // When true only admins and the users in `members` can read it (and the collection must allow them too).
   restricted     Boolean                  @default(false)
+  // Only an admin may change or publish it while true (migration 18): an approved SOP that must not drift.
+  locked         Boolean                  @default(false)
   // The page this one sits under (a chapter under its guide); null for a top-level document.
   // Always in the same collection; set only through setDocumentParent (migration 13).
   parentId       String?
@@ -164,6 +171,7 @@ model Document {
   groups          DocumentGroup[]
   comments        DocumentComment[]
   templates       DocumentTemplate[] @relation("TemplateSource")
+  reviews         DocumentReview[]
   aiConversations AiConversation[]
   parent          Document?          @relation("DocumentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children        Document[]         @relation("DocumentTree")
@@ -444,4 +452,45 @@ model DocumentTemplate {
   @@index([createdById])
   @@index([sourceDocumentId])
   @@map("document_templates")
+}
+
+enum ReviewKind {
+  /// Publish a draft.
+  PUBLISH
+  /// Replace the text of a published document with `proposal`.
+  CHANGE
+}
+
+enum ReviewStatus {
+  PENDING
+  /// An admin approved it and the change is being applied (migration 19); back to PENDING if applying fails.
+  APPLYING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+/// A request to an admin to publish a document, or to change a published one, in a collection that
+/// requires approval (migration 18). At most one is pending per document (checked under a lock).
+model DocumentReview {
+  id            String       @id @default(cuid())
+  documentId    String
+  kind          ReviewKind
+  status        ReviewStatus @default(PENDING)
+  /// For CHANGE: { title, excerpt, content, type } the editor wants the document to have.
+  proposal      Json?
+  note          String?
+  requestedById String?
+  decidedById   String?
+  decidedAt     DateTime?
+  decisionNote  String?
+  createdAt     DateTime     @default(now())
+
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  requestedBy User?    @relation("ReviewRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  decidedBy   User?    @relation("ReviewDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId, createdAt])
+  @@index([status, createdAt])
+  @@map("document_reviews")
 }

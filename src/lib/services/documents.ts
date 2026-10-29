@@ -222,9 +222,10 @@ export async function setRelatedDocuments(documentId: string, relatedIds: string
     // Only documents the editor can read can be related or unrelated by them.
     const own = await tx.document.findFirst({
       where: { id: documentId, ...documentReadableWhere(actor) },
-      select: { id: true },
+      select: { id: true, locked: true },
     });
     if (!own) throw new Error("Dokumen tidak ditemukan");
+    if (own.locked && actor.role !== Role.ADMIN) throw new Error(LOCKED_MESSAGE);
 
     const existing = await tx.document.findMany({
       where: { id: { in: desired }, ...documentReadableWhere(actor) },
@@ -445,6 +446,32 @@ function assertAdmin(actor: Viewer) {
   if (actor.role !== Role.ADMIN) throw new Error("Hanya admin yang boleh membatasi akses dokumen");
 }
 
+export const APPROVAL_REQUIRED_MESSAGE = "Koleksi ini butuh persetujuan admin sebelum dokumen terbit atau diubah; ajukan lewat halaman Tinjau";
+export const MOVE_OUT_MESSAGE = "Hanya admin yang boleh memindahkan dokumen keluar dari koleksi yang butuh persetujuan";
+export const LOCKED_MESSAGE = "Dokumen ini dikunci; hanya admin yang boleh mengubahnya";
+
+/**
+ * The two rules that stop an editor writing straight to a document (roadmap 12 and 36). A locked document
+ * is for admins only. In a collection that requires approval, an editor may not make a document published
+ * (publishing a draft, changing a published one, moving one in or out): they ask, and an admin decides
+ * (reviews.ts, which passes `approved` once the admin has). Making a document less public (draft, archived)
+ * is always allowed to whoever may edit it. Admins are the approvers and are never held.
+ */
+function assertMayWrite(
+  doc: { locked: boolean } | null,
+  where: { currentRequiresApproval: boolean; targetRequiresApproval: boolean; moved: boolean },
+  nextStatus: DocumentStatus,
+  actor: Viewer,
+  approved = false,
+) {
+  if (actor.role === Role.ADMIN) return;
+  if (doc?.locked) throw new Error(LOCKED_MESSAGE);
+  // Leaving such a collection is how an unreviewed document would reach an open one (move, then publish)
+  if (where.moved && where.currentRequiresApproval) throw new Error(MOVE_OUT_MESSAGE);
+  const needsApproval = where.currentRequiresApproval || where.targetRequiresApproval;
+  if (!approved && needsApproval && nextStatus === DocumentStatus.PUBLISHED) throw new Error(APPROVAL_REQUIRED_MESSAGE);
+}
+
 /** The ids that may be stored as members: strings only, no repeats, within the limit. */
 function cleanMemberIds(memberIds: unknown): string[] {
   if (!Array.isArray(memberIds)) throw new Error("Permintaan tidak valid");
@@ -488,6 +515,9 @@ export async function createDocument(data: DocumentInput, actor: Viewer, access?
   if (!isAvailable) {
     throw new Error("Slug dokumen sudah digunakan");
   }
+  const target = await db.collection.findUnique({ where: { id: validated.collectionId }, select: { requiresApproval: true } });
+  const requires = target?.requiresApproval ?? false;
+  assertMayWrite(null, { currentRequiresApproval: requires, targetRequiresApproval: requires, moved: false }, validated.status, actor);
 
   return db.$transaction(async (tx) => {
     await assertCollectionAccess(tx, actor, validated.collectionId);
@@ -590,7 +620,8 @@ async function appendRevision(
   }
 }
 
-export async function updateDocument(id: string, data: DocumentInput, actor: Viewer) {
+/** `approved` is for reviews.ts only: an admin has approved this exact change, so the approval rule does not hold it. */
+export async function updateDocument(id: string, data: DocumentInput, actor: Viewer, options: { approved?: boolean } = {}) {
   const editorId = actor.id;
   const validated = documentSchema.parse(data);
 
@@ -629,6 +660,15 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
     if (validated.collectionId !== current.collectionId) {
       await assertCollectionAccess(tx, actor, validated.collectionId);
     }
+    const flags = await tx.collection.findMany({ where: { id: { in: [current.collectionId, validated.collectionId] } }, select: { id: true, requiresApproval: true } });
+    const requires = (id: string) => flags.find((c) => c.id === id)?.requiresApproval ?? false;
+    assertMayWrite(
+      current,
+      { currentRequiresApproval: requires(current.collectionId), targetRequiresApproval: requires(validated.collectionId), moved: validated.collectionId !== current.collectionId },
+      validated.status,
+      actor,
+      options.approved,
+    );
 
     // A change of status is a change of its own: who published or archived a
     // document is something the history has to answer, even if the text is the same.
@@ -687,7 +727,8 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
  * history. Setting the status a document already has changes nothing and
  * records nothing.
  */
-export async function setDocumentStatus(id: string, status: DocumentStatus, actor: Viewer) {
+/** `approved` is for reviews.ts only, like updateDocument's. */
+export async function setDocumentStatus(id: string, status: DocumentStatus, actor: Viewer, options: { approved?: boolean } = {}) {
   const editorId = actor.id;
   // Server actions can be called directly with any payload.
   if (typeof id !== "string" || !Object.values(DocumentStatus).includes(status)) {
@@ -701,6 +742,9 @@ export async function setDocumentStatus(id: string, status: DocumentStatus, acto
       throw new Error("Dokumen tidak ditemukan");
     }
     if (current.status === status) return current;
+    const collection = await tx.collection.findUnique({ where: { id: current.collectionId }, select: { requiresApproval: true } });
+    const requires = collection?.requiresApproval ?? false;
+    assertMayWrite(current, { currentRequiresApproval: requires, targetRequiresApproval: requires, moved: false }, status, actor, options.approved);
 
     if (latest === undefined) {
       latest = await snapshotBaseline(tx, current);
