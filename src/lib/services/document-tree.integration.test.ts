@@ -5,6 +5,7 @@ import { db } from "../db";
 import { ADMIN, READER } from "./test-viewers";
 import { COLLECTION_PAGE_SIZE, countDocumentsByCollection, getDocumentsByCollection, updateDocument } from "./documents";
 import {
+  assertParentAllowed,
   getAncestors,
   getChildren,
   getParentCandidates,
@@ -93,6 +94,9 @@ test("a page cannot go under itself, its own pages, another collection, or too d
   await assert.rejects(setDocumentParent(levels[0].id, levels[2].id, EDITOR), /halamannya sendiri/);
   const extra = await makeDoc(col, "extra");
   await assert.rejects(setDocumentParent(extra.id, levels[MAX_TREE_DEPTH - 1].id, EDITOR), /terlalu dalam/);
+  // the same is said before a new document is written
+  await assert.rejects(assertParentAllowed(null, col.id, levels[MAX_TREE_DEPTH - 1].id, EDITOR), /terlalu dalam/);
+  await assertParentAllowed(null, col.id, levels[MAX_TREE_DEPTH - 2].id, EDITOR);
   const stranger = await makeDoc(other, "stranger");
   await assert.rejects(setDocumentParent(extra.id, stranger.id, EDITOR), /koleksi yang sama/);
   // moving a subtree under something deep is refused for its height, not only its own level
@@ -138,8 +142,11 @@ test("moving to another collection, deleting a parent, and restoring", { skip: !
   await setDocumentParent(kid.id, null, EDITOR);
   const kid2 = await makeDoc(col, "k2");
   await setDocumentParent(kid2.id, parent.id, EDITOR);
+  const kid2Before = await db.document.findUniqueOrThrow({ where: { id: kid2.id } });
   await updateDocument(parent.id, { title: "Judul p", slug: `${tag}-p`, collectionId: dest.id, type: "PANDUAN", content: "p", status: "PUBLISHED" }, realAdmin);
-  assert.equal((await db.document.findUniqueOrThrow({ where: { id: kid2.id } })).parentId, null);
+  const after2 = await db.document.findUniqueOrThrow({ where: { id: kid2.id } });
+  assert.equal(after2.parentId, null);
+  assert.equal(after2.updatedAt.getTime(), kid2Before.updatedAt.getTime(), "a page left behind is not edited");
 
   // trash and restore: back under its parent while that exists, at the top once it does not
   const p2 = await makeDoc(col, "p2");

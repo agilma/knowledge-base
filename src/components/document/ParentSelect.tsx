@@ -59,7 +59,9 @@ export function ParentSelect({
           </option>
         ))}
       </Select>
-      <input type="hidden" name="parentTouched" value="1" />
+      {/* A saved document is only re-parented when the person changed this field or the collection: an editor
+          who cannot read the current parent sees an empty field, and saving must not read that as "no parent". */}
+      {(!documentId || picked !== null || collectionId !== initialCollectionId) && <input type="hidden" name="parentTouched" value="1" />}
       <p className="text-xs text-muted-foreground">
         Menaruh dokumen ini sebagai bagian dari dokumen lain di koleksi yang sama (misalnya bab di bawah satu panduan), paling banyak 4 tingkat.
       </p>

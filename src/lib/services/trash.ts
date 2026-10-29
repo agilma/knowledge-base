@@ -225,6 +225,7 @@ export async function restoreTrashedDocument(trashId: string, actor: Viewer): Pr
 
     // Back under its parent only when that page is still there, in the same collection; the pages
     // that were under this one became top-level when it was deleted and stay so.
+    if (d.parentId) await tx.$queryRaw`SELECT id FROM documents WHERE id = ${d.parentId} FOR SHARE`;
     const parent = d.parentId
       ? await tx.document.findFirst({ where: { id: d.parentId, collectionId: d.collectionId }, select: { id: true } })
       : null;

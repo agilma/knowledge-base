@@ -104,6 +104,43 @@ async function chainUp(tx: Prisma.TransactionClient, id: string): Promise<string
  * siblings. This is not an edit of the text: its own "last updated" time is left as it was and no
  * version is written. Editors and admins only.
  */
+/**
+ * Whether `id` (null for a document not yet created, which has no pages of its own) may go under
+ * `parentId`, said with the reason when it may not. Used by the form's save before anything is
+ * written, and again inside the transaction of setDocumentParent.
+ */
+async function checkParent(
+  tx: Prisma.TransactionClient,
+  id: string | null,
+  collectionId: string,
+  parentId: string,
+  actor: Viewer,
+): Promise<void> {
+  if (parentId === id) throw new Error("Dokumen tidak bisa menjadi bagian dari dirinya sendiri");
+  const parent = await tx.document.findFirst({ where: { id: parentId, ...documentReadableWhere(actor) }, select: { collectionId: true } });
+  if (!parent) throw new Error("Dokumen induk tidak ditemukan");
+  if (parent.collectionId !== collectionId) throw new Error("Dokumen induk harus berada di koleksi yang sama");
+
+  const above = await chainUp(tx, parentId);
+  if (id && above.includes(id)) throw new Error("Dokumen tidak bisa dipindah ke bawah halamannya sendiri");
+  const height = id ? (await descendantIds(tx, id)).height : 0;
+  if (above.length + 1 + height > MAX_TREE_DEPTH) throw new Error(`Susunan terlalu dalam (paling banyak ${MAX_TREE_DEPTH} tingkat)`);
+}
+
+/** Says why a save that names a parent would fail, before the document is written (best effort; setDocumentParent decides). */
+export async function assertParentAllowed(id: string | null, collectionId: string, parentId: string, actor: Viewer): Promise<void> {
+  assertCanWrite(actor);
+  await checkParent(db, id, collectionId, parentId, actor);
+}
+
+/**
+ * Puts a document under `parentId` (or at the top of its collection when null). The parent must be
+ * readable by the actor, in the same collection, not the document itself or one of its own pages,
+ * and the whole tree stays within MAX_TREE_DEPTH levels. The document goes last among its new
+ * siblings. This is not an edit of the text: the columns are written with SQL, which leaves the
+ * document's own "last updated" time alone (and cannot step on a save that commits meanwhile), and
+ * no version is written. Editors and admins only.
+ */
 export async function setDocumentParent(id: string, parentId: string | null, actor: Viewer): Promise<void> {
   assertCanWrite(actor);
   if (typeof id !== "string" || !id || (parentId !== null && typeof parentId !== "string")) throw new Error("Permintaan tidak valid");
@@ -111,31 +148,24 @@ export async function setDocumentParent(id: string, parentId: string | null, act
   await db.$transaction(async (tx) => {
     // One writer of the tree at a time: two moves that are each fine alone can make a cycle together.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_tree'))`;
+    // Row locks, the parent first (the order deleting a parent takes them in): the parent cannot
+    // change collection or be deleted, nor this page change collection, until this commits.
+    if (parentId) await tx.$queryRaw`SELECT id FROM documents WHERE id = ${parentId} FOR SHARE`;
+    await tx.$queryRaw`SELECT id FROM documents WHERE id = ${id} FOR SHARE`;
 
-    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) } });
+    const doc = await tx.document.findFirst({ where: { id, ...documentReadableWhere(actor) }, select: { parentId: true, collectionId: true } });
     if (!doc) throw new Error("Dokumen tidak ditemukan");
     if ((doc.parentId ?? null) === parentId) return;
 
     if (parentId === null) {
-      await tx.document.update({ where: { id }, data: { parentId: null, position: 0, updatedAt: doc.updatedAt } });
+      await tx.$executeRaw`UPDATE documents SET "parentId" = NULL, position = 0 WHERE id = ${id}`;
       return;
     }
 
-    if (parentId === id) throw new Error("Dokumen tidak bisa menjadi bagian dari dirinya sendiri");
-    const parent = await tx.document.findFirst({ where: { id: parentId, ...documentReadableWhere(actor) } });
-    if (!parent) throw new Error("Dokumen induk tidak ditemukan");
-    if (parent.collectionId !== doc.collectionId) throw new Error("Dokumen induk harus berada di koleksi yang sama");
-
-    const above = await chainUp(tx, parentId);
-    if (above.includes(id)) throw new Error("Dokumen tidak bisa dipindah ke bawah halamannya sendiri");
-    const { height } = await descendantIds(tx, id);
-    if (above.length + 1 + height > MAX_TREE_DEPTH) throw new Error(`Susunan terlalu dalam (paling banyak ${MAX_TREE_DEPTH} tingkat)`);
-
+    await checkParent(tx, id, doc.collectionId, parentId, actor);
     const last = await tx.document.aggregate({ where: { parentId }, _max: { position: true } });
-    await tx.document.update({
-      where: { id },
-      data: { parentId, position: (last._max.position ?? -1) + 1, updatedAt: doc.updatedAt },
-    });
+    const position = (last._max.position ?? -1) + 1;
+    await tx.$executeRaw`UPDATE documents SET "parentId" = ${parentId}, position = ${position} WHERE id = ${id}`;
   });
 }
 
@@ -156,7 +186,7 @@ export async function moveDocumentInParent(id: string, direction: "up" | "down",
 
     const siblings = await tx.document.findMany({
       where: { parentId: doc.parentId, ...documentReadableWhere(actor) },
-      select: { id: true, position: true, updatedAt: true },
+      select: { id: true, position: true },
       orderBy: [{ position: "asc" }, { title: "asc" }, { id: "asc" }],
     });
     const index = siblings.findIndex((s) => s.id === id);
@@ -164,7 +194,7 @@ export async function moveDocumentInParent(id: string, direction: "up" | "down",
     if (index < 0 || target < 0 || target >= siblings.length) return;
     [siblings[index], siblings[target]] = [siblings[target], siblings[index]];
     for (const [position, sibling] of siblings.entries()) {
-      await tx.document.update({ where: { id: sibling.id }, data: { position, updatedAt: sibling.updatedAt } });
+      await tx.$executeRaw`UPDATE documents SET position = ${position} WHERE id = ${sibling.id}`;
     }
   });
 }

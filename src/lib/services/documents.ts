@@ -655,7 +655,8 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
       });
       // A page and its parent live in one collection: moving leaves the old parent, and the
       // pages under this one stay behind as top-level pages of the collection it left.
-      await tx.document.updateMany({ where: { parentId: id }, data: { parentId: null } });
+      // SQL, not updateMany: that would bump the "last updated" time of every page left behind.
+      await tx.$executeRaw`UPDATE documents SET "parentId" = NULL WHERE "parentId" = ${id}`;
     }
 
     const updated = await tx.document.update({

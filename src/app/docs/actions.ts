@@ -16,7 +16,7 @@ import {
   setRelatedDocuments,
   type DocumentAccessInput,
 } from "@/lib/services/documents";
-import { setDocumentParent } from "@/lib/services/document-tree";
+import { assertParentAllowed, setDocumentParent } from "@/lib/services/document-tree";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
 import { documentSchema, DocumentInput } from "@/lib/validation/document";
@@ -56,6 +56,13 @@ async function applyParent(documentId: string, formData: FormData, actor: { id: 
   await setDocumentParent(documentId, typeof parentId === "string" && parentId ? parentId : null, actor);
 }
 
+/** Said before the document is written, so a refused parent does not leave a half-saved document behind. */
+async function checkParentFromForm(documentId: string | null, collectionId: string, formData: FormData, actor: { id: string; role: Role }) {
+  if (formData.get("parentTouched") !== "1") return;
+  const parentId = formData.get("parentId");
+  if (typeof parentId === "string" && parentId) await assertParentAllowed(documentId, collectionId, parentId, actor);
+}
+
 export async function createDocumentAction(
   _prevState: ActionState | null,
   formData: FormData
@@ -91,6 +98,7 @@ export async function createDocumentAction(
   }
 
   try {
+    await checkParentFromForm(null, parsed.data.collectionId, formData, { id: user.id, role: user.role });
     const newDoc = await createDocument(parsed.data, { id: user.id, role: user.role }, accessFromForm(user.role, formData) ?? undefined);
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(
@@ -155,6 +163,7 @@ export async function updateDocumentAction(
 
   try {
     const oldDoc = await getDocumentForRevalidate(id);
+    await checkParentFromForm(id, parsed.data.collectionId, formData, { id: user.id, role: user.role });
     const updatedDoc = await updateDocument(id, parsed.data, { id: user.id, role: user.role });
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id), {

@@ -11,7 +11,7 @@ import { DocumentActions } from "@/components/document/DocumentActions";
 import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
-import { getAncestors, getChildren } from "@/lib/services/document-tree";
+import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
 import { moveDocumentAction } from "@/app/docs/tree-actions";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, Plus } from "lucide-react";
@@ -175,7 +175,7 @@ export default async function DocumentPage({
           <div className="print:hidden mt-12 pt-8 border-t border-border">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               {children.length > 0 ? <h3 className="text-xl font-semibold tracking-tight">Halaman di bawah ini</h3> : <span />}
-              {canSeeDrafts && (
+              {canSeeDrafts && ancestors.length + 1 < MAX_TREE_DEPTH && (
                 <Link href={{ pathname: "/docs/new", query: { parent: doc.slug } }} className={buttonVariants({ variant: "outline", size: "sm" })}>
                   <Plus className="mr-1.5 h-4 w-4" />
                   Tambah sub-halaman
@@ -199,10 +199,10 @@ export default async function DocumentPage({
                     {canSeeDrafts && children.length > 1 && (
                       <form action={moveDocumentAction} className="flex shrink-0 items-center gap-1">
                         <input type="hidden" name="id" value={child.id} />
-                        <button type="submit" name="direction" value="up" disabled={index === 0} aria-label={`Naikkan ${child.title}`} className="rounded-md p-2 text-muted-foreground hover:bg-muted disabled:opacity-30">
+                        <button type="submit" name="direction" value="up" disabled={index === 0} aria-label={`Naikkan ${child.title}`} className="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30">
                           <ArrowUp className="size-4" />
                         </button>
-                        <button type="submit" name="direction" value="down" disabled={index === children.length - 1} aria-label={`Turunkan ${child.title}`} className="rounded-md p-2 text-muted-foreground hover:bg-muted disabled:opacity-30">
+                        <button type="submit" name="direction" value="down" disabled={index === children.length - 1} aria-label={`Turunkan ${child.title}`} className="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30">
                           <ArrowDown className="size-4" />
                         </button>
                       </form>

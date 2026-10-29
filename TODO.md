@@ -265,3 +265,4 @@ dibiarkan lama, penandanya kehilangan arti dan orang berhenti memperhatikannya.
 - [ ] Menghapus induk membuat bab-babnya tingkat atas, dan memulihkan induk tidak mengembalikan mereka ke bawahnya.
 - [ ] Daftar pilihan induk di form dibatasi 300 judul per koleksi (urut judul); koleksi yang lebih besar perlu pencarian seperti pemilih dokumen terkait.
 - [ ] Pembaca yang mencetak halaman induk tidak mendapat daftar bab (disembunyikan saat cetak, seperti dokumen terkait).
+- [ ] Dokumen bersarang: memulihkan dari sampah ke induk yang sementara itu disusun ulang hingga tingkat 4 menaruh dokumen di tingkat 5 (kedalaman tidak diperiksa ulang saat pulih); "Tambah sub-halaman" disembunyikan berdasarkan induk yang terlihat, jadi untuk pohon yang sebagian tersembunyi server yang memutuskan; tombol naik/turun tidak menampilkan galat bila gagal; `getAncestors` memakai beberapa kueri berurutan (maksimal 4).
