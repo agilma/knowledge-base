@@ -62,6 +62,8 @@ test("anything else is refused: other hosts, lookalikes, other schemes, credenti
     `https://www.youtube.com/watch?v=${YT}x`,
     `https://www.youtube.com/watch?v=${YT} onload=alert(1)`,
     "https://" + "a".repeat(700) + ".com/",
+    "https://www.youtube.com/embed/videoseries?list=PL123456789",
+    "https://www.youtube.com/embed/live_stream?channel=UC123",
     "",
     "   \n  ",
     "Tempel tautan di sini",

@@ -38,7 +38,8 @@ function Preview({ language, text }: { language: DrawnBlockLanguage; text: strin
   }
   if (language === "sematan") {
     const embed = parseEmbed(text);
-    return embed ? <EmbedFrame embed={embed} /> : <p className="kb-preview-hint">{HINTS.sematan}</p>;
+    // keyed by the address: pressing Tampilkan is a choice about this link, not about whatever is typed next
+    return embed ? <EmbedFrame key={embed.src} embed={embed} /> : <p className="kb-preview-hint">{HINTS.sematan}</p>;
   }
   const callout = parseCallout(text);
   return callout ? <CalloutBox callout={callout} /> : <p className="kb-preview-hint">{HINTS.peringatan}</p>;

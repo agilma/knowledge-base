@@ -77,7 +77,9 @@ function youtube(url: URL): Pick<Embed, "provider" | "src" | "openUrl" | "ratio"
     if (kind === "watch") id = url.searchParams.get("v");
     else if (kind === "embed" || kind === "shorts" || kind === "live") id = second ?? null;
   }
-  if (!id || !YOUTUBE_ID.test(id)) return null;
+  // "videoseries" and "live_stream" have the shape of an id but are playlist and channel players that need
+  // parameters this does not carry: a broken frame, so they are refused
+  if (!id || !YOUTUBE_ID.test(id) || id === "videoseries" || id === "live_stream") return null;
   const start = startSeconds(url);
   const startParam = start ? `&start=${start}` : "";
   return {
