@@ -37,24 +37,50 @@ export interface TemplateItem {
   createdAt: Date;
   /** Characters of text, to tell a stub from a full guide. */
   size: number;
+  /**
+   * Where it was copied from: the document's title and slug while it is still open to everyone; "restricted"
+   * once that document or its collection has been restricted since (the copy is then a way around it, and
+   * the title is not shown, since the reader may not be allowed to see it); null when the source is gone.
+   */
+  source: { title: string; slug: string } | "restricted" | null;
 }
 
-/** Every template, by name. Editors and admins only. */
+/** Every template, by name, without loading their text. Editors and admins only. */
 export async function listTemplates(viewer: Viewer): Promise<TemplateItem[]> {
   assertStaff(viewer);
-  const rows = await db.documentTemplate.findMany({
-    orderBy: { name: "asc" },
-    take: MAX_TEMPLATES,
-    select: { id: true, name: true, type: true, createdById: true, createdAt: true, createdBy: { select: { name: true, email: true } }, content: true },
-  });
+  const rows = await db.$queryRaw<
+    {
+      id: string;
+      name: string;
+      type: string;
+      createdById: string | null;
+      createdAt: Date;
+      size: number;
+      createdByName: string | null;
+      sourceTitle: string | null;
+      sourceSlug: string | null;
+      sourceRestricted: boolean | null;
+    }[]
+  >`
+    SELECT t.id, t.name, t.type, t."createdById", t."createdAt", length(t.content)::int AS size,
+           coalesce(u.name, u.email) AS "createdByName",
+           d.title AS "sourceTitle", d.slug AS "sourceSlug",
+           (d.restricted OR c.restricted) AS "sourceRestricted"
+    FROM document_templates t
+    LEFT JOIN users u ON u.id = t."createdById"
+    LEFT JOIN documents d ON d.id = t."sourceDocumentId"
+    LEFT JOIN collections c ON c.id = d."collectionId"
+    ORDER BY t.name ASC
+    LIMIT ${MAX_TEMPLATES}`;
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
     type: documentType(row.type),
     createdById: row.createdById,
-    createdByName: row.createdBy ? (row.createdBy.name ?? row.createdBy.email) : null,
+    createdByName: row.createdByName,
     createdAt: row.createdAt,
-    size: row.content.length,
+    size: row.size,
+    source: row.sourceSlug === null ? null : row.sourceRestricted ? "restricted" : { title: row.sourceTitle ?? "", slug: row.sourceSlug },
   }));
 }
 
@@ -74,24 +100,33 @@ export async function getTemplate(id: string, viewer: Viewer): Promise<{ id: str
 export async function createTemplateFromDocument(documentId: string, rawName: unknown, viewer: Viewer): Promise<{ id: string; name: string }> {
   assertStaff(viewer);
   if (typeof documentId !== "string" || !documentId) throw new Error("Permintaan tidak valid");
-  const doc = await db.document.findFirst({
-    where: { id: documentId, ...documentReadableWhere(viewer) },
-    select: { title: true, type: true, content: true, restricted: true, collection: { select: { restricted: true } } },
-  });
-  if (!doc) throw new Error("Dokumen tidak ditemukan");
-  if (doc.restricted || doc.collection.restricted) {
-    throw new Error("Hanya dokumen yang terbuka untuk semua pengguna yang bisa dijadikan templat");
-  }
-  if (doc.content.length > TEMPLATE_CONTENT_MAX) throw new Error(`Dokumen terlalu panjang untuk templat (maksimal ${TEMPLATE_CONTENT_MAX} karakter)`);
-  const base = cleanTemplateName(rawName === undefined || rawName === null || rawName === "" ? doc.title.slice(0, TEMPLATE_NAME_MAX) : rawName);
+  const explicit = rawName !== undefined && rawName !== null && rawName !== "";
+  const explicitName = explicit ? cleanTemplateName(rawName) : null;
 
   return db.$transaction(async (tx) => {
+    // The document is read and copied under a lock on its row, so it cannot be restricted between the check and the copy.
+    await tx.$queryRaw`SELECT id FROM documents WHERE id = ${documentId} FOR SHARE`;
+    const doc = await tx.document.findFirst({
+      where: { id: documentId, ...documentReadableWhere(viewer) },
+      select: { id: true, title: true, type: true, content: true, restricted: true, collection: { select: { restricted: true } } },
+    });
+    if (!doc) throw new Error("Dokumen tidak ditemukan");
+    if (doc.restricted || doc.collection.restricted) {
+      throw new Error("Hanya dokumen yang terbuka untuk semua pengguna yang bisa dijadikan templat");
+    }
+    if (doc.content.length > TEMPLATE_CONTENT_MAX) throw new Error(`Dokumen terlalu panjang untuk templat (maksimal ${TEMPLATE_CONTENT_MAX} karakter)`);
+    // A title shorter than a name may be (a two-letter title) still makes a template, under a name that says what it is.
+    const base = explicitName ?? cleanTemplateName(doc.title.length >= TEMPLATE_NAME_MIN ? doc.title.slice(0, TEMPLATE_NAME_MAX) : `Templat ${doc.title}`.trim());
+
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('document_templates'))`;
     if ((await tx.documentTemplate.count()) >= MAX_TEMPLATES) throw new Error(`Templat maksimal ${MAX_TEMPLATES}`);
     const taken = new Set((await tx.documentTemplate.findMany({ where: { name: { startsWith: base.slice(0, 70), mode: "insensitive" } }, select: { name: true } })).map((t) => t.name.toLowerCase()));
     let name = base;
     for (let n = 2; taken.has(name.toLowerCase()); n += 1) name = `${base.slice(0, TEMPLATE_NAME_MAX - 6)} (${n})`;
-    return tx.documentTemplate.create({ data: { name, type: doc.type, content: doc.content, createdById: viewer.id }, select: { id: true, name: true } });
+    return tx.documentTemplate.create({
+      data: { name, type: doc.type, content: doc.content, createdById: viewer.id, sourceDocumentId: doc.id },
+      select: { id: true, name: true },
+    });
   });
 }
 

@@ -60,8 +60,9 @@ export default async function NewDocumentPage({
           <ul className="flex flex-wrap gap-2">
             <li>
               <Link
-                href={{ pathname: "/docs/new", query: { ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}) } }}
-                className={`inline-flex min-h-9 items-center rounded-full border px-3 text-sm ${!chosen ? "bg-foreground text-background" : "hover:bg-muted"}`}
+                href={{ pathname: "/docs/new", query: { ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}), ...(defaultTitle ? { title: defaultTitle } : {}) } }}
+                aria-current={!chosen ? "true" : undefined}
+                className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${!chosen ? "bg-foreground text-background" : "hover:bg-muted"}`}
               >
                 Kosong (bawaan)
               </Link>
@@ -69,14 +70,16 @@ export default async function NewDocumentPage({
             {templates.map((template) => (
               <li key={template.id}>
                 <Link
-                  href={{ pathname: "/docs/new", query: { templat: template.id, ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}) } }}
-                  className={`inline-flex min-h-9 items-center rounded-full border px-3 text-sm ${chosen?.id === template.id ? "bg-foreground text-background" : "hover:bg-muted"}`}
+                  href={{ pathname: "/docs/new", query: { templat: template.id, ...(collectionSlug ? { collection: collectionSlug } : {}), ...(parentSlug ? { parent: parentSlug } : {}), ...(defaultTitle ? { title: defaultTitle } : {}) } }}
+                  aria-current={chosen?.id === template.id ? "true" : undefined}
+                  className={`inline-flex min-h-11 max-w-full items-center break-words rounded-full border px-3 text-sm ${chosen?.id === template.id ? "bg-foreground text-background" : "hover:bg-muted"}`}
                 >
                   {template.name}
                 </Link>
               </li>
             ))}
           </ul>
+          {templateId && !chosen && <p role="status" className="text-xs text-destructive">Templat itu tidak ditemukan (mungkin sudah dihapus); formulir dimulai dari kerangka bawaan.</p>}
           {chosen && <p className="text-xs text-muted-foreground">Isi dan jenis diambil dari templat &ldquo;{chosen.name}&rdquo;; ubah sesuka Anda sebelum menyimpan.</p>}
         </section>
       )}

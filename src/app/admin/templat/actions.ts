@@ -14,13 +14,13 @@ function fail(path: string, error: unknown, fallback: string): never {
 }
 
 /** "Jadikan templat" on a document page: the document's title becomes the template's name. */
-export async function createTemplateAction(documentId: string, slug: string): Promise<void> {
+export async function createTemplateAction(documentId: string): Promise<void> {
   const user = await requireRole(staff);
   let name: string;
   try {
     ({ name } = await createTemplateFromDocument(documentId, undefined, { id: user.id, role: user.role }));
   } catch (err) {
-    fail(`/docs/${encodeURIComponent(slug)}`, err, "Gagal menjadikan templat");
+    fail("/admin/templat", err, "Gagal menjadikan templat");
   }
   revalidatePath("/admin/templat");
   redirect(`/admin/templat?dibuat=${encodeURIComponent(name.slice(0, 120))}`);

@@ -100,3 +100,26 @@ test("names are cleaned, and the number of templates is limited", T, async () =>
   assert.throws(() => cleanTemplateName(7), /wajib/);
   assert.ok(MAX_TEMPLATES >= 50);
 });
+
+test("a short title still makes a template; the source is remembered and flagged once it is restricted", T, async () => {
+  const col = await db.collection.create({ data: { slug: `${tag}-col5`, name: `Lima ${tag}` } });
+  created.collections.push(col.id);
+  const doc = await db.document.create({ data: { slug: `${tag}-ab`, title: "AB", content: "## Isi\n\nteks", collectionId: col.id } });
+  const { id, name } = await createTemplateFromDocument(doc.id, undefined, editor);
+  assert.equal(name, "Templat AB");
+
+  let item = (await listTemplates(admin)).find((t) => t.id === id)!;
+  assert.deepEqual(item.source, { title: "AB", slug: `${tag}-ab` });
+  assert.equal(item.size, "## Isi\n\nteks".length);
+
+  // the document is restricted afterwards: the copy now says so, without showing the title
+  await db.document.update({ where: { id: doc.id }, data: { restricted: true } });
+  item = (await listTemplates(admin)).find((t) => t.id === id)!;
+  assert.equal(item.source, "restricted");
+
+  // the source is deleted: no source, the template stays
+  await db.document.delete({ where: { id: doc.id } });
+  item = (await listTemplates(admin)).find((t) => t.id === id)!;
+  assert.equal(item.source, null);
+  assert.equal((await getTemplate(id, editor))?.content, "## Isi\n\nteks");
+});

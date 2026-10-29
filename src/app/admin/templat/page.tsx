@@ -65,6 +65,18 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
                       {template.type.charAt(0) + template.type.slice(1).toLowerCase()} · {template.size.toLocaleString("id-ID")} karakter · {formatDate(template.createdAt)}
                       {template.createdByName ? ` · ${template.createdByName}` : ""}
                     </p>
+                    {template.source === "restricted" ? (
+                      <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-300">
+                        Dokumen sumbernya kini dibatasi, tetapi templat ini masih terbaca semua penyunting. Hapus bila isinya tidak boleh dibagikan.
+                      </p>
+                    ) : template.source ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Dari dokumen{" "}
+                        <Link href={`/docs/${template.source.slug}`} className="underline underline-offset-2">
+                          {template.source.title}
+                        </Link>
+                      </p>
+                    ) : null}
                   </div>
                   <Link href={{ pathname: "/docs/new", query: { templat: template.id } }} className={buttonVariants({ variant: "outline", size: "sm" })}>
                     <FilePlus2 className="mr-1.5 h-4 w-4" />

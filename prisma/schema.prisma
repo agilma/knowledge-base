@@ -163,6 +163,7 @@ model Document {
   members         DocumentMember[]
   groups          DocumentGroup[]
   comments        DocumentComment[]
+  templates       DocumentTemplate[] @relation("TemplateSource")
   aiConversations AiConversation[]
   parent          Document?          @relation("DocumentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children        Document[]         @relation("DocumentTree")
@@ -431,11 +432,16 @@ model DocumentTemplate {
   type        String       @default("PANDUAN")
   content     String
   createdById String?
+  /// The document it was copied from (migration 17), so an admin can tell when that document has since
+  /// been restricted and the copy should go. Null once the document is deleted.
+  sourceDocumentId String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy      User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  sourceDocument Document? @relation("TemplateSource", fields: [sourceDocumentId], references: [id], onDelete: SetNull)
 
   @@index([createdById])
+  @@index([sourceDocumentId])
   @@map("document_templates")
 }

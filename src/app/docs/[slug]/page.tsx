@@ -106,7 +106,7 @@ export default async function DocumentPage({
               </Link>
             )}
             {canSeeDrafts && !doc.restricted && !doc.collection?.restricted && (
-              <form action={createTemplateAction.bind(null, doc.id, doc.slug)}>
+              <form action={createTemplateAction.bind(null, doc.id)}>
                 <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
                   <FileStack className="mr-1.5 h-4 w-4" />
                   Jadikan templat
