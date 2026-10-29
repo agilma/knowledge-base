@@ -8,7 +8,14 @@ import type { FlowItem } from "@/lib/step-mode";
 
 const CHANGED = "kb-steps-changed";
 
+/**
+ * What was ticked in this tab, kept in step with the storage but never lost to it: when the storage is
+ * blocked or full the ticks still last until the page is closed, as the person expects.
+ */
+const memory = new Map<string, string>();
+
 function read(key: string): string {
+  if (memory.has(key)) return memory.get(key) ?? "";
   try {
     return window.localStorage.getItem(key) ?? "";
   } catch {
@@ -17,6 +24,7 @@ function read(key: string): string {
 }
 
 function write(key: string, value: string) {
+  memory.set(key, value);
   try {
     if (value) window.localStorage.setItem(key, value);
     else window.localStorage.removeItem(key);
@@ -27,11 +35,16 @@ function write(key: string, value: string) {
 }
 
 function subscribe(callback: () => void) {
+  // Another tab changed the storage: what it wrote is newer than what this tab remembers.
+  const fromOtherTab = () => {
+    memory.clear();
+    callback();
+  };
   window.addEventListener(CHANGED, callback);
-  window.addEventListener("storage", callback);
+  window.addEventListener("storage", fromOtherTab);
   return () => {
     window.removeEventListener(CHANGED, callback);
-    window.removeEventListener("storage", callback);
+    window.removeEventListener("storage", fromOtherTab);
   };
 }
 
@@ -48,7 +61,8 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
     () => read(storageKey),
     () => "",
   );
-  const done = new Set(stored ? stored.split(",").map(Number) : []);
+  // Only whole numbers that are positions of items: anything else in the storage (edited by hand, damaged) is ignored.
+  const done = new Set(stored ? stored.split(",").filter((part) => /^\d+$/.test(part)).map(Number).filter((n) => n < items.length) : []);
   const stepIndexes = items.flatMap((item, i) => (item.kind === "step" ? [i] : []));
   const total = stepIndexes.length;
 
@@ -81,6 +95,8 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+      // Alt+arrow is the browser's history, and a held key must not tick every step by repeating.
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat || event.defaultPrevented) return;
       if (event.key === "ArrowLeft") go(index - 1);
       if (event.key === "ArrowRight") {
         const item = items[index];
@@ -95,14 +111,29 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
   // Keep the screen on while it is being followed; not every browser can, and none needs to.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | null = null;
+    let cancelled = false;
     const hold = () => {
       const wake = (navigator as Navigator & { wakeLock?: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock;
-      wake?.request("screen").then((l) => (lock = l), () => undefined);
+      wake?.request("screen").then(
+        (granted) => {
+          // Left the page before the browser answered, or a lock is already held: do not keep this one.
+          if (cancelled || lock) granted.release().catch(() => undefined);
+          else lock = granted;
+        },
+        () => undefined,
+      );
     };
     hold();
-    const onVisible = () => document.visibilityState === "visible" && hold();
+    // The browser drops the lock when the tab is hidden; take it again on return.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        lock = null;
+        hold();
+      }
+    };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
+      cancelled = true;
       document.removeEventListener("visibilitychange", onVisible);
       lock?.release().catch(() => undefined);
     };
@@ -112,7 +143,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
     <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-2xl flex-col px-5 pb-6 pt-4">
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <Link href={backHref} className="inline-flex min-h-11 items-center gap-1.5 pr-3 text-sm text-muted-foreground hover:text-foreground">
             <X className="size-4" />
             Keluar
           </Link>
@@ -164,7 +195,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
                   onClick={() => toggle(i)}
                   aria-pressed={done.has(i)}
                   aria-label={`${done.has(i) ? "Batalkan selesai" : "Tandai selesai"}: ${item.title}`}
-                  className={`mr-2 flex size-10 shrink-0 items-center justify-center rounded-md border ${done.has(i) ? "border-emerald-600 bg-emerald-600 text-white" : "border-border text-transparent"}`}
+                  className={`mr-2 flex size-11 shrink-0 items-center justify-center rounded-md border ${done.has(i) ? "border-emerald-600 bg-emerald-600 text-white" : "border-border text-transparent"}`}
                 >
                   <Check className="size-5" />
                 </button>
@@ -226,7 +257,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
               <RotateCcw className="mr-2 size-5" />
               Mulai ulang
             </Button>
-            <Link href={backHref} className="inline-flex h-14 items-center justify-center rounded-lg bg-primary px-4 text-base font-medium text-primary-foreground">
+            <Link href={backHref} className="inline-flex h-14 items-center justify-center rounded-lg bg-primary px-4 text-base font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2">
               Kembali ke dokumen
             </Link>
           </div>
@@ -236,7 +267,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
               <ArrowLeft className="size-5" />
             </Button>
             <Button type="button" size="lg" className="h-14 text-lg" onClick={next}>
-              {current?.kind === "callout" ? "Mengerti, lanjut" : index === items.length - 1 || stepIndexes[stepIndexes.length - 1] === index ? "Selesai" : "Selesai, lanjut"}
+              {current?.kind === "callout" ? "Mengerti, lanjut" : index === items.length - 1 ? "Selesai" : "Selesai, lanjut"}
               <ArrowRight className="ml-2 size-5" />
             </Button>
           </div>
