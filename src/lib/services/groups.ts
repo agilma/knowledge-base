@@ -133,6 +133,14 @@ export async function setGroupMembers(groupId: string, userIds: unknown, actor: 
   });
 }
 
+/** A group deleted while a form listing it was being saved: say so, rather than a database error. */
+function groupGone(err: unknown): never {
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+    throw new Error("Grup yang dipilih sudah dihapus; muat ulang halaman lalu coba lagi");
+  }
+  throw err;
+}
+
 /** Ids of the groups listed on a collection. Admin only. */
 export async function getCollectionGroupIds(collectionId: string, actor: Viewer): Promise<string[]> {
   assertAdmin(actor);
@@ -191,7 +199,7 @@ export async function setCollectionGroups(collectionId: string, groupIds: unknow
     if (await writeItemGroups(tx, { collectionId }, groupIds)) {
       await tx.collection.update({ where: { id: collectionId }, data: { updatedAt: new Date() } });
     }
-  });
+  }).catch(groupGone);
 }
 
 /**
@@ -206,5 +214,5 @@ export async function setDocumentGroups(documentId: string, groupIds: unknown, a
     const document = await tx.document.findUnique({ where: { id: documentId }, select: { id: true } });
     if (!document) throw new Error("Dokumen tidak ditemukan");
     await writeItemGroups(tx, { documentId }, groupIds);
-  });
+  }).catch(groupGone);
 }

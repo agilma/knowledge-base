@@ -16,7 +16,7 @@ import {
   setRelatedDocuments,
   type DocumentAccessInput,
 } from "@/lib/services/documents";
-import { setDocumentGroups } from "@/lib/services/groups";
+import { MAX_GROUPS_PER_ITEM, setDocumentGroups } from "@/lib/services/groups";
 import { assertParentAllowed, setDocumentParent } from "@/lib/services/document-tree";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
@@ -34,10 +34,16 @@ function documentMemberIds(formData: FormData): string[] {
 
 /** Said before anything is written: the document and its access are saved in two steps. */
 function tooManyDocumentMembers(formData: FormData): string | null {
-  if (formData.get("documentMembersTouched") !== "1") return null;
-  return new Set(documentMemberIds(formData)).size > MAX_DOCUMENT_MEMBERS
-    ? `Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`
-    : null;
+  if (formData.get("documentMembersTouched") === "1" && new Set(documentMemberIds(formData)).size > MAX_DOCUMENT_MEMBERS) {
+    return `Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`;
+  }
+  if (
+    formData.get("documentGroupsTouched") === "1" &&
+    new Set(formData.getAll("documentGroupIds").filter((id) => typeof id === "string")).size > MAX_GROUPS_PER_ITEM
+  ) {
+    return `Grup maksimal ${MAX_GROUPS_PER_ITEM} per dokumen`;
+  }
+  return null;
 }
 
 /**

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { userMessage } from "@/lib/errors";
-import { createGroup, deleteGroup, renameGroup, setGroupMembers } from "@/lib/services/groups";
+import { createGroup, deleteGroup, MAX_GROUP_MEMBERS, renameGroup, setGroupMembers } from "@/lib/services/groups";
 
 function back(path: string, error: unknown, fallback: string): never {
   redirect(`${path}?galat=${encodeURIComponent(userMessage(error, fallback).slice(0, 200))}`);
@@ -29,10 +29,13 @@ export async function saveGroupAction(groupId: string, formData: FormData): Prom
   if (typeof groupId !== "string") return;
   const viewer = { id: admin.id, role: admin.role };
   try {
-    await renameGroup(groupId, formData.get("name"), viewer);
-    if (formData.get("membersTouched") === "1") {
-      await setGroupMembers(groupId, formData.getAll("memberIds").filter((v): v is string => typeof v === "string"), viewer);
+    const memberIds = formData.getAll("memberIds").filter((v): v is string => typeof v === "string");
+    // Said before the name is saved, so a refused list does not leave a half-saved group.
+    if (formData.get("membersTouched") === "1" && new Set(memberIds).size > MAX_GROUP_MEMBERS) {
+      throw new Error(`Anggota grup maksimal ${MAX_GROUP_MEMBERS} orang`);
     }
+    await renameGroup(groupId, formData.get("name"), viewer);
+    if (formData.get("membersTouched") === "1") await setGroupMembers(groupId, memberIds, viewer);
   } catch (err) {
     back(`/admin/grup/${encodeURIComponent(groupId)}`, err, "Gagal menyimpan grup");
   }

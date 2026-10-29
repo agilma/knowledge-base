@@ -14,7 +14,7 @@ import {
   setCollectionMembers,
 } from "@/lib/services/collections";
 import { collectionSchema, CollectionInput } from "@/lib/validation/collection";
-import { setCollectionGroups } from "@/lib/services/groups";
+import { MAX_GROUPS_PER_ITEM, setCollectionGroups } from "@/lib/services/groups";
 import { MAX_COLLECTION_MEMBERS } from "@/lib/collection-access";
 
 export type ActionState = {
@@ -22,12 +22,18 @@ export type ActionState = {
   fieldErrors?: Record<string, string>;
 };
 
-/** Ids chosen in the member picker; anything that is not a string is dropped. */
+/** Said before anything is written: a collection and its access are saved in several steps. */
+function tooManyGroups(formData: FormData): string | null {
+  if (formData.get("groupsTouched") !== "1") return null;
+  return new Set(groupIds(formData)).size > MAX_GROUPS_PER_ITEM ? `Grup maksimal ${MAX_GROUPS_PER_ITEM} per koleksi` : null;
+}
+
 /** Ids ticked in the group list; anything that is not a string is dropped. */
 function groupIds(formData: FormData): string[] {
   return formData.getAll("groupIds").filter((id): id is string => typeof id === "string");
 }
 
+/** Ids chosen in the member picker; anything that is not a string is dropped. */
 function memberIds(formData: FormData): string[] {
   return formData.getAll("memberIds").filter((id): id is string => typeof id === "string");
 }
@@ -49,7 +55,7 @@ export async function createCollectionAction(
 ): Promise<ActionState> {
   const admin = await requireRole(Role.ADMIN);
 
-  const tooMany = tooManyMembers(formData);
+  const tooMany = tooManyMembers(formData) ?? tooManyGroups(formData);
   if (tooMany) return { error: tooMany };
 
   const rawData: CollectionInput = {
@@ -102,7 +108,7 @@ export async function updateCollectionAction(
   const admin = await requireRole(Role.ADMIN);
   if (typeof id !== "string") return { error: "Permintaan tidak valid" };
 
-  const tooMany = tooManyMembers(formData);
+  const tooMany = tooManyMembers(formData) ?? tooManyGroups(formData);
   if (tooMany) return { error: tooMany };
 
   const viewer = { id: admin.id, role: admin.role };
