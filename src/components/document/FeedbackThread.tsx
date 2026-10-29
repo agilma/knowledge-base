@@ -43,7 +43,7 @@ export function FeedbackThread({ thread, slug, staff, from }: { thread: ThreadIt
                 >
                   <input type="hidden" name="id" value={item.id} />
                   <input type="hidden" name="from" value={from} />
-                  <button type="submit" aria-label="Hapus" className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted">
+                  <button type="submit" aria-label="Hapus" className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted">
                     <Trash2 className="size-4" />
                   </button>
                 </ConfirmForm>
@@ -57,7 +57,10 @@ export function FeedbackThread({ thread, slug, staff, from }: { thread: ThreadIt
       <form action={replyAction.bind(null, slug)} className="space-y-2">
         <input type="hidden" name="rootId" value={thread.id} />
         <input type="hidden" name="from" value={from} />
-        <Textarea name="body" required minLength={3} maxLength={COMMENT_MAX} rows={2} placeholder="Tulis balasan" aria-label="Balasan" />
+        <label htmlFor={`reply-${thread.id}`} className="sr-only">
+          Balasan
+        </label>
+        <Textarea id={`reply-${thread.id}`} name="body" required minLength={3} maxLength={COMMENT_MAX} rows={2} placeholder="Tulis balasan" />
         <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" size="sm" variant="outline">
             Balas

@@ -18,3 +18,15 @@ test("too short, too long and not a string are refused", () => {
   assert.throws(() => cleanCommentBody(42), /wajib/);
   assert.throws(() => cleanCommentBody(undefined), /wajib/);
 });
+
+test("hostile input is bounded: far over the limit is refused at once, whitespace runs cost nothing", () => {
+  const started = Date.now();
+  assert.throws(() => cleanCommentBody("a" + " ".repeat(1_000_000) + "b"), /maksimal/);
+  assert.throws(() => cleanCommentBody("a" + " ".repeat(3900) + "b".repeat(50)), /maksimal/);
+  assert.throws(() => cleanCommentBody((" \u0000").repeat(1900) + "xyz"), /maksimal/);
+  assert.ok(Date.now() - started < 300, `took ${Date.now() - started} ms`);
+});
+
+test("direction-changing and zero-width marks are removed", () => {
+  assert.equal(cleanCommentBody("abc\u202Edef\u200Bghi\u2028jkl\uFEFF"), "abcdefghijkl");
+});

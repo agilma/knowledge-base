@@ -61,7 +61,8 @@ export async function addFeedback(documentId: string, rawBody: unknown, viewer: 
 async function visibleRoot(rootId: string, viewer: Viewer) {
   if (typeof rootId !== "string" || !rootId) return null;
   const root = await db.documentComment.findFirst({
-    where: { id: rootId, parentId: null, document: { ...documentReadableWhere(viewer) } },
+    // A reader's own note is theirs while its document is one they may read as a reader: published.
+    where: { id: rootId, parentId: null, document: { ...documentReadableWhere(viewer), ...(isStaff(viewer) ? {} : { status: DocumentStatus.PUBLISHED }) } },
     select: { id: true, authorId: true, resolved: true, documentId: true, document: { select: { slug: true } } },
   });
   if (!root) return null;

@@ -100,6 +100,16 @@ test("only a document the reader may read can be written on, and a draft is for 
   assert.ok((await listInbox(admin, "open")).some((t) => t.document.slug === `${tag}-secret`));
 });
 
+test("a reader cannot answer a thread on a document that is no longer published", T, async () => {
+  const col = await db.collection.create({ data: { slug: `${tag}-col4`, name: `Empat ${tag}` } });
+  created.collections.push(col.id);
+  const doc = await db.document.create({ data: { slug: `${tag}-withdrawn`, title: "Ditarik", content: "isi", status: DocumentStatus.PUBLISHED, collectionId: col.id } });
+  const { id } = await addFeedback(doc.id, "Sebelum ditarik", ana);
+  await db.document.update({ where: { id: doc.id }, data: { status: DocumentStatus.DRAFT } });
+  await assert.rejects(addReply(id, "balasan buta", ana), /tidak ditemukan/);
+  await addReply(id, "dari penyunting", editor);
+});
+
 test("text is validated, and one person is limited per hour", T, async () => {
   await assert.rejects(addFeedback(docId, "ab", ana), /minimal/);
   await assert.rejects(addFeedback(docId, "x".repeat(1001), ana), /maksimal/);

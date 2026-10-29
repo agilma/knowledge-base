@@ -68,8 +68,8 @@ export default async function FeedbackPage({
 
       <form action={sendFeedbackAction.bind(null, doc.id, doc.slug)} className="space-y-3">
         <Label htmlFor="body">Masukan Anda</Label>
-        <Textarea id="body" name="body" required minLength={3} maxLength={COMMENT_MAX} rows={4} placeholder="Misalnya: langkah 3 tidak menyebut menu mana yang dibuka" />
-        <p className="text-xs text-muted-foreground">Sampai {COMMENT_MAX} karakter. Jangan menulis kata sandi atau data pelanggan.</p>
+        <Textarea id="body" name="body" required minLength={3} maxLength={COMMENT_MAX} rows={4} aria-describedby="body-hint" placeholder="Misalnya: langkah 3 tidak menyebut menu mana yang dibuka" />
+        <p id="body-hint" className="text-xs text-muted-foreground">Sampai {COMMENT_MAX} karakter. Jangan menulis kata sandi atau data pelanggan.</p>
         <Button type="submit">Kirim masukan</Button>
       </form>
 

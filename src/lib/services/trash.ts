@@ -89,7 +89,7 @@ export async function trashDocument(id: string, actor: Viewer) {
         collection: { select: { name: true } },
         members: { select: { userId: true } },
         groups: { select: { groupId: true } },
-        comments: { orderBy: { createdAt: "asc" }, take: 1000 },
+        comments: { orderBy: { createdAt: "asc" } },
         relatedFrom: { select: { fromId: true, toId: true } },
         relatedTo: { select: { fromId: true, toId: true } },
         revisions: { orderBy: { version: "asc" } },
