@@ -49,6 +49,7 @@ model User {
   documentAccess   DocumentMember[]
   groups           GroupMember[]
   comments         DocumentComment[]  @relation("CommentAuthor")
+  templates        DocumentTemplate[]
   resolvedComments DocumentComment[]  @relation("CommentResolver")
   aiConversations  AiConversation[]
 
@@ -162,6 +163,7 @@ model Document {
   members         DocumentMember[]
   groups          DocumentGroup[]
   comments        DocumentComment[]
+  templates       DocumentTemplate[] @relation("TemplateSource")
   aiConversations AiConversation[]
   parent          Document?          @relation("DocumentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children        Document[]         @relation("DocumentTree")
@@ -416,4 +418,30 @@ model DocumentComment {
   @@index([authorId, createdAt])
   @@index([resolved, createdAt])
   @@map("document_comments")
+}
+
+/// A document saved as a starting point for new ones (migration 16): "SOP Closing", "Masalah POS".
+/// Editors and admins make and use them; only documents open to everyone who can sign in can become
+/// one, since every editor can read every template.
+model DocumentTemplate {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  /// A DocumentType name, kept as text on purpose: Prisma applies migration folders in alphabetical
+  /// order ("16_" before "2_"), and a column of the enum type would stop migration 2 from rebuilding it
+  /// on a new database. The application only writes valid names (templates.ts).
+  type        String       @default("PANDUAN")
+  content     String
+  createdById String?
+  /// The document it was copied from (migration 17), so an admin can tell when that document has since
+  /// been restricted and the copy should go. Null once the document is deleted.
+  sourceDocumentId String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdBy      User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  sourceDocument Document? @relation("TemplateSource", fields: [sourceDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([createdById])
+  @@index([sourceDocumentId])
+  @@map("document_templates")
 }

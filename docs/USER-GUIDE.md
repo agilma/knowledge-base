@@ -166,6 +166,10 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 
 Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakapan disimpan di akun Anda selama 90 hari sejak pesan terakhir. Buka lagi lewat tombol **Riwayat** di panel (daftar percakapan Anda, buka untuk melanjutkan, ikon tempat sampah untuk menghapus), atau mulai yang baru dengan **Percakapan baru**. Riwayat hanya terlihat oleh Anda; admin lain tidak bisa membukanya. Jangan menempel kata sandi atau data pribadi pelanggan: yang ditempel ikut tersimpan sampai dihapus. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
+## Templat: memulai dokumen dari yang sudah bagus (EDITOR dan ADMIN)
+
+Di dokumen yang jadi contoh, tekan **Jadikan templat** (hanya dokumen yang terbuka untuk semua pengguna). Templat tersimpan lengkap dengan langkah bergambar, peringatan, dan bagian "Perlu dikonfirmasi". Saat membuat **Dokumen Baru**, pilih templat di **Mulai dari templat**: isi dan jenisnya terisi, lalu ubah sesuka Anda. **Kosong (bawaan)** memakai kerangka seperti biasa. Menu **Templat** menampilkan semuanya: **Pakai**, ganti nama, atau hapus (pembuatnya atau admin). Mengubah dokumen sumber tidak mengubah templatnya; buat ulang bila perlu.
+
 ## Masukan dari pembaca
 
 **Pembaca:** di bagian bawah dokumen ada **Kirim masukan**. Tulis bagian yang kurang jelas, salah, atau sudah berubah (sampai 1000 karakter; jangan menulis kata sandi atau data pelanggan). Masukan hanya dibaca penyunting dokumen itu; orang lain tidak melihatnya. Di halaman yang sama Anda melihat masukan Anda, balasan penyunting, dan apakah sudah **Selesai**; membalas utas yang sudah selesai membukanya lagi. Satu orang paling banyak mengirim 10 masukan per jam.
