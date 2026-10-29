@@ -54,8 +54,9 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
 
   const firstOpen = items.findIndex((item, i) => item.kind === "step" && !done.has(i));
   const [picked, setPicked] = useState<number | null>(null);
-  // Until the person moves, the screen is the first step not yet ticked; all ticked means the end.
-  const index = picked ?? (firstOpen === -1 ? items.length : firstOpen);
+  // Until the person moves, the screen is the start (a notice may come before the first step), or once
+  // something is ticked the first step not yet ticked; all ticked means the end.
+  const index = picked ?? (done.size === 0 ? 0 : firstOpen === -1 ? items.length : firstOpen);
   const [listOpen, setListOpen] = useState(false);
 
   const finished = index >= items.length;
@@ -173,7 +174,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
         </ol>
       )}
 
-      <main className="flex flex-1 flex-col justify-center py-8" aria-live="polite">
+      <section className="flex flex-1 flex-col justify-center py-8" aria-live="polite">
         {finished ? (
           <div className="space-y-4 text-center">
             <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-600 text-white">
@@ -207,7 +208,7 @@ export function StepRunner({ items, storageKey, title, backHref }: { items: Flow
             )}
           </div>
         ) : null}
-      </main>
+      </section>
 
       <footer className="sticky bottom-0 space-y-3 bg-background pb-2 pt-3">
         {finished ? (
