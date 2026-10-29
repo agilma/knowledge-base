@@ -21,6 +21,7 @@ import {
   Route,
   TriangleAlert,
   Workflow,
+  Frame,
   Undo2,
   Redo2,
 } from "lucide-react";
@@ -152,6 +153,9 @@ function Toolbar({ editor }: { editor: Editor }) {
       </ToolButton>
       <ToolButton label="Diagram alur" onPress={() => chain().insertContent(drawnBlockNode("mermaid")).run()}>
         <Workflow />
+      </ToolButton>
+      <ToolButton label="Sematan Canva atau video" onPress={() => chain().insertContent(drawnBlockNode("sematan")).run()}>
+        <Frame />
       </ToolButton>
     </div>
   );
