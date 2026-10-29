@@ -11,6 +11,10 @@ import { DocumentActions } from "@/components/document/DocumentActions";
 import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
+import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
+import { moveDocumentAction } from "@/app/docs/tree-actions";
+import { buttonVariants } from "@/components/ui/button";
+import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { isFavorite } from "@/lib/services/favorites";
 import { extractHeadings } from "@/lib/markdown";
 import { formatDate } from "@/lib/format";
@@ -38,7 +42,11 @@ export default async function DocumentPage({
     notFound();
   }
 
-  const relatedDocs = await getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts, viewer });
+  const [relatedDocs, ancestors, children] = await Promise.all([
+    getRelatedDocuments(doc.id, { includeDrafts: canSeeDrafts, viewer }),
+    getAncestors(doc.id, { includeDrafts: canSeeDrafts, viewer }),
+    getChildren(doc.id, { includeDrafts: canSeeDrafts, viewer }),
+  ]);
   const headings = extractHeadings(doc.content);
   const favorite = user ? await isFavorite(user.id, doc.id) : false;
 
@@ -61,7 +69,7 @@ export default async function DocumentPage({
 
         {/* Breadcrumb / Action Header */}
         <div className="print:hidden flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Link href="/collections" className="hover:text-foreground transition-colors flex items-center gap-1">
               <FolderOpen className="w-4 h-4" />
               Koleksi
@@ -75,6 +83,14 @@ export default async function DocumentPage({
                 <ChevronRight className="w-4 h-4" />
               </>
             )}
+            {ancestors.map((ancestor) => (
+              <span key={ancestor.id} className="contents">
+                <Link href={`/docs/${ancestor.slug}`} className="hover:text-foreground transition-colors truncate max-w-[160px]">
+                  {ancestor.title}
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+              </span>
+            ))}
             <span className="text-foreground truncate max-w-[200px]">{doc.title}</span>
           </div>
 
@@ -153,6 +169,50 @@ export default async function DocumentPage({
 
         {/* Document Content Sections */}
         <MarkdownContent content={doc.content} />
+
+        {/* Pages under this one (chapters of a guide) */}
+        {(children.length > 0 || canSeeDrafts) && (
+          <div className="print:hidden mt-12 pt-8 border-t border-border">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              {children.length > 0 ? <h3 className="text-xl font-semibold tracking-tight">Halaman di bawah ini</h3> : <span />}
+              {canSeeDrafts && ancestors.length + 1 < MAX_TREE_DEPTH && (
+                <Link href={{ pathname: "/docs/new", query: { parent: doc.slug } }} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Tambah sub-halaman
+                </Link>
+              )}
+            </div>
+            {children.length > 0 && (
+              <ol className="divide-y divide-border rounded-xl border border-border">
+                {children.map((child, index) => (
+                  <li key={child.id} className="flex items-center gap-2 pr-2">
+                    <Link href={`/docs/${child.slug}`} className="flex-1 min-w-0 px-4 py-3 hover:bg-accent/50 transition-colors rounded-l-xl">
+                      <span className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+                        {child.restricted && <Lock className="size-3.5 text-muted-foreground" aria-label="Dokumen terbatas" />}
+                        <span className="break-words">{child.title}</span>
+                        {child.status !== DocumentStatus.PUBLISHED && (
+                          <Badge variant="outline">{child.status === DocumentStatus.DRAFT ? "Draf" : "Arsip"}</Badge>
+                        )}
+                      </span>
+                      {child.excerpt && <span className="mt-0.5 block text-sm text-muted-foreground line-clamp-2">{child.excerpt}</span>}
+                    </Link>
+                    {canSeeDrafts && children.length > 1 && (
+                      <form action={moveDocumentAction} className="flex shrink-0 items-center gap-1">
+                        <input type="hidden" name="id" value={child.id} />
+                        <button type="submit" name="direction" value="up" disabled={index === 0} aria-label={`Naikkan ${child.title}`} className="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30">
+                          <ArrowUp className="size-4" />
+                        </button>
+                        <button type="submit" name="direction" value="down" disabled={index === children.length - 1} aria-label={`Turunkan ${child.title}`} className="flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted disabled:opacity-30">
+                          <ArrowDown className="size-4" />
+                        </button>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
 
         {/* Related Knowledge Section */}
         {relatedDocs.length > 0 && (

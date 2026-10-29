@@ -146,3 +146,8 @@ test("a collection can be exported alone; an unknown one is not found; a huge li
   assert.equal((await handleExportRequest(get("?koleksi=tidak-ada"), deps())).status, 404);
   assert.equal((await handleExportRequest(get(), deps({ count: async () => 60_001 }))).status, 413);
 });
+
+test("a page under another names its parent, a top-level page has no such line", () => {
+  assert.match(documentToMarkdown({ ...doc(3), parent: { slug: "panduan-induk" } }), /restricted: false\nparent: panduan-induk\n/);
+  assert.doesNotMatch(documentToMarkdown(doc(4)), /^parent:/m);
+});

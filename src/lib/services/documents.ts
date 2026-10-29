@@ -45,11 +45,29 @@ async function assertCollectionAccess(client: Db, viewer: Viewer, collectionId: 
 /** How many documents a collection page lists at a time. */
 export const COLLECTION_PAGE_SIZE = 50;
 
-function collectionDocumentsWhere(collectionId: string, options: ReadOptions): Prisma.DocumentWhereInput {
-  return {
-    collectionId,
+export interface CollectionListOptions extends ReadOptions {
+  /**
+   * Only the pages that sit at the top of the collection: no parent, or a parent this viewer
+   * does not see in the list (a restricted or draft chapter must not hide its readable
+   * children from everyone who cannot see it). The pages under a parent are on the parent's page.
+   */
+  topLevelOnly?: boolean;
+}
+
+function collectionDocumentsWhere(collectionId: string, options: CollectionListOptions): Prisma.DocumentWhereInput {
+  const listed: Prisma.DocumentWhereInput = {
     ...documentReadableWhere(options.viewer),
     ...(options.includeDrafts ? {} : { status: DocumentStatus.PUBLISHED }),
+  };
+  return {
+    collectionId,
+    ...listed,
+    // An admin who sees drafts sees every parent (and `NOT: {}` would match nothing at all).
+    ...(options.topLevelOnly
+      ? Object.keys(listed).length === 0
+        ? { parentId: null }
+        : { OR: [{ parentId: null }, { parent: { is: { NOT: listed } } }] }
+      : {}),
   };
 }
 
@@ -59,7 +77,7 @@ function collectionDocumentsWhere(collectionId: string, options: ReadOptions): P
  */
 export async function getDocumentsByCollection(
   collectionId: string,
-  options: ReadOptions & { skip?: number; take?: number }
+  options: CollectionListOptions & { skip?: number; take?: number }
 ) {
   return db.document.findMany({
     where: collectionDocumentsWhere(collectionId, options),
@@ -70,7 +88,7 @@ export async function getDocumentsByCollection(
   });
 }
 
-export async function countDocumentsByCollection(collectionId: string, options: ReadOptions) {
+export async function countDocumentsByCollection(collectionId: string, options: CollectionListOptions) {
   return db.document.count({ where: collectionDocumentsWhere(collectionId, options) });
 }
 
@@ -629,11 +647,16 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
 
     // A document moving between collections changes what each of them holds, and the
     // offline cache key is built from the restricted ones' last change: touch both.
-    if (validated.collectionId !== current.collectionId) {
+    const moved = validated.collectionId !== current.collectionId;
+    if (moved) {
       await tx.collection.updateMany({
         where: { id: { in: [current.collectionId, validated.collectionId] } },
         data: { updatedAt: new Date() },
       });
+      // A page and its parent live in one collection: moving leaves the old parent, and the
+      // pages under this one stay behind as top-level pages of the collection it left.
+      // SQL, not updateMany: that would bump the "last updated" time of every page left behind.
+      await tx.$executeRaw`UPDATE documents SET "parentId" = NULL WHERE "parentId" = ${id}`;
     }
 
     const updated = await tx.document.update({
@@ -647,6 +670,7 @@ export async function updateDocument(id: string, data: DocumentInput, actor: Vie
         content: validated.content,
         status: validated.status,
         lastEditedById: editorId ?? current.lastEditedById,
+        ...(moved ? { parentId: null, position: 0 } : {}),
       },
     });
 

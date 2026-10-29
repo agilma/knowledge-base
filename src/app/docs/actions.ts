@@ -16,6 +16,7 @@ import {
   setRelatedDocuments,
   type DocumentAccessInput,
 } from "@/lib/services/documents";
+import { assertParentAllowed, setDocumentParent } from "@/lib/services/document-tree";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
 import { documentSchema, DocumentInput } from "@/lib/validation/document";
@@ -46,6 +47,20 @@ function tooManyDocumentMembers(formData: FormData): string | null {
 function accessFromForm(role: Role, formData: FormData): DocumentAccessInput | null {
   if (role !== Role.ADMIN || formData.get("documentRestrictedTouched") !== "1") return null;
   return { restricted: formData.get("documentRestricted") === "on", memberIds: documentMemberIds(formData) };
+}
+
+/** The "Induk" field: only a form that carries it decides, so one without it cannot detach the document. */
+async function applyParent(documentId: string, formData: FormData, actor: { id: string; role: Role }) {
+  if (formData.get("parentTouched") !== "1") return;
+  const parentId = formData.get("parentId");
+  await setDocumentParent(documentId, typeof parentId === "string" && parentId ? parentId : null, actor);
+}
+
+/** Said before the document is written, so a refused parent does not leave a half-saved document behind. */
+async function checkParentFromForm(documentId: string | null, collectionId: string, formData: FormData, actor: { id: string; role: Role }) {
+  if (formData.get("parentTouched") !== "1") return;
+  const parentId = formData.get("parentId");
+  if (typeof parentId === "string" && parentId) await assertParentAllowed(documentId, collectionId, parentId, actor);
 }
 
 export async function createDocumentAction(
@@ -83,6 +98,7 @@ export async function createDocumentAction(
   }
 
   try {
+    await checkParentFromForm(null, parsed.data.collectionId, formData, { id: user.id, role: user.role });
     const newDoc = await createDocument(parsed.data, { id: user.id, role: user.role }, accessFromForm(user.role, formData) ?? undefined);
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(
@@ -91,6 +107,7 @@ export async function createDocumentAction(
         { id: user.id, role: user.role }
       );
     }
+    await applyParent(newDoc.id, formData, { id: user.id, role: user.role });
     const createdWithCol = await getDocumentForRevalidate(newDoc.id);
     revalidatePath("/collections");
     if (createdWithCol?.collection) {
@@ -146,6 +163,7 @@ export async function updateDocumentAction(
 
   try {
     const oldDoc = await getDocumentForRevalidate(id);
+    await checkParentFromForm(id, parsed.data.collectionId, formData, { id: user.id, role: user.role });
     const updatedDoc = await updateDocument(id, parsed.data, { id: user.id, role: user.role });
     if (formData.get("relatedTouched") === "1") {
       await setRelatedDocuments(id, parseRelatedIds(formData.getAll("relatedIds"), id), {
@@ -153,6 +171,7 @@ export async function updateDocumentAction(
         role: user.role,
       });
     }
+    await applyParent(id, formData, { id: user.id, role: user.role });
     const access = accessFromForm(user.role, formData);
     if (access) {
       // A picker that was not loaded sends no list: keep the people already on it.
