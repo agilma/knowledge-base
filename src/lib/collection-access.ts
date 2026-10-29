@@ -9,6 +9,8 @@ import { Prisma, Role } from "@prisma/client";
  * cannot forget it. Where a reader may not see a collection the answer is "not
  * found", never "forbidden", so its existence is not revealed either.
  *
+ * Members are people listed by name or, since migration 14, everyone in a listed group.
+ *
  * A document can be restricted too, with its own member list. Both must allow
  * the reader: a restricted document in a restricted collection needs a place in
  * both lists, and an open document in a restricted collection stays as closed as
@@ -32,10 +34,18 @@ export function canAccessCollection(
   return isMember;
 }
 
+/**
+ * Besides being listed by name, a person is a member through a group they belong to that is
+ * listed (migration 14). Prisma filter for "this viewer is in some group of the list".
+ */
+function inListedGroup(viewer: Viewer) {
+  return { some: { group: { members: { some: { userId: viewer.id } } } } };
+}
+
 /** Prisma filter for collections the viewer may read. */
 export function collectionReadableWhere(viewer: Viewer): Prisma.CollectionWhereInput {
   if (viewer.role === Role.ADMIN) return {};
-  return { OR: [{ restricted: false }, { members: { some: { userId: viewer.id } } }] };
+  return { OR: [{ restricted: false }, { members: { some: { userId: viewer.id } } }, { groups: inListedGroup(viewer) }] };
 }
 
 /** The most people one restricted document can list; the picker and the server both hold to it. */
@@ -63,7 +73,7 @@ export function documentReadableWhere(viewer: Viewer): Prisma.DocumentWhereInput
   return {
     AND: [
       { collection: collectionReadableWhere(viewer) },
-      { OR: [{ restricted: false }, { members: { some: { userId: viewer.id } } }] },
+      { OR: [{ restricted: false }, { members: { some: { userId: viewer.id } } }, { groups: inListedGroup(viewer) }] },
     ],
   };
 }
@@ -77,7 +87,10 @@ export function collectionReadableSql(viewer: Viewer, alias: string): Prisma.Sql
   if (viewer.role === Role.ADMIN) return Prisma.sql`TRUE`;
   const col = Prisma.raw(alias);
   return Prisma.sql`(${col}.restricted = FALSE OR EXISTS (
-    SELECT 1 FROM collection_members m WHERE m."collectionId" = ${col}.id AND m."userId" = ${viewer.id}))`;
+    SELECT 1 FROM collection_members m WHERE m."collectionId" = ${col}.id AND m."userId" = ${viewer.id})
+    OR EXISTS (
+    SELECT 1 FROM collection_groups cg JOIN group_members gm ON gm."groupId" = cg."groupId"
+    WHERE cg."collectionId" = ${col}.id AND gm."userId" = ${viewer.id}))`;
 }
 
 /**
@@ -90,7 +103,10 @@ export function documentReadableSql(viewer: Viewer, docAlias: string, colAlias: 
   if (viewer.role === Role.ADMIN) return Prisma.sql`TRUE`;
   const doc = Prisma.raw(docAlias);
   return Prisma.sql`(${collectionReadableSql(viewer, colAlias)} AND (${doc}.restricted = FALSE OR EXISTS (
-    SELECT 1 FROM document_members dm WHERE dm."documentId" = ${doc}.id AND dm."userId" = ${viewer.id})))`;
+    SELECT 1 FROM document_members dm WHERE dm."documentId" = ${doc}.id AND dm."userId" = ${viewer.id})
+    OR EXISTS (
+    SELECT 1 FROM document_groups dg JOIN group_members gm ON gm."groupId" = dg."groupId"
+    WHERE dg."documentId" = ${doc}.id AND gm."userId" = ${viewer.id})))`;
 }
 
 /**

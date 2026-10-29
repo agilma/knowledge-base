@@ -9,6 +9,7 @@ import {
   getRelatedCandidates,
 } from "@/lib/services/documents";
 import { getCollections, listAssignableUsers } from "@/lib/services/collections";
+import { getDocumentGroupIds, listGroups } from "@/lib/services/groups";
 import { DocumentForm } from "@/components/document/DocumentForm";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +38,15 @@ export default async function EditDocumentPage({
     : null;
 
   // Only an admin may restrict a document, so only an admin's form carries the section.
-  const [accessUsers, initialMemberIds] =
+  const [accessUsers, initialMemberIds, accessGroups, initialGroupIds] =
     user.role === Role.ADMIN
-      ? await Promise.all([listAssignableUsers(viewer), getDocumentMemberIds(document.id, viewer)])
-      : [undefined, undefined];
+      ? await Promise.all([
+          listAssignableUsers(viewer),
+          getDocumentMemberIds(document.id, viewer),
+          listGroups(viewer),
+          getDocumentGroupIds(document.id, viewer),
+        ])
+      : [undefined, undefined, undefined, undefined];
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
@@ -59,6 +65,8 @@ export default async function EditDocumentPage({
         aiEnabled={user.role === Role.ADMIN}
         initialRestricted={document.restricted}
         initialMemberIds={initialMemberIds}
+        accessGroups={accessGroups}
+        initialGroupIds={initialGroupIds}
         initialData={document}
       />
     </div>

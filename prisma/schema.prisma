@@ -47,6 +47,7 @@ model User {
   revisions        DocumentRevision[]
   collectionAccess CollectionMember[]
   documentAccess   DocumentMember[]
+  groups           GroupMember[]
   aiConversations  AiConversation[]
 
   @@map("users")
@@ -106,6 +107,7 @@ model Collection {
 
   documents Document[]
   members   CollectionMember[]
+  groups    CollectionGroup[]
 
   @@map("collections")
 }
@@ -156,6 +158,7 @@ model Document {
   relatedTo       DocumentRelation[] @relation("RelatedTo")
   revisions       DocumentRevision[]
   members         DocumentMember[]
+  groups          DocumentGroup[]
   aiConversations AiConversation[]
   parent          Document?          @relation("DocumentTree", fields: [parentId], references: [id], onDelete: SetNull)
   children        Document[]         @relation("DocumentTree")
@@ -326,4 +329,59 @@ model TrashedDocument {
 
   @@index([deletedAt])
   @@map("trashed_documents")
+}
+
+/// A named set of users (Tim CS, Koordinator Toko) that can be listed on a restricted collection or
+/// document instead of each person: everyone in the group reads it, and a person added to or removed
+/// from the group gains or loses access at once (migration 14).
+model Group {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     GroupMember[]
+  collections CollectionGroup[]
+  documents   DocumentGroup[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+model CollectionGroup {
+  collectionId String
+  groupId      String
+  createdAt    DateTime @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, groupId])
+  @@index([groupId])
+  @@map("collection_groups")
+}
+
+model DocumentGroup {
+  documentId String
+  groupId    String
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, groupId])
+  @@index([groupId])
+  @@map("document_groups")
 }

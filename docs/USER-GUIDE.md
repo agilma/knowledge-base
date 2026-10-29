@@ -166,6 +166,10 @@ Di **Dokumen Baru** dan **Edit Dokumen**, admin melihat tombol **Asisten AI**. E
 
 Yang perlu diketahui: teks yang Anda kirim diproses oleh Anthropic API; percakapan disimpan di akun Anda selama 90 hari sejak pesan terakhir. Buka lagi lewat tombol **Riwayat** di panel (daftar percakapan Anda, buka untuk melanjutkan, ikon tempat sampah untuk menghapus), atau mulai yang baru dengan **Percakapan baru**. Riwayat hanya terlihat oleh Anda; admin lain tidak bisa membukanya. Jangan menempel kata sandi atau data pribadi pelanggan: yang ditempel ikut tersimpan sampai dihapus. Bahan yang terlalu panjang ditolak dengan pesan (tidak dipotong diam-diam), dan ada batas sekitar 20 permintaan per 10 menit per admin. Butuh internet. Selalu baca ulang hasilnya: AI bisa keliru atau melewatkan hal yang tidak ada di bahan.
 
+## Grup: mengatur akses untuk banyak orang sekaligus (ADMIN)
+
+Buka **Grup** di menu, buat grup (misalnya Tim CS), lalu pilih anggotanya dan simpan. Di form koleksi atau dokumen yang **dibatasi**, centang grup yang boleh membaca; semua anggotanya ikut bisa membaca, selain orang yang dipilih satu per satu. Kalau seseorang ditambahkan ke grup atau dikeluarkan, aksesnya berubah saat itu juga, tanpa mengubah koleksi atau dokumennya. Untuk dokumen terbatas di dalam koleksi terbatas, orangnya harus lolos di kedua daftar (lewat nama atau grup). Menghapus grup mencabut akses yang hanya lewat grup itu.
+
 ## Dokumen bersarang: bab di bawah satu panduan (EDITOR dan ADMIN)
 
 Untuk panduan yang punya banyak bagian (misalnya SOP 01 sampai 06 di bawah satu induk), buka halaman induknya lalu tekan **Tambah sub-halaman**; atau di form dokumen mana pun pilih **Induk**. Induk harus di koleksi yang sama, dan susunan paling dalam 4 tingkat. Di halaman induk muncul daftar **Halaman di bawah ini**; panah naik dan turun mengatur urutannya. Pembaca melihat breadcrumb di atas judul dan daftar bab di bawah isi. Daftar koleksi hanya menampilkan halaman tingkat atas; bab dibuka dari induknya (atau lewat pencarian). Memindahkan dokumen ke koleksi lain melepasnya dari induk; menghapus induk menjadikan bab-babnya halaman tingkat atas.

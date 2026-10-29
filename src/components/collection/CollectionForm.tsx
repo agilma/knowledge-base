@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { slugify } from "@/lib/slug";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { GroupsPicker, type GroupOption } from "@/components/collection/GroupsPicker";
 import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
 import { createCollectionAction, updateCollectionAction, ActionState } from "@/app/collections/actions";
 
@@ -24,9 +25,12 @@ interface CollectionFormProps {
   /** Everyone who can be made a member; given only to admins, who are the only ones here. */
   users?: AssignableUser[];
   initialMemberIds?: string[];
+  /** Every group, and the ones already on the collection. */
+  groups?: GroupOption[];
+  initialGroupIds?: string[];
 }
 
-export function CollectionForm({ initialData, users = [], initialMemberIds = [] }: CollectionFormProps) {
+export function CollectionForm({ initialData, users = [], initialMemberIds = [], groups = [], initialGroupIds = [] }: CollectionFormProps) {
   const isEditing = !!initialData;
   const isOnline = useOnlineStatus();
   const [name, setName] = useState(initialData?.name ?? "");
@@ -191,6 +195,7 @@ export function CollectionForm({ initialData, users = [], initialMemberIds = [] 
         {/* kept mounted (only hidden) so choices not yet saved survive unticking the box */}
         <div hidden={!restricted}>
           <CollectionMembersPicker users={users} initialIds={initialMemberIds} />
+          <GroupsPicker groups={groups} initialIds={initialGroupIds} />
         </div>
       </div>
 

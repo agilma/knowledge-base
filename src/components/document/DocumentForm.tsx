@@ -11,6 +11,7 @@ import { Sparkles } from "lucide-react";
 import { AiAssistantPanel } from "@/components/document/AiAssistantPanel";
 import type { FormContext, Proposal } from "@/lib/ai/request";
 import { MarkdownEditor } from "@/components/document/MarkdownEditor";
+import { GroupsPicker, type GroupOption } from "@/components/collection/GroupsPicker";
 import { ParentSelect, type ParentOption } from "@/components/document/ParentSelect";
 import { RelatedDocumentsPicker, type RelatedCandidate } from "@/components/document/RelatedDocumentsPicker";
 import { CollectionMembersPicker, type AssignableUser } from "@/components/collection/CollectionMembersPicker";
@@ -55,6 +56,9 @@ interface DocumentFormProps {
   accessUsers?: AssignableUser[];
   initialRestricted?: boolean;
   initialMemberIds?: string[];
+  /** Admins only: every group, and the ones already on the document. */
+  accessGroups?: GroupOption[];
+  initialGroupIds?: string[];
   /** Given only to admins; the server checks the role again on every request. */
   aiEnabled?: boolean;
   defaultCollectionId?: string;
@@ -79,6 +83,8 @@ export function DocumentForm({
   accessUsers,
   initialRestricted = false,
   initialMemberIds = [],
+  accessGroups = [],
+  initialGroupIds = [],
   aiEnabled = false,
   defaultCollectionId,
   defaultTitle,
@@ -594,6 +600,13 @@ export function DocumentForm({
               max={MAX_DOCUMENT_MEMBERS}
               fieldName="documentMemberIds"
               touchedName="documentMembersTouched"
+            />
+            <GroupsPicker
+              groups={accessGroups}
+              initialIds={initialGroupIds}
+              noun="dokumen"
+              fieldName="documentGroupIds"
+              touchedName="documentGroupsTouched"
             />
           </div>
         </div>

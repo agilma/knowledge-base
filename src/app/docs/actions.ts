@@ -16,6 +16,7 @@ import {
   setRelatedDocuments,
   type DocumentAccessInput,
 } from "@/lib/services/documents";
+import { MAX_GROUPS_PER_ITEM, setDocumentGroups } from "@/lib/services/groups";
 import { assertParentAllowed, setDocumentParent } from "@/lib/services/document-tree";
 import { MAX_DOCUMENT_MEMBERS } from "@/lib/collection-access";
 import { parseRelatedIds } from "@/lib/related";
@@ -33,10 +34,16 @@ function documentMemberIds(formData: FormData): string[] {
 
 /** Said before anything is written: the document and its access are saved in two steps. */
 function tooManyDocumentMembers(formData: FormData): string | null {
-  if (formData.get("documentMembersTouched") !== "1") return null;
-  return new Set(documentMemberIds(formData)).size > MAX_DOCUMENT_MEMBERS
-    ? `Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`
-    : null;
+  if (formData.get("documentMembersTouched") === "1" && new Set(documentMemberIds(formData)).size > MAX_DOCUMENT_MEMBERS) {
+    return `Anggota dokumen maksimal ${MAX_DOCUMENT_MEMBERS} orang`;
+  }
+  if (
+    formData.get("documentGroupsTouched") === "1" &&
+    new Set(formData.getAll("documentGroupIds").filter((id) => typeof id === "string")).size > MAX_GROUPS_PER_ITEM
+  ) {
+    return `Grup maksimal ${MAX_GROUPS_PER_ITEM} per dokumen`;
+  }
+  return null;
 }
 
 /**
@@ -54,6 +61,13 @@ async function applyParent(documentId: string, formData: FormData, actor: { id: 
   if (formData.get("parentTouched") !== "1") return;
   const parentId = formData.get("parentId");
   await setDocumentParent(documentId, typeof parentId === "string" && parentId ? parentId : null, actor);
+}
+
+/** The groups ticked in an admin's form; only a form that carries the list decides (see accessFromForm). */
+async function applyGroups(documentId: string, formData: FormData, actor: { id: string; role: Role }) {
+  if (actor.role !== Role.ADMIN || formData.get("documentGroupsTouched") !== "1") return;
+  const ids = formData.getAll("documentGroupIds").filter((id): id is string => typeof id === "string");
+  await setDocumentGroups(documentId, ids, actor);
 }
 
 /** Said before the document is written, so a refused parent does not leave a half-saved document behind. */
@@ -108,6 +122,7 @@ export async function createDocumentAction(
       );
     }
     await applyParent(newDoc.id, formData, { id: user.id, role: user.role });
+    await applyGroups(newDoc.id, formData, { id: user.id, role: user.role });
     const createdWithCol = await getDocumentForRevalidate(newDoc.id);
     revalidatePath("/collections");
     if (createdWithCol?.collection) {
@@ -172,6 +187,7 @@ export async function updateDocumentAction(
       });
     }
     await applyParent(id, formData, { id: user.id, role: user.role });
+    await applyGroups(id, formData, { id: user.id, role: user.role });
     const access = accessFromForm(user.role, formData);
     if (access) {
       // A picker that was not loaded sends no list: keep the people already on it.
