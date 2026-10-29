@@ -11,6 +11,8 @@ import { DocumentActions } from "@/components/document/DocumentActions";
 import { TableOfContents } from "@/components/document/TableOfContents";
 import { FavoriteButton } from "@/components/document/FavoriteButton";
 import { RecordView } from "@/components/document/RecordView";
+import { extractStepFlow } from "@/lib/step-mode";
+import { ListChecks } from "lucide-react";
 import { getAncestors, getChildren, MAX_TREE_DEPTH } from "@/lib/services/document-tree";
 import { moveDocumentAction } from "@/app/docs/tree-actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -48,6 +50,7 @@ export default async function DocumentPage({
     getChildren(doc.id, { includeDrafts: canSeeDrafts, viewer }),
   ]);
   const headings = extractHeadings(doc.content);
+  const hasSteps = extractStepFlow(doc.content).length > 0;
   const favorite = user ? await isFavorite(user.id, doc.id) : false;
 
   return (
@@ -95,6 +98,12 @@ export default async function DocumentPage({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {hasSteps && (
+              <Link href={`/docs/${doc.slug}/langkah`} className={buttonVariants({ variant: "default", size: "sm" })}>
+                <ListChecks className="mr-1.5 h-4 w-4" />
+                Mode langkah
+              </Link>
+            )}
             <DocumentShareActions slug={doc.slug} title={doc.title} />
             {user && (
               <DocumentActions

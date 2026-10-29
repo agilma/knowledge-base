@@ -25,7 +25,7 @@ Prinsip pemilihan: (1) membantu pembaca awam menemukan dan menjalankan prosedur 
 
 ### Tahap 2 — Membuat dokumen dipakai, bukan hanya dibaca
 
-7. **Mode langkah (checklist interaktif)** (M). Dokumen berisi langkah bergambar bisa dibuka satu langkah per layar dengan huruf besar dan tanda "selesai" per langkah (disimpan di perangkat). Cocok untuk kasir di depan mesin.
+7. **[SELESAI 29 Okt 2026] Mode langkah (checklist interaktif)** (M). Dokumen berisi langkah bergambar bisa dibuka satu langkah per layar dengan huruf besar dan tanda "selesai" per langkah (disimpan di perangkat). Cocok untuk kasir di depan mesin.
 8. **Beranda per peran dan dokumen sematan** (M). Admin menyematkan "Mulai di sini" per koleksi, dan beranda menampilkan yang sering dibuka. Migrasi aditif (kolom urutan sematan).
 9. **Saran dan masukan dari pembaca** (M). Tombol "Ada yang kurang jelas atau berubah?" di dokumen; masuk ke kotak masuk editor per dokumen. Menggantikan kebutuhan kolaborasi real-time. Migrasi (tabel masukan).
 10. **Tanya Knowledge Base (jawaban AI dengan sumber)** (L). Kotak tanya untuk semua pengguna: pencarian full-text lebih dulu, lalu Claude merangkum dari dokumen yang boleh dibaca orang itu, selalu dengan tautan sumber dan tanpa mengarang; aturan akses koleksi dan dokumen terbatas wajib berlaku di tahap pengambilan. Batas pemakaian per pengguna dan biaya terpantau. Pembuka: tombol "Tanya" di hasil pencarian. Embedding (pgvector) hanya bila pencarian biasa tidak cukup.
