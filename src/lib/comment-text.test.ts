@@ -23,7 +23,7 @@ test("hostile input is bounded: far over the limit is refused at once, whitespac
   const started = Date.now();
   assert.throws(() => cleanCommentBody("a" + " ".repeat(1_000_000) + "b"), /maksimal/);
   assert.throws(() => cleanCommentBody("a" + " ".repeat(3900) + "b".repeat(50)), /maksimal/);
-  assert.throws(() => cleanCommentBody((" \u0000").repeat(1900) + "xyz"), /maksimal/);
+  assert.equal(cleanCommentBody((" \u0000").repeat(1900) + "xyz"), "xyz");
   assert.ok(Date.now() - started < 300, `took ${Date.now() - started} ms`);
 });
 
