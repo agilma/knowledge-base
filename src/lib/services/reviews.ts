@@ -33,7 +33,7 @@ function cleanNote(raw: unknown, { required }: { required: boolean }): string | 
 function loadDocument(client: Prisma.TransactionClient | typeof db, id: string, actor: Viewer) {
   return client.document.findFirst({
     where: { id: typeof id === "string" ? id : "", ...documentReadableWhere(actor) },
-    select: { id: true, slug: true, title: true, excerpt: true, content: true, type: true, status: true, locked: true, collection: { select: { requiresApproval: true } } },
+    select: { id: true, slug: true, title: true, excerpt: true, content: true, type: true, status: true, locked: true, updatedAt: true, collection: { select: { requiresApproval: true } } },
   });
 }
 
@@ -42,6 +42,27 @@ export interface ReviewProposal {
   excerpt: string | null;
   content: string;
   type: DocumentType;
+  /** The document's "last updated" when this was asked, so an approval cannot apply it over a newer text. */
+  baseUpdatedAt: string;
+}
+
+/** What is stored for a request to publish: no text, only the state of the draft that was asked about. */
+interface PublishBase {
+  baseUpdatedAt: string;
+}
+
+export const STALE_MESSAGE = "Dokumen berubah sejak permintaan ini diajukan; minta pengaju mengajukan ulang (atau tolak)";
+export const CHANGED_MESSAGE = "Permintaan berubah sejak Anda membukanya; muat ulang halaman lalu periksa lagi";
+/** A request being applied for longer than this is taken to have been interrupted, and waits again. */
+const APPLYING_STALE_MS = 5 * 60 * 1000;
+const OPEN: ReviewStatus[] = [ReviewStatus.PENDING, ReviewStatus.APPLYING];
+
+/** Requests whose approval was interrupted (a timeout between claiming and applying) go back to waiting. */
+async function releaseStuck(client: Prisma.TransactionClient | typeof db) {
+  await client.documentReview.updateMany({
+    where: { status: ReviewStatus.APPLYING, decidedAt: { lt: new Date(Date.now() - APPLYING_STALE_MS) } },
+    data: { status: ReviewStatus.PENDING, decidedById: null, decidedAt: null, decisionNote: null },
+  });
 }
 
 export interface ReviewItem {
@@ -79,14 +100,19 @@ export async function submitPublish(documentId: string, rawNote: unknown, actor:
   const note = cleanNote(rawNote, { required: false });
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`review:${documentId}`}))`;
+    await releaseStuck(tx);
     const doc = await loadDocument(tx, documentId, actor);
     if (!doc) throw new Error("Dokumen tidak ditemukan");
     if (isAdmin(actor)) throw new Error("Admin menyetujui sendiri: terbitkan langsung");
     if (!doc.collection.requiresApproval) throw new Error("Koleksi ini tidak butuh persetujuan: terbitkan langsung");
     if (doc.locked) throw new Error("Dokumen ini dikunci; hanya admin yang boleh mengubahnya");
     if (doc.status === DocumentStatus.PUBLISHED) throw new Error("Dokumen ini sudah terbit");
-    if ((await tx.documentReview.count({ where: { documentId, status: ReviewStatus.PENDING } })) > 0) throw new Error("Sudah ada permintaan yang menunggu keputusan");
-    const review = await tx.documentReview.create({ data: { documentId, kind: ReviewKind.PUBLISH, note, requestedById: actor.id }, select: { id: true } });
+    if ((await tx.documentReview.count({ where: { documentId, status: { in: OPEN } } })) > 0) throw new Error("Sudah ada permintaan yang menunggu keputusan");
+    const base: PublishBase = { baseUpdatedAt: doc.updatedAt.toISOString() };
+    const review = await tx.documentReview.create({
+      data: { documentId, kind: ReviewKind.PUBLISH, note, requestedById: actor.id, proposal: base as unknown as Prisma.InputJsonValue },
+      select: { id: true },
+    });
     return { id: review.id, slug: doc.slug };
   });
 }
@@ -100,18 +126,21 @@ export async function submitChange(documentId: string, input: unknown, rawNote: 
   const note = cleanNote(rawNote, { required: false });
   const raw = (input ?? {}) as Record<string, unknown>;
   const parsed = documentSchema.pick({ title: true, excerpt: true, content: true, type: true }).parse({ title: raw.title, excerpt: raw.excerpt, content: raw.content, type: raw.type });
-  const proposal: ReviewProposal = { title: parsed.title, excerpt: parsed.excerpt || null, content: parsed.content, type: parsed.type };
+  const proposed = { title: parsed.title, excerpt: parsed.excerpt || null, content: parsed.content, type: parsed.type };
 
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`review:${documentId}`}))`;
+    await releaseStuck(tx);
     const doc = await loadDocument(tx, documentId, actor);
     if (!doc) throw new Error("Dokumen tidak ditemukan");
     if (isAdmin(actor)) throw new Error("Admin menyetujui sendiri: simpan langsung");
     if (!doc.collection.requiresApproval || doc.status !== DocumentStatus.PUBLISHED) throw new Error("Dokumen ini bisa disimpan langsung");
     if (doc.locked) throw new Error("Dokumen ini dikunci; hanya admin yang boleh mengubahnya");
-    if (!hasMeaningfulChange(doc, proposal)) throw new Error("Tidak ada perubahan untuk diajukan");
+    if (!hasMeaningfulChange(doc, proposed)) throw new Error("Tidak ada perubahan untuk diajukan");
+    const proposal: ReviewProposal = { ...proposed, baseUpdatedAt: doc.updatedAt.toISOString() };
 
-    const pending = await tx.documentReview.findFirst({ where: { documentId, status: ReviewStatus.PENDING }, select: { id: true, kind: true, requestedById: true } });
+    const pending = await tx.documentReview.findFirst({ where: { documentId, status: { in: OPEN } }, select: { id: true, kind: true, status: true, requestedById: true } });
+    if (pending && pending.status === ReviewStatus.APPLYING) throw new Error("Permintaan sedang diproses admin; coba lagi sebentar lagi");
     if (pending && !(pending.kind === ReviewKind.CHANGE && pending.requestedById === actor.id)) {
       throw new Error("Sudah ada permintaan lain yang menunggu keputusan");
     }
@@ -141,31 +170,46 @@ export async function withdrawReview(reviewId: string, actor: Viewer): Promise<{
 
 /**
  * An admin approves: the document is published, or its text replaced by the proposal, as the admin (the
- * request and the admin's name stay on the review). The request is claimed first, so two admins pressing
- * Approve cannot apply it twice; if applying fails the request goes back to waiting.
+ * request and the admin's name stay on the review). The admin approves what they saw: `seen` is the
+ * request's "asked at" they were shown, and a request the editor has since replaced no longer matches.
+ * The request is claimed first (PENDING to APPLYING, which also keeps anyone from asking for the same
+ * document meanwhile), so two admins cannot apply it twice; it becomes APPROVED once written, and goes
+ * back to PENDING if the document has changed since it was asked or writing fails.
  */
-export async function approveReview(reviewId: string, rawNote: unknown, actor: Viewer): Promise<{ slug: string }> {
+export async function approveReview(reviewId: string, rawNote: unknown, actor: Viewer, seen: unknown): Promise<{ slug: string }> {
   if (!isAdmin(actor)) throw new Error("Hanya admin yang boleh menyetujui");
   const note = cleanNote(rawNote, { required: false });
+  const stamp = typeof seen === "number" ? seen : typeof seen === "string" && /^\d{1,16}$/.test(seen) ? Number(seen) : NaN;
+  if (!Number.isFinite(stamp)) throw new Error(CHANGED_MESSAGE);
+  await releaseStuck(db);
   const review = await db.documentReview.findFirst({
     where: { id: typeof reviewId === "string" ? reviewId : "", status: ReviewStatus.PENDING },
-    select: { id: true, kind: true, proposal: true, documentId: true },
+    select: { id: true, kind: true, proposal: true, documentId: true, createdAt: true },
   });
   if (!review) throw new Error("Permintaan tidak ditemukan atau sudah diputuskan");
+  if (review.createdAt.getTime() !== stamp) throw new Error(CHANGED_MESSAGE);
   const claim = await db.documentReview.updateMany({
-    where: { id: review.id, status: ReviewStatus.PENDING },
-    data: { status: ReviewStatus.APPROVED, decidedById: actor.id, decidedAt: new Date(), decisionNote: note },
+    where: { id: review.id, status: ReviewStatus.PENDING, createdAt: review.createdAt },
+    data: { status: ReviewStatus.APPLYING, decidedById: actor.id, decidedAt: new Date(), decisionNote: note },
   });
-  if (claim.count === 0) throw new Error("Permintaan sudah diputuskan");
+  if (claim.count === 0) throw new Error(CHANGED_MESSAGE);
 
+  const giveBack = () =>
+    db.documentReview.updateMany({
+      where: { id: review.id, status: ReviewStatus.APPLYING },
+      data: { status: ReviewStatus.PENDING, decidedById: null, decidedAt: null, decisionNote: null },
+    });
   try {
-    const doc = await db.document.findUnique({ where: { id: review.documentId }, select: { slug: true, collectionId: true, status: true } });
+    const doc = await db.document.findUnique({ where: { id: review.documentId }, select: { slug: true, collectionId: true, status: true, updatedAt: true } });
     if (!doc) throw new Error("Dokumen tidak ditemukan");
+    const base = (review.proposal as unknown as PublishBase | null)?.baseUpdatedAt;
+    if (!base || doc.updatedAt.toISOString() !== base) throw new Error(STALE_MESSAGE);
+
     if (review.kind === ReviewKind.PUBLISH) {
       await setDocumentStatus(review.documentId, DocumentStatus.PUBLISHED, actor, { approved: true });
     } else {
       const p = review.proposal as unknown as ReviewProposal | null;
-      if (!p) throw new Error("Permintaan tidak memuat perubahan");
+      if (!p || typeof p.content !== "string") throw new Error("Permintaan tidak memuat perubahan");
       await updateDocument(
         review.documentId,
         { title: p.title, slug: doc.slug, collectionId: doc.collectionId, type: p.type, excerpt: p.excerpt ?? undefined, content: p.content, status: doc.status },
@@ -173,12 +217,10 @@ export async function approveReview(reviewId: string, rawNote: unknown, actor: V
         { approved: true },
       );
     }
+    await db.documentReview.updateMany({ where: { id: review.id, status: ReviewStatus.APPLYING }, data: { status: ReviewStatus.APPROVED, decidedAt: new Date() } });
     return { slug: doc.slug };
   } catch (err) {
-    await db.documentReview.updateMany({
-      where: { id: review.id, status: ReviewStatus.APPROVED },
-      data: { status: ReviewStatus.PENDING, decidedById: null, decidedAt: null, decisionNote: null },
-    });
+    await giveBack();
     throw err;
   }
 }
@@ -246,7 +288,8 @@ export async function listReviewsForDocument(documentId: string, actor: Viewer):
     select: REVIEW_SELECT,
   });
   const items = rows.map(toItem);
-  return [...items.filter((i) => i.status === ReviewStatus.PENDING), ...items.filter((i) => i.status !== ReviewStatus.PENDING)];
+  const open = (i: ReviewItem) => i.status === ReviewStatus.PENDING || i.status === ReviewStatus.APPLYING;
+  return [...items.filter(open), ...items.filter((i) => !open(i))];
 }
 
 /**
@@ -257,8 +300,8 @@ export async function listInbox(actor: Viewer): Promise<{ pending: ReviewItem[];
   if (!isStaff(actor)) throw new Error("Hanya penyunting yang boleh membuka kotak persetujuan");
   const base = { document: { ...documentReadableWhere(actor) }, ...(isAdmin(actor) ? {} : { requestedById: actor.id }) };
   const [pending, decided] = await Promise.all([
-    db.documentReview.findMany({ where: { ...base, status: ReviewStatus.PENDING }, orderBy: { createdAt: "asc" }, take: 100, select: REVIEW_SELECT }),
-    db.documentReview.findMany({ where: { ...base, status: { not: ReviewStatus.PENDING } }, orderBy: { decidedAt: "desc" }, take: HISTORY_LIMIT, select: REVIEW_SELECT }),
+    db.documentReview.findMany({ where: { ...base, status: { in: OPEN } }, orderBy: { createdAt: "asc" }, take: 100, select: REVIEW_SELECT }),
+    db.documentReview.findMany({ where: { ...base, status: { notIn: OPEN } }, orderBy: { decidedAt: "desc" }, take: HISTORY_LIMIT, select: REVIEW_SELECT }),
   ]);
   return { pending: pending.map(toItem), decided: decided.map(toItem) };
 }

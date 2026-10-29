@@ -8,8 +8,9 @@ import { REVIEW_NOTE_MAX } from "@/lib/services/reviews";
 import type { ReviewItem } from "@/lib/services/reviews";
 import { approveAction, rejectAction, withdrawAction } from "@/app/docs/[slug]/tinjau/actions";
 
-const STATUS_LABEL: Record<ReviewStatus, string> = { PENDING: "Menunggu", APPROVED: "Disetujui", REJECTED: "Ditolak", WITHDRAWN: "Ditarik" };
+const STATUS_LABEL: Record<ReviewStatus, string> = { PENDING: "Menunggu", APPLYING: "Diproses", APPROVED: "Disetujui", REJECTED: "Ditolak", WITHDRAWN: "Ditarik" };
 const STATUS_CLASS: Record<ReviewStatus, string> = {
+  APPLYING: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200",
   PENDING: "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-100",
   APPROVED: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
   REJECTED: "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200",
@@ -38,6 +39,7 @@ export function ReviewCard({
   from: "document" | "inbox";
 }) {
   const pending = review.status === ReviewStatus.PENDING;
+  const open = pending || review.status === ReviewStatus.APPLYING;
   const mine = review.requestedById === userId;
   return (
     <li className="space-y-3 rounded-xl border border-border p-4">
@@ -59,7 +61,7 @@ export function ReviewCard({
         </details>
       )}
 
-      {!pending && (
+      {!open && (
         <p className="text-sm text-muted-foreground">
           {STATUS_LABEL[review.status]} oleh {review.decidedByName ?? "admin"}
           {review.decidedAt ? ` · ${formatDate(review.decidedAt)}` : ""}
@@ -71,6 +73,8 @@ export function ReviewCard({
         <div className="space-y-2">
           <form action={approveAction.bind(null, slug)} className="space-y-2">
             <input type="hidden" name="reviewId" value={review.id} />
+            {/* what the admin was shown: a request replaced in the meantime no longer matches (see approveReview) */}
+            <input type="hidden" name="seen" value={review.createdAt.getTime()} />
             <input type="hidden" name="from" value={from} />
             <label htmlFor={`note-${review.id}`} className="sr-only">
               Catatan (untuk menyetujui atau menolak)

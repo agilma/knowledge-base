@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { DocumentStatus, DocumentType, ReviewStatus, Role } from "@prisma/client";
 import { db } from "../db";
 import type { Viewer } from "../collection-access";
-import { APPROVAL_REQUIRED_MESSAGE, createDocument, LOCKED_MESSAGE, setDocumentStatus, updateDocument } from "./documents";
-import { approveReview, listInbox, listReviewsForDocument, rejectReview, saveMode, setDocumentLocked, submitChange, submitPublish, withdrawReview } from "./reviews";
+import { APPROVAL_REQUIRED_MESSAGE, createDocument, LOCKED_MESSAGE, MOVE_OUT_MESSAGE, setDocumentStatus, setRelatedDocuments, updateDocument } from "./documents";
+import { moveDocumentInParent, setDocumentParent } from "./document-tree";
+import { approveReview, CHANGED_MESSAGE, listInbox, listReviewsForDocument, rejectReview, saveMode, setDocumentLocked, STALE_MESSAGE, submitChange, submitPublish, withdrawReview } from "./reviews";
 
 /**
  * The approval flow and the lock: what an editor may write, what waits for an admin, and that the live
@@ -23,6 +24,10 @@ async function user(name: string, role: Role): Promise<Viewer> {
   const row = await db.user.create({ data: { email: `${tag}-${name}@example.test`, name: `${name} ${tag}`, role } });
   created.users.push(row.id);
   return { id: row.id, role };
+}
+/** What the admin's screen holds: the moment the request was made, sent back with the decision. */
+async function seen(reviewId: string): Promise<number> {
+  return (await db.documentReview.findUniqueOrThrow({ where: { id: reviewId } })).createdAt.getTime();
 }
 const input = (slug: string, collectionId: string, extra: Record<string, unknown> = {}) => ({
   title: `Judul ${slug}`,
@@ -83,8 +88,8 @@ test("a request to publish waits for an admin, who approves it once", T, async (
   await assert.rejects(submitPublish(draft.id, null, other), /Sudah ada permintaan/);
   assert.equal((await db.document.findUniqueOrThrow({ where: { id: draft.id } })).status, DocumentStatus.DRAFT);
 
-  await assert.rejects(approveReview(id, null, editor), /Hanya admin/);
-  await approveReview(id, "Disetujui", admin);
+  await assert.rejects(approveReview(id, null, editor, await seen(id)), /Hanya admin/);
+  await approveReview(id, "Disetujui", admin, await seen(id));
   const doc = await db.document.findUniqueOrThrow({ where: { id: draft.id } });
   assert.equal(doc.status, DocumentStatus.PUBLISHED);
   const review = await db.documentReview.findUniqueOrThrow({ where: { id } });
@@ -92,7 +97,7 @@ test("a request to publish waits for an admin, who approves it once", T, async (
   assert.equal(review.note, "Siap ditinjau");
   assert.equal(review.decidedById, admin.id);
   assert.equal(review.decisionNote, "Disetujui");
-  await assert.rejects(approveReview(id, null, admin), /tidak ditemukan atau sudah diputuskan/);
+  await assert.rejects(approveReview(id, null, admin, await seen(id)), /tidak ditemukan atau sudah diputuskan/);
   assert.equal(await db.documentRevision.count({ where: { documentId: draft.id, status: DocumentStatus.PUBLISHED } }), 1);
 
   await assert.rejects(submitPublish(draft.id, null, editor), /sudah terbit/);
@@ -114,7 +119,7 @@ test("a change to a published document leaves the live text until it is approved
   assert.equal((await db.document.findUniqueOrThrow({ where: { id: doc.id } })).content, "versi lama", "the live document is untouched");
   assert.equal(await db.documentRevision.count({ where: { documentId: doc.id } }), 1);
 
-  await approveReview(first.id, null, admin);
+  await approveReview(first.id, null, admin, await seen(first.id));
   const after = await db.document.findUniqueOrThrow({ where: { id: doc.id } });
   assert.equal(after.content, "usulan kedua");
   assert.equal(after.status, DocumentStatus.PUBLISHED);
@@ -182,4 +187,67 @@ test("the inbox: an admin sees every waiting request, an editor their own, nobod
 
   await rejectReview(id, "belum lengkap", admin);
   assert.ok((await listInbox(editor)).decided.some((r) => r.id === id && r.decisionNote === "belum lengkap"), "the editor reads the answer");
+});
+
+test("moving a document out of an approval collection is for admins, so publishing cannot be had by moving", T, async () => {
+  const doc = await createDocument(input("g1", strictId), editor);
+  await assert.rejects(updateDocument(doc.id, input("g1", looseId, { status: DocumentStatus.PUBLISHED }), editor), new RegExp(MOVE_OUT_MESSAGE.slice(0, 30)));
+  await assert.rejects(updateDocument(doc.id, input("g1", looseId), editor), new RegExp(MOVE_OUT_MESSAGE.slice(0, 30)));
+  // an editor cannot publish into a strict collection either
+  const open = await createDocument(input("g2", looseId), editor);
+  await assert.rejects(updateDocument(open.id, input("g2", strictId, { status: DocumentStatus.PUBLISHED }), editor), /butuh persetujuan/);
+  await updateDocument(doc.id, input("g1", looseId, { status: DocumentStatus.PUBLISHED }), admin);
+});
+
+test("approving a publish request fails when the draft changed after it was asked, and when the screen is out of date", T, async () => {
+  const draft = await createDocument(input("h1", strictId, { content: "yang dilihat" }), editor);
+  const { id } = await submitPublish(draft.id, null, editor);
+  const at = await seen(id);
+  await updateDocument(draft.id, input("h1", strictId, { content: "disisipkan sesudahnya" }), editor);
+  await assert.rejects(approveReview(id, null, admin, at), new RegExp(STALE_MESSAGE.slice(0, 25)));
+  assert.equal((await db.document.findUniqueOrThrow({ where: { id: draft.id } })).status, DocumentStatus.DRAFT);
+  assert.equal((await db.documentReview.findUniqueOrThrow({ where: { id } })).status, ReviewStatus.PENDING, "given back, not lost");
+
+  const change = await createDocument(input("h2", strictId, { status: DocumentStatus.PUBLISHED, content: "lama" }), admin);
+  const first = await submitChange(change.id, { title: change.title, content: "usulan satu", type: change.type }, null, editor);
+  const opened = await seen(first.id);
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  await db.documentReview.update({ where: { id: first.id }, data: { createdAt: new Date() } });
+  await assert.rejects(approveReview(first.id, null, admin, opened), new RegExp(CHANGED_MESSAGE.slice(0, 25)));
+  assert.equal((await db.document.findUniqueOrThrow({ where: { id: change.id } })).content, "lama");
+});
+
+test("a change proposed on an old text is not applied over a newer one", T, async () => {
+  const doc = await createDocument(input("i1", strictId, { status: DocumentStatus.PUBLISHED, content: "awal" }), admin);
+  const { id } = await submitChange(doc.id, { title: doc.title, content: "usulan editor", type: doc.type }, null, editor);
+  await updateDocument(doc.id, input("i1", strictId, { status: DocumentStatus.PUBLISHED, content: "ditulis admin" }), admin);
+  await assert.rejects(approveReview(id, null, admin, await seen(id)), new RegExp(STALE_MESSAGE.slice(0, 25)));
+  assert.equal((await db.document.findUniqueOrThrow({ where: { id: doc.id } })).content, "ditulis admin");
+});
+
+test("while a request is being applied nobody can ask or decide it again; a stuck one goes back to waiting", T, async () => {
+  const doc = await createDocument(input("j1", strictId, { status: DocumentStatus.PUBLISHED, content: "dasar" }), admin);
+  const { id } = await submitChange(doc.id, { title: doc.title, content: "sedang diterapkan", type: doc.type }, null, editor);
+  await db.documentReview.update({ where: { id }, data: { status: ReviewStatus.APPLYING, decidedById: admin.id, decidedAt: new Date() } });
+  await assert.rejects(submitChange(doc.id, { title: doc.title, content: "lagi", type: doc.type }, null, other), /sedang diproses|permintaan lain/);
+  await assert.rejects(approveReview(id, null, admin, await seen(id)), /tidak ditemukan atau sudah diputuskan/);
+  await assert.rejects(rejectReview(id, "alasan", admin), /tidak ditemukan atau sudah diputuskan/);
+
+  // a claim older than five minutes is a crash, and the request waits again
+  await db.documentReview.update({ where: { id }, data: { decidedAt: new Date(Date.now() - 10 * 60_000) } });
+  await approveReview(id, null, admin, await seen(id));
+  assert.equal((await db.document.findUniqueOrThrow({ where: { id: doc.id } })).content, "sedang diterapkan");
+  assert.equal((await db.documentReview.findUniqueOrThrow({ where: { id } })).status, ReviewStatus.APPROVED);
+});
+
+test("a lock also covers moving in the tree and the related documents, for non-admins", T, async () => {
+  const parent = await createDocument(input("k1", looseId, { status: DocumentStatus.PUBLISHED }), admin);
+  const child = await createDocument(input("k2", looseId, { status: DocumentStatus.PUBLISHED }), editor);
+  const sibling = await createDocument(input("k3", looseId, { status: DocumentStatus.PUBLISHED }), editor);
+  await setDocumentLocked(child.id, true, admin);
+  await assert.rejects(setDocumentParent(child.id, parent.id, editor), /dikunci/);
+  await assert.rejects(moveDocumentInParent(child.id, "up", editor), /dikunci/);
+  await assert.rejects(setRelatedDocuments(child.id, [sibling.id], editor), /dikunci/);
+  await setDocumentParent(child.id, parent.id, admin);
+  await setRelatedDocuments(child.id, [sibling.id], admin);
 });

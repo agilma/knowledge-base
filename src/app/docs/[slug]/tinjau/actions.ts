@@ -57,7 +57,7 @@ export async function approveAction(slug: string, formData: FormData): Promise<v
   const id = formData.get("reviewId");
   let doc: { slug: string };
   try {
-    doc = await approveReview(typeof id === "string" ? id : "", formData.get("note"), { id: user.id, role: user.role });
+    doc = await approveReview(typeof id === "string" ? id : "", formData.get("note"), { id: user.id, role: user.role }, formData.get("seen"));
   } catch (err) {
     fail(path, err, "Gagal menyetujui");
   }

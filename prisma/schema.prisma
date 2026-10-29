@@ -463,6 +463,8 @@ enum ReviewKind {
 
 enum ReviewStatus {
   PENDING
+  /// An admin approved it and the change is being applied (migration 19); back to PENDING if applying fails.
+  APPLYING
   APPROVED
   REJECTED
   WITHDRAWN

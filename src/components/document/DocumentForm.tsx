@@ -624,7 +624,7 @@ export function DocumentForm({
           <p className="text-sm font-medium">Dokumen ini terbit di koleksi yang butuh persetujuan</p>
           <p className="text-xs text-muted-foreground">
             Perubahan Anda tidak langsung tampil: dikirim ke admin, dan dokumen yang terbit baru berubah setelah admin menyetujui.
-            Yang diajukan: judul, ringkasan, jenis, dan isi.
+            Yang diajukan hanya judul, ringkasan, jenis, dan isi; perubahan koleksi, alamat (slug), induk, dokumen terkait, dan akses tidak ikut.
           </p>
           <Label htmlFor="reviewNote">Catatan untuk admin (opsional)</Label>
           <textarea
