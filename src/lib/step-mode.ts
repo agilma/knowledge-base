@@ -10,12 +10,38 @@ export type FlowItem =
   | { kind: "step"; title: string; description: string; section: string | null }
   | { kind: "callout"; title: string; body: string[] };
 
-const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[ \t]*([^\s`]*)[^`]*$/;
-const HEADING = /^ {0,3}#{1,6}[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/;
+/** A line longer than this is never a fence or a heading here: nothing real is, and it bounds the work on hostile text. */
+const MAX_LINE = 2000;
+/** Leading spaces, tabs and `>` marks: a block inside a list item or a quote is indented or quoted. */
+const PREFIX = /^[ \t>]*/;
 
 /** The nearest heading above a step, as plain text: a link or emphasis mark is not part of what is read out. */
 function plain(heading: string): string {
   return heading.replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[`*_~]/g, "").trim();
+}
+
+/** `## Title ##` to "Title"; null when the line is not a heading. Written without a pattern that can backtrack. */
+function headingOf(line: string): string | null {
+  const indent = line.length - line.trimStart().length;
+  if (indent > 3) return null;
+  let hashes = 0;
+  while (line[indent + hashes] === "#") hashes += 1;
+  if (hashes < 1 || hashes > 6) return null;
+  const after = line.slice(indent + hashes);
+  if (!/^[ \t]/.test(after)) return null;
+  const text = after.trim().replace(/[ \t]+#+$/, "");
+  return text || null;
+}
+
+/** An opening fence: its character run and the first word after it (the block's kind); null when the line is not one. */
+function openingFence(line: string): { fence: string; kind: string } | null {
+  const rest = line.slice(PREFIX.exec(line)![0].length);
+  const mark = rest[0];
+  if (mark !== "`" && mark !== "~") return null;
+  let run = 0;
+  while (rest[run] === mark) run += 1;
+  if (run < 3) return null;
+  return { fence: mark.repeat(run), kind: rest.slice(run).trim().split(/\s/, 1)[0] ?? "" };
 }
 
 export function extractStepFlow(markdown: string): FlowItem[] {
@@ -24,24 +50,26 @@ export function extractStepFlow(markdown: string): FlowItem[] {
   let section: string | null = null;
 
   for (let i = 0; i < lines.length; i += 1) {
-    const open = FENCE_OPEN.exec(lines[i]);
+    const line = lines[i];
+    const open = line.length > MAX_LINE ? null : openingFence(line);
     if (!open) {
-      const heading = HEADING.exec(lines[i]);
-      if (heading) section = plain(heading[1]) || null;
+      const heading = line.length > MAX_LINE ? null : headingOf(line);
+      if (heading) section = plain(heading) || null;
       continue;
     }
-    const fence = open[1];
-    const kind = open[2].toLowerCase();
+    const { fence, kind } = open;
     const body: string[] = [];
     let j = i + 1;
-    // The block ends at a line of the same character, at least as long; an unclosed one runs to the end.
+    // The block ends at a line of the same character, at least as long (whatever it is indented or quoted
+    // by); an unclosed one runs to the end.
     for (; j < lines.length; j += 1) {
-      const closing = lines[j].trim();
-      if (closing.length >= fence.length && closing === fence[0].repeat(closing.length)) break;
-      body.push(lines[j]);
+      const closing = lines[j].replace(PREFIX, "").trim();
+      if (closing.length >= fence.length && closing.length <= MAX_LINE && closing === fence[0].repeat(closing.length)) break;
+      body.push(lines[j].replace(PREFIX, ""));
     }
     i = j;
 
+    // Case-sensitive, like the page: "Langkah" is drawn there as the code block it is.
     if (kind === "langkah") {
       const steps = parseSteps(body.join("\n"));
       if (steps) for (const step of steps) items.push({ kind: "step", ...step, section });
@@ -66,7 +94,7 @@ export function stepCount(items: FlowItem[]): number {
 export function flowKey(items: FlowItem[]): string {
   let hash = 0x811c9dc5;
   for (const ch of items.map((item) => `${item.kind}:${item.title}`).join("\u0001")) {
-    hash ^= ch.charCodeAt(0);
+    hash ^= ch.codePointAt(0)!;
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash.toString(36);

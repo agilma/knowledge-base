@@ -55,3 +55,23 @@ test("the key follows the titles, so an edit starts the ticks again", () => {
   assert.notEqual(a, flowKey(extractStepFlow(DOC.replace("Login", "Masuk"))));
   assert.equal(a, flowKey(extractStepFlow(DOC.replace("Pakai akun koordinator", "Beda deskripsi"))), "wording of a description does not reset it");
 });
+
+test("blocks inside a list item or a quote are found, as the page draws them; the kind is case-sensitive", () => {
+  assert.deepEqual(extractStepFlow("1. Siapkan:\n\n    ```langkah\n    A\n    B\n    ```\n").map((i) => i.title), ["A", "B"]);
+  assert.deepEqual(extractStepFlow("> ```langkah\n> A\n> ```").map((i) => i.title), ["A"]);
+  assert.deepEqual(extractStepFlow("```Langkah\nA\n```"), []);
+  assert.deepEqual(extractStepFlow("```langkah\nA\n    ```\nB\n```").map((i) => i.title), ["A"], "a closing fence may be indented");
+});
+
+test("hostile long lines cost next to nothing", () => {
+  const started = Date.now();
+  extractStepFlow("```" + "a".repeat(200_000) + "`");
+  extractStepFlow("# a" + " ".repeat(200_000) + "x");
+  extractStepFlow(("#" + " ".repeat(500) + "x\n").repeat(500));
+  assert.ok(Date.now() - started < 500, `took ${Date.now() - started} ms`);
+});
+
+test("the key tells apart titles that differ only by an emoji", () => {
+  const key = (title: string) => flowKey(extractStepFlow("```langkah\n" + title + "\n```"));
+  assert.notEqual(key("😀 a"), key("😁 a"));
+});

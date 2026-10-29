@@ -20,5 +20,5 @@ export default async function StepModePage({ params }: { params: Promise<{ slug:
   const items = extractStepFlow(doc.content);
   if (items.length === 0) notFound();
 
-  return <StepRunner items={items} storageKey={`kb:steps:${doc.id}:${flowKey(items)}`} title={doc.title} backHref={`/docs/${doc.slug}`} />;
+  return <StepRunner items={items} storageKey={`kb:steps:${user.id}:${doc.id}:${flowKey(items)}`} title={doc.title} backHref={`/docs/${doc.slug}`} />;
 }
